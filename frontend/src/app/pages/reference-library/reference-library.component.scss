@@ -116,7 +116,9 @@
 
 .card-actions {
   margin-top: 8px;
-  display: grid;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   gap: 6px;
 }
 
@@ -143,6 +145,7 @@
 }
 
 .filename {
+  flex-basis: 100%;
   color: var(--muted);
   font-size: 0.8rem;
   overflow-wrap: anywhere;
