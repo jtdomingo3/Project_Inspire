@@ -7,6 +7,7 @@ import express from 'express';
 import { projectRoot, referencesDir, supportedModels, surveyQuestions } from './config.js';
 import { generateLessonPlan } from './openrouter.js';
 import {
+  deleteSurvey,
   deleteReferenceMetadata,
   deleteUser,
   findUserByCredentials,
@@ -447,6 +448,16 @@ app.post('/api/surveys', async (request, response) => {
   } catch (error) {
     sendJson(response, 400, { success: false, error: String(error.message || error) });
   }
+});
+
+app.delete('/api/surveys/:id', async (request, response) => {
+  const deleted = await deleteSurvey(request.params.id);
+  if (!deleted) {
+    sendJson(response, 404, { success: false, error: 'Survey not found' });
+    return;
+  }
+
+  sendJson(response, 200, { success: true });
 });
 
 app.get('/api/admin/stats', async (_request, response) => {

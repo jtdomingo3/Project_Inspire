@@ -1,55 +1,76 @@
 <section class="page-shell">
-  <div class="page-header card">
+  <div class="page-header">
     <div>
-      <p class="eyebrow">Surveys</p>
-      <h2>Track the pre and post competency survey inside the app.</h2>
-      <p>Responses are stored locally and surfaced for the admin dashboard.</p>
+      <div class="breadcrumbs">Surveys · Pre/Post</div>
+      <h2>Pre / Post Competency Survey</h2>
     </div>
+    <p class="scale-note">Likert scale (1 = Strongly Disagree · 5 = Strongly Agree)</p>
   </div>
 
   @if (loading()) {
     <section class="card status-panel">Loading survey data...</section>
   } @else {
-    <div class="tabs card">
-      <button type="button" class="tab" [class.active]="activeTab() === 'pre'" (click)="setTab('pre')">Pre-Intervention</button>
-      <button type="button" class="tab" [class.active]="activeTab() === 'post'" (click)="setTab('post')">Post-Intervention</button>
+    <div class="tabs">
+      <button type="button" class="tab" [class.active]="activeTab() === 'pre'" (click)="setTab('pre')">Pre-Intervention Survey</button>
+      <button type="button" class="tab" [class.active]="activeTab() === 'post'" (click)="setTab('post')">Post-Intervention Survey</button>
     </div>
 
     <div class="layout">
       <section class="card form-panel">
-        <p class="eyebrow">{{ activeTab() === 'pre' ? 'Pre-intervention survey' : 'Post-intervention survey' }}</p>
-        <p class="muted">Likert scale: 1 = Strongly Disagree, 5 = Strongly Agree</p>
+        <div class="form-meta">
+          <div class="meta-chip">{{ activeTab() === 'pre' ? 'Pre-Intervention' : 'Post-Intervention' }}</div>
+          <div class="meta-chip">{{ answeredCurrentCount() }}/{{ currentQuestions().length }} answered</div>
+          <div class="meta-chip">{{ completionPercent() }}% complete</div>
+        </div>
+
+        <p class="muted-intro">Please rate each statement honestly based on your current practice.</p>
+        <div class="response-guide" aria-hidden="true">
+          <span>1</span>
+          <span>2</span>
+          <span>3</span>
+          <span>4</span>
+          <span>5</span>
+          <small>Strongly Disagree → Strongly Agree</small>
+        </div>
 
         <div class="questions">
-          @for (question of currentQuestions(); track $index) {
-            <article class="question-card">
-              <div class="question-title">{{ $index + 1 }}. {{ question }}</div>
-              <div class="likert">
-                @for (rating of [1, 2, 3, 4, 5]; track rating) {
-                  <button
-                    type="button"
-                    class="rating"
-                    [class.active]="isSelected($index, rating)"
-                    (click)="setResponse($index, rating)"
-                  >
-                    {{ rating }}
-                  </button>
-                }
-              </div>
-            </article>
+          @for (section of surveySections(); track section.title) {
+            <section class="question-section">
+              <h3>{{ section.title }}</h3>
+
+              @for (question of section.questions; track question) {
+                <article class="question-row">
+                  <div class="question-title">{{ section.startIndex + $index + 1 }}. {{ question }}</div>
+                  <div class="likert-group" role="radiogroup" [attr.aria-label]="question">
+                    @for (rating of [1, 2, 3, 4, 5]; track rating) {
+                      <label class="likert-option">
+                        <input
+                          type="radio"
+                          [name]="'q-' + (section.startIndex + $index)"
+                          [checked]="isSelected(section.startIndex + $index, rating)"
+                          (change)="setResponse(section.startIndex + $index, rating)"
+                        >
+                        <span>{{ rating }}</span>
+                      </label>
+                    }
+                  </div>
+                </article>
+              }
+            </section>
           }
         </div>
 
-        <button type="button" class="primary-button" (click)="submit()" [disabled]="saving()">
-          {{ saving() ? 'Saving survey...' : 'Submit survey' }}
+        @if (error()) {
+          <p class="error">{{ error() }}</p>
+        }
+
+        <button type="button" class="primary-button" (click)="submit()" [disabled]="saving() || !canSubmit()">
+          {{ saving() ? 'Saving survey...' : (activeTab() === 'pre' ? 'Submit Pre-Intervention Survey' : 'Submit Post-Intervention Survey') }}
         </button>
       </section>
 
       <aside class="card list-panel">
-        <p class="eyebrow">Survey submissions</p>
-        @if (error()) {
-          <p class="error">{{ error() }}</p>
-        }
+        <p class="eyebrow">Completed surveys</p>
 
         <div class="stack">
           @for (survey of surveys(); track survey.id) {
@@ -58,7 +79,30 @@
                 <strong>{{ survey.survey_type | uppercase }}</strong>
                 <span>{{ survey.completed_at | date:'mediumDate' }}</span>
               </div>
-              <p>{{ survey.question_responses | json }}</p>
+              <p class="summary-line">Answered: {{ answeredCount(survey) }} items</p>
+              <p class="summary-line">Overall average: {{ averageScore(survey) }}/5</p>
+              <p class="summary-line">Section A avg: {{ sectionAverage(survey, 0, 10) }}/5</p>
+              <p class="summary-line">Section B avg: {{ sectionAverage(survey, 10, 20) }}/5</p>
+
+              <div class="submission-actions">
+                <button type="button" class="action-button ghost" (click)="toggleView(survey.id)">
+                  {{ isViewing(survey.id) ? 'Hide' : 'View' }}
+                </button>
+                <button type="button" class="action-button danger" [disabled]="isDeleting(survey.id)" (click)="deleteSurvey(survey)">
+                  {{ isDeleting(survey.id) ? 'Deleting...' : 'Delete' }}
+                </button>
+              </div>
+
+              @if (isViewing(survey.id)) {
+                <div class="survey-details">
+                  @for (entry of orderedResponses(survey); track entry.key) {
+                    <div class="detail-row">
+                      <p class="detail-question">{{ entry.label }}</p>
+                      <span class="detail-score">{{ entry.value }}/5</span>
+                    </div>
+                  }
+                </div>
+              }
             </article>
           } @empty {
             <p>No surveys have been submitted yet.</p>

@@ -182,6 +182,10 @@ export class InspireApiService {
     return this.http.post<{ success: boolean; survey: SurveyRecord }>('/api/surveys', payload);
   }
 
+  deleteSurvey(id: number): Observable<{ success: boolean }> {
+    return this.http.delete<{ success: boolean }>(`/api/surveys/${id}`);
+  }
+
   getAdminStats(): Observable<AdminStats> {
     return this.http.get<AdminStats>('/api/admin/stats');
   }

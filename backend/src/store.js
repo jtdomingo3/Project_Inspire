@@ -444,6 +444,19 @@ export async function upsertSurvey(record) {
   return nextRecord;
 }
 
+export async function deleteSurvey(id) {
+  const store = await readStore();
+  const currentLength = store.surveys.length;
+  store.surveys = store.surveys.filter((item) => Number(item.id) !== Number(id));
+
+  if (store.surveys.length === currentLength) {
+    return false;
+  }
+
+  await writeStore(store);
+  return true;
+}
+
 export async function listUsers() {
   const store = await readStore();
   return store.users;
