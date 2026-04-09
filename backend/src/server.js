@@ -79,12 +79,15 @@ function normalizeLessonPayload(body) {
 function normalizeReflectionPayload(body) {
   const payload = ensureObject(body, 'Request body');
   return {
+    id: payload.id,
     date: normalizeText(payload.date ?? payload.reflection_date),
     subject: normalizeText(payload.subject),
     grade: normalizeText(payload.grade),
     lesson_plan_linked: normalizeText(payload.lesson_plan_linked ?? payload.lessonPlanLinked),
     strategies_used: normalizeText(payload.strategies_used ?? payload.strategiesUsed),
     learner_response: normalizeText(payload.learner_response ?? payload.learnerResponse),
+    worked_well: normalizeText(payload.worked_well ?? payload.workedWell),
+    needs_improvement: normalizeText(payload.needs_improvement ?? payload.needsImprovement),
     effectiveness_rating: Number(payload.effectiveness_rating ?? payload.effectivenessRating ?? 0),
     inspire_confidence_rating: Number(payload.inspire_confidence_rating ?? payload.inspireConfidenceRating ?? 0),
     challenges: normalizeText(payload.challenges),

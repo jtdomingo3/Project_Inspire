@@ -74,6 +74,8 @@ export interface ReflectionRecord {
   lesson_plan_linked: string;
   strategies_used: string;
   learner_response: string;
+  worked_well?: string;
+  needs_improvement?: string;
   effectiveness_rating: number;
   inspire_confidence_rating: number;
   challenges: string;

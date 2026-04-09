@@ -1,99 +1,143 @@
 <section class="page-shell">
-  <div class="page-header card">
-    <div>
-      <p class="eyebrow">Reflection logs</p>
-      <h2>Record what happened after teaching each inclusive lesson.</h2>
-      <p>Reflections are stored locally in the backend and linked to the selected lesson plan.</p>
-    </div>
+  <div class="breadcrumbs">Reflection Logs · List</div>
+  <div class="page-header">
+    <h2>My Reflection Logs</h2>
+    <button class="new-button" type="button" (click)="openModal()">+ New Reflection</button>
   </div>
 
   @if (loading()) {
     <section class="card status-panel">Loading reflections...</section>
   } @else {
-    <div class="layout">
-      <form class="card form-panel" [formGroup]="form" (ngSubmit)="submit()">
-        <div class="grid">
-          <label>
-            <span>Date of lesson</span>
-            <input type="date" formControlName="date">
-          </label>
-          <label>
-            <span>Subject</span>
-            <input type="text" formControlName="subject">
-          </label>
-          <label>
-            <span>Grade</span>
-            <input type="text" formControlName="grade">
-          </label>
-          <label>
-            <span>Linked lesson</span>
-            <select formControlName="lesson_plan_linked">
-              @for (lesson of lessons(); track lesson.id) {
-                <option [value]="lesson.title">{{ lesson.title }}</option>
-              }
-            </select>
-          </label>
-          <label class="full-span">
-            <span>Strategies used</span>
-            <textarea rows="3" formControlName="strategies_used"></textarea>
-          </label>
-          <label class="full-span">
-            <span>Learner response</span>
-            <textarea rows="3" formControlName="learner_response"></textarea>
-          </label>
-          <label>
-            <span>Effectiveness rating</span>
-            <select formControlName="effectiveness_rating">
-              @for (rating of [1, 2, 3, 4, 5]; track rating) {
-                <option [value]="rating">{{ rating }}</option>
-              }
-            </select>
-          </label>
-          <label>
-            <span>INSPIRE confidence</span>
-            <select formControlName="inspire_confidence_rating">
-              @for (rating of [1, 2, 3, 4, 5]; track rating) {
-                <option [value]="rating">{{ rating }}</option>
-              }
-            </select>
-          </label>
-          <label class="full-span">
-            <span>Challenges encountered</span>
-            <textarea rows="3" formControlName="challenges"></textarea>
-          </label>
-          <label class="full-span">
-            <span>Plans for next lesson</span>
-            <textarea rows="3" formControlName="next_steps"></textarea>
-          </label>
-        </div>
+    <section class="card table-panel">
+      @if (error()) {
+        <p class="error">{{ error() }}</p>
+      }
 
-        <button type="submit" class="primary-button" [disabled]="saving()">
-          {{ saving() ? 'Saving reflection...' : 'Submit reflection log' }}
-        </button>
-      </form>
-
-      <aside class="card list-panel">
-        <p class="eyebrow">Saved reflections</p>
-        @if (error()) {
-          <p class="error">{{ error() }}</p>
-        }
-
-        <div class="stack">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Subject</th>
+            <th>Grade</th>
+            <th>Lesson Plan Linked</th>
+            <th>Effectiveness Rating</th>
+            <th>Submitted</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
           @for (reflection of reflections(); track reflection.id) {
-            <article class="item-card">
-              <div class="item-meta">
-                <strong>{{ reflection.date }}</strong>
-                <span>{{ reflection.subject }} · {{ reflection.grade }}</span>
-              </div>
-              <p><strong>Linked:</strong> {{ reflection.lesson_plan_linked }}</p>
-              <p><strong>Rating:</strong> {{ reflection.effectiveness_rating }}/5</p>
-              <p>{{ reflection.next_steps }}</p>
-            </article>
+            <tr>
+              <td>{{ reflection.date | date:'MMM d, y' }}</td>
+              <td>{{ reflection.subject }}</td>
+              <td>{{ reflection.grade }}</td>
+              <td>{{ reflection.lesson_plan_linked }}</td>
+              <td>{{ stars(reflection.effectiveness_rating) }}</td>
+              <td>Yes</td>
+              <td>
+                <button type="button" class="action-button">View</button>
+                <button type="button" class="action-button">Edit</button>
+              </td>
+            </tr>
           } @empty {
-            <p>No reflection logs saved yet.</p>
+            <tr>
+              <td colspan="7" class="empty-state">No reflection logs yet. Click New Reflection to add one.</td>
+            </tr>
           }
-        </div>
-      </aside>
+        </tbody>
+      </table>
+    </section>
+  }
+
+  @if (modalOpen()) {
+    <div class="modal-backdrop" (click)="closeModal()">
+      <section class="modal-panel" (click)="$event.stopPropagation()">
+        <form [formGroup]="form" (ngSubmit)="submit()">
+          <div class="form-grid">
+            <label>
+              <span>Date of Lesson</span>
+              <input type="date" formControlName="date">
+            </label>
+
+            <label>
+              <span>Subject</span>
+              <input type="text" formControlName="subject" placeholder="Mathematics">
+            </label>
+
+            <label>
+              <span>Grade</span>
+              <input type="text" formControlName="grade" placeholder="Grade 8">
+            </label>
+
+            <label>
+              <span>Linked Lesson Plan</span>
+              <select formControlName="lesson_plan_linked">
+                <option value="" disabled>Select lesson</option>
+                @for (lesson of lessons(); track lesson.id) {
+                  <option [value]="lesson.title">{{ lesson.title }}</option>
+                }
+              </select>
+            </label>
+
+            <label class="full-span">
+              <span>What strategies did you use?</span>
+              <textarea rows="3" formControlName="strategies_used"></textarea>
+            </label>
+
+            <label class="full-span">
+              <span>How did learners respond?</span>
+              <textarea rows="3" formControlName="learner_response"></textarea>
+            </label>
+
+            <label class="full-span">
+              <span>What worked well?</span>
+              <textarea rows="3" formControlName="worked_well"></textarea>
+            </label>
+
+            <label class="full-span">
+              <span>What needs improvement?</span>
+              <textarea rows="3" formControlName="needs_improvement"></textarea>
+            </label>
+
+            <label>
+              <span>Overall rating of lesson effectiveness</span>
+              <select formControlName="effectiveness_rating">
+                <option [value]="0" disabled>Select rating</option>
+                @for (rating of [1, 2, 3, 4, 5]; track rating) {
+                  <option [value]="rating">{{ rating }}</option>
+                }
+              </select>
+            </label>
+
+            <label>
+              <span>Overall confidence using INSPIRE</span>
+              <select formControlName="inspire_confidence_rating">
+                <option [value]="0" disabled>Select rating</option>
+                @for (rating of [1, 2, 3, 4, 5]; track rating) {
+                  <option [value]="rating">{{ rating }}</option>
+                }
+              </select>
+            </label>
+
+            <label class="full-span">
+              <span>Challenges encountered</span>
+              <textarea rows="3" formControlName="challenges"></textarea>
+            </label>
+
+            <label class="full-span">
+              <span>Plans for next lesson</span>
+              <textarea rows="3" formControlName="next_steps"></textarea>
+            </label>
+          </div>
+
+          <div class="modal-actions">
+            <button class="submit-button" type="submit" [disabled]="saving()">
+              {{ saving() ? 'Saving reflection...' : 'Submit Reflection' }}
+            </button>
+            <button class="cancel-button" type="button" (click)="closeModal()">Cancel</button>
+          </div>
+        </form>
+      </section>
     </div>
   }
 </section>

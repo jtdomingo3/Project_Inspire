@@ -6,59 +6,13 @@ import { dataFilePath, referencesDir, supportedModels, surveyQuestions } from '.
 const defaultStore = () => ({
   meta: {
     nextLessonId: 1,
-    nextReflectionId: 4,
+    nextReflectionId: 1,
     nextObservationId: 3,
     nextSurveyId: 3,
     nextUserId: 4
   },
   lessons: [],
-  reflections: [
-    {
-      id: 1,
-      date: '2026-04-05',
-      subject: 'Math',
-      grade: 'Grade 8',
-      lesson_plan_linked: 'Fractions Activity',
-      strategies_used: 'Fraction strips, think-alouds, oral response options',
-      learner_response: 'Learners stayed engaged when visuals were introduced.',
-      effectiveness_rating: 4,
-      inspire_confidence_rating: 4,
-      challenges: 'A few learners needed extra time to interpret the fraction cards.',
-      next_steps: 'Pre-teach the vocabulary and add a short review warm-up.',
-      created_at: '2026-04-05T09:00:00.000Z',
-      updated_at: '2026-04-05T09:00:00.000Z'
-    },
-    {
-      id: 2,
-      date: '2026-04-03',
-      subject: 'English',
-      grade: 'Grade 9',
-      lesson_plan_linked: 'Short Story Analysis',
-      strategies_used: 'Graphic organizers and partner reading',
-      learner_response: 'Most learners participated during the guided discussion.',
-      effectiveness_rating: 3,
-      inspire_confidence_rating: 4,
-      challenges: 'Instructions needed to be repeated more than once.',
-      next_steps: 'Chunk the task directions into smaller steps.',
-      created_at: '2026-04-03T09:00:00.000Z',
-      updated_at: '2026-04-03T09:00:00.000Z'
-    },
-    {
-      id: 3,
-      date: '2026-03-30',
-      subject: 'Science',
-      grade: 'Grade 7',
-      lesson_plan_linked: 'Science Lab Safety',
-      strategies_used: 'Safety posters and demonstration',
-      learner_response: 'Learners copied the routine quickly after modeling.',
-      effectiveness_rating: 4,
-      inspire_confidence_rating: 5,
-      challenges: 'One group needed reminder prompts during cleanup.',
-      next_steps: 'Add a cleanup checklist for each group table.',
-      created_at: '2026-03-30T09:00:00.000Z',
-      updated_at: '2026-03-30T09:00:00.000Z'
-    }
-  ],
+  reflections: [],
   observations: [
     {
       id: 1,

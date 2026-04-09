@@ -4,7 +4,7 @@
 }
 
 .card {
-  border-radius: 10px;
+  border-radius: 12px;
   border: 1px solid var(--border);
   background: var(--bg-elevated);
   box-shadow: var(--shadow-soft);
@@ -19,21 +19,25 @@
 
 .breadcrumbs {
   color: var(--muted);
-  font-size: 0.78rem;
+  font-size: 0.85rem;
+  margin-bottom: 6px;
 }
 
 .library-header h2 {
-  margin: 2px 0 0;
-  font-size: 1.1rem;
+  margin: 0;
+  font-size: 2rem;
+  font-family: 'Fraunces', serif;
+  line-height: 1.1;
 }
 
 .header-btn {
   border: 1px solid #2f855a;
   background: #2f855a;
   color: #fff;
-  border-radius: 999px;
-  padding: 6px 12px;
-  font-size: 0.78rem;
+  border-radius: 9px;
+  padding: 8px 14px;
+  font-size: 0.85rem;
+  font-weight: 700;
   cursor: pointer;
 }
 
@@ -46,9 +50,9 @@
 .search-input {
   width: 100%;
   border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 8px 10px;
-  font-size: 0.85rem;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 0.9rem;
   margin-bottom: 8px;
 }
 
@@ -63,8 +67,8 @@
   background: #fff;
   color: #233;
   border-radius: 999px;
-  padding: 2px 9px;
-  font-size: 0.68rem;
+  padding: 4px 10px;
+  font-size: 0.78rem;
   cursor: pointer;
 }
 
@@ -82,22 +86,23 @@
 
 .resource-card {
   border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 10px;
+  border-radius: 10px;
+  padding: 12px;
   background: var(--surface);
 }
 
 .resource-card h3 {
-  margin: 0 0 6px;
-  font-size: 0.95rem;
+  margin: 0 0 8px;
+  font-size: 1rem;
+  font-family: 'Nunito', sans-serif;
   line-height: 1.2;
 }
 
 .resource-card p {
-  margin: 6px 0;
+  margin: 8px 0;
   color: var(--muted);
-  font-size: 0.82rem;
-  line-height: 1.35;
+  font-size: 0.9rem;
+  line-height: 1.45;
 }
 
 .tag {
@@ -105,8 +110,8 @@
   border: 1px solid #b8d4c3;
   color: #2f855a;
   border-radius: 999px;
-  padding: 1px 7px;
-  font-size: 0.64rem;
+  padding: 2px 8px;
+  font-size: 0.72rem;
 }
 
 .card-actions {
@@ -120,21 +125,22 @@
   border: 1px solid var(--border);
   background: #fff;
   color: #2f855a;
-  border-radius: 999px;
-  padding: 2px 9px;
-  font-size: 0.7rem;
+  border-radius: 8px;
+  padding: 5px 10px;
+  font-size: 0.8rem;
   cursor: pointer;
 }
 
 .filename {
   color: var(--muted);
-  font-size: 0.7rem;
+  font-size: 0.8rem;
   overflow-wrap: anywhere;
 }
 
 .empty-state {
-  margin: 2px;
+  margin: 4px;
   color: var(--muted);
+  font-size: 0.92rem;
 }
 
 .error-panel {
@@ -165,12 +171,14 @@
 
 .modal-panel h3 {
   margin: 0;
+  font-size: 1.25rem;
+  font-family: 'Nunito', sans-serif;
 }
 
 .modal-panel label {
   display: grid;
   gap: 6px;
-  font-size: 0.84rem;
+  font-size: 0.9rem;
 }
 
 .modal-panel input,
@@ -178,8 +186,8 @@
 .modal-panel select {
   width: 100%;
   border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 8px 10px;
+  border-radius: 10px;
+  padding: 10px 12px;
   background: #fff;
   color: var(--text-color);
   font: inherit;

@@ -1,49 +1,112 @@
 .page-shell {
   display: grid;
-  gap: 20px;
+  gap: 12px;
+}
+
+.breadcrumbs {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.page-header h2 {
+  margin: 0;
+  font-size: 2rem;
+  font-family: 'Fraunces', serif;
+}
+
+.new-button {
+  border: 1px solid #1f6a3b;
+  background: #1f6a3b;
+  color: #fff;
+  border-radius: 9px;
+  padding: 8px 14px;
+  font-weight: 700;
+  cursor: pointer;
 }
 
 .card {
-  border-radius: var(--radius-xl);
+  border-radius: 12px;
   border: 1px solid var(--border);
   background: var(--bg-elevated);
   box-shadow: var(--shadow-soft);
 }
 
-.page-header,
-.status-panel,
-.form-panel,
-.list-panel {
-  padding: 24px;
+.table-panel,
+.status-panel {
+  padding: 10px;
 }
 
-.page-header h2,
-.item-card strong {
-  font-family: 'Fraunces', serif;
+.table {
+  width: 100%;
+  border-collapse: collapse;
 }
 
-.page-header h2 {
-  margin: 0;
-  font-size: clamp(1.8rem, 3vw, 2.8rem);
+.table th,
+.table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
 }
 
-.page-header p,
-.item-card p,
-.item-card span {
+.table th {
+  font-size: 0.9rem;
+}
+
+.table td {
+  font-size: 0.92rem;
+}
+
+.action-button {
+  border: 1px solid var(--border);
+  background: #fff;
+  color: #1f6a3b;
+  border-radius: 8px;
+  padding: 3px 8px;
+  font-size: 0.75rem;
+  margin-right: 5px;
+}
+
+.empty-state {
   color: var(--muted);
-  line-height: 1.6;
+  text-align: center;
+  padding: 20px;
 }
 
-.layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
-  gap: 20px;
+.error {
+  color: #c81e1e;
+  margin: 4px 0 10px;
 }
 
-.grid {
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.28);
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
+  place-items: center;
+  z-index: 100;
+}
+
+.modal-panel {
+  width: min(1100px, calc(100vw - 40px));
+  max-height: calc(100vh - 40px);
+  overflow: auto;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow-soft);
+  padding: 14px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
 }
 
 .full-span {
@@ -52,73 +115,59 @@
 
 label {
   display: grid;
-  gap: 8px;
+  gap: 6px;
 }
 
-label span,
-.eyebrow {
-  color: var(--muted);
-  font-size: 0.88rem;
+label span {
+  font-weight: 600;
+  color: #21343a;
 }
 
 input,
 select,
 textarea {
   width: 100%;
-  padding: 14px 16px;
-  border-radius: 16px;
-  border: 1px solid var(--border);
-  background: var(--surface-strong);
-  color: var(--text);
-  outline: none;
+  padding: 10px 12px;
+  border: 1px solid #c5d3cb;
+  border-radius: 10px;
+  background: #fff;
+  color: #122024;
+  font: inherit;
 }
 
-input:focus,
-select:focus,
-textarea:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 4px var(--focus);
-}
-
-.primary-button {
-  width: 100%;
-  margin-top: 18px;
-  min-height: 52px;
-  border: 0;
-  border-radius: 16px;
-  background: linear-gradient(135deg, #8af0e3, var(--accent));
-  color: #052d2a;
-  font-weight: 800;
-}
-
-.stack {
-  display: grid;
-  gap: 12px;
-  margin-top: 16px;
-}
-
-.item-card {
-  padding: 16px;
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--border);
-  background: var(--surface);
-}
-
-.item-meta {
+.modal-actions {
+  margin-top: 12px;
   display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  align-items: baseline;
-  margin-bottom: 8px;
+  justify-content: flex-end;
+  gap: 8px;
 }
 
-.error {
-  color: #dc2626;
+.submit-button {
+  border: 1px solid #1f6a3b;
+  background: #1f6a3b;
+  color: #fff;
+  border-radius: 9px;
+  padding: 9px 14px;
+  font-weight: 700;
 }
 
-@media (max-width: 1080px) {
-  .layout,
-  .grid {
+.cancel-button {
+  border: 1px solid var(--border);
+  background: #fff;
+  color: #1f6a3b;
+  border-radius: 9px;
+  padding: 9px 14px;
+  font-weight: 700;
+}
+
+@media (max-width: 900px) {
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .form-grid {
     grid-template-columns: 1fr;
   }
 }
