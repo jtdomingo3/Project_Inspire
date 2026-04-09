@@ -125,6 +125,26 @@ export class ReferenceLibraryComponent implements OnInit {
     });
   }
 
+  deleteResource(item: ResourceLibraryItem): void {
+    const confirmed = window.confirm(`Delete resource file "${item.file_name}"? This removes it from the reference folder.`);
+    if (!confirmed) {
+      return;
+    }
+
+    this.saving.set(true);
+    this.api.deleteReference(item.file_name).subscribe({
+      next: () => {
+        this.resources.update((current) => current.filter((existing) => existing.id !== item.id));
+        this.saving.set(false);
+        this.error.set(null);
+      },
+      error: (error) => {
+        this.saving.set(false);
+        this.error.set(this.api.describeError(error));
+      }
+    });
+  }
+
   openUpload(): void {
     this.uploadModalOpen.set(true);
   }

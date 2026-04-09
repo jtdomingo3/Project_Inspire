@@ -51,6 +51,10 @@ export class InspireApiService {
     return this.http.post<{ success: boolean; item: ResourceLibraryItem }>('/api/resource-library/upload', payload);
   }
 
+  deleteReference(fileName: string): Observable<{ success: boolean }> {
+    return this.http.delete<{ success: boolean }>(`/api/resource-library/${encodeURIComponent(fileName)}`);
+  }
+
   getLessons(): Observable<LessonRecord[]> {
     return this.http.get<{ lessons?: LessonRecord[] }>('/api/lessons').pipe(
       map((response) => response.lessons ?? [])

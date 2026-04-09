@@ -44,6 +44,7 @@
             <p>{{ item.description }}</p>
             <div class="card-actions">
               <button type="button" class="card-btn" (click)="openEdit(item)">Edit</button>
+              <button type="button" class="delete-btn" (click)="deleteResource(item)">Delete</button>
               <span class="filename">{{ item.file_name }}</span>
             </div>
           </article>

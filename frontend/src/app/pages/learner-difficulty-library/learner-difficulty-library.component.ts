@@ -297,6 +297,24 @@ export class LearnerDifficultyLibraryComponent {
     this.closeAddModal();
   }
 
+  deleteDifficulty(category: DifficultyCategory): void {
+    const confirmed = window.confirm(`Delete "${category.title}"?`);
+    if (!confirmed) {
+      return;
+    }
+
+    this.categories.update((current) => current.filter((item) => item.id !== category.id));
+
+    const remaining = this.categories();
+    if (remaining.length === 0) {
+      return;
+    }
+
+    if (this.selected().id === category.id) {
+      this.selected.set(remaining[0]);
+    }
+  }
+
   private parseList(value: string): string[] {
     return value
       .split(/\r?\n|,/)

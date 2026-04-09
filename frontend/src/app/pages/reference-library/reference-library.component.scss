@@ -131,6 +131,17 @@
   cursor: pointer;
 }
 
+.delete-btn {
+  width: fit-content;
+  border: 1px solid #d9a8a8;
+  background: #fff;
+  color: #9f2d2d;
+  border-radius: 8px;
+  padding: 5px 10px;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
 .filename {
   color: var(--muted);
   font-size: 0.8rem;

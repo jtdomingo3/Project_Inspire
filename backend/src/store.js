@@ -368,6 +368,18 @@ export async function upsertReferenceMetadata(fileName, metadataPatch) {
   };
 }
 
+export async function deleteReferenceMetadata(fileName) {
+  const store = await readStore();
+  const key = normalizeText(fileName);
+
+  if (store.reference_metadata[key]) {
+    delete store.reference_metadata[key];
+    await writeStore(store);
+  }
+
+  return true;
+}
+
 export async function upsertLesson(record) {
   const store = await readStore();
   const id = record.id ? Number(record.id) : nextNumericId(store.lessons);

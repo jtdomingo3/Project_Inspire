@@ -7,6 +7,7 @@ import express from 'express';
 import { projectRoot, referencesDir, supportedModels, surveyQuestions } from './config.js';
 import { generateLessonPlan } from './openrouter.js';
 import {
+  deleteReferenceMetadata,
   deleteUser,
   findUserByCredentials,
   getDefaultStoreSnapshot,
@@ -311,6 +312,25 @@ app.post('/api/resource-library/upload', async (request, response) => {
     });
 
     sendJson(response, 201, { success: true, item });
+  } catch (error) {
+    sendJson(response, 400, { success: false, error: String(error.message || error) });
+  }
+});
+
+app.delete('/api/resource-library/:fileName', async (request, response) => {
+  try {
+    const fileName = sanitizeReferenceFileName(decodeURIComponent(request.params.fileName));
+    const targetPath = path.join(referencesDir, fileName);
+
+    const hasExistingFile = await fs.access(targetPath).then(() => true).catch(() => false);
+    if (!hasExistingFile) {
+      sendJson(response, 404, { success: false, error: 'Reference file not found.' });
+      return;
+    }
+
+    await fs.unlink(targetPath);
+    await deleteReferenceMetadata(fileName);
+    sendJson(response, 200, { success: true });
   } catch (error) {
     sendJson(response, 400, { success: false, error: String(error.message || error) });
   }

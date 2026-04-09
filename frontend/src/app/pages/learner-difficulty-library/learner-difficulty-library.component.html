@@ -24,6 +24,7 @@
         <div class="card-actions">
           <button type="button" class="detail-btn" (click)="selectCategory(category); $event.stopPropagation()">View Details</button>
           <button type="button" class="detail-btn" (click)="openEditModal(category); $event.stopPropagation()">Edit</button>
+          <button type="button" class="delete-btn" (click)="deleteDifficulty(category); $event.stopPropagation()">Delete</button>
         </div>
       </article>
     }
