@@ -266,7 +266,7 @@ function shouldAutofillCategory(currentCategory) {
     return true;
   }
 
-  const allowed = new Set(['Strategies', 'Tips', 'Templates', 'Videos', 'References']);
+  const allowed = new Set(['Strategies', 'Tips', 'Templates', 'References']);
   return !allowed.has(normalized);
 }
 

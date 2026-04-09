@@ -130,3 +130,13 @@ export function findRelevantChunks(query, chunks) {
 
   return selectRelevantChunks(query, chunks, 4);
 }
+
+export async function loadReferenceTextByFileName(fileName) {
+  const safeName = String(fileName || '').replace(/[\\/]/g, '').trim();
+  if (!safeName || !/\.(pdf|docx)$/i.test(safeName)) {
+    return '';
+  }
+
+  const filePath = path.join(referencesDir, safeName);
+  return extractReferenceText(filePath);
+}

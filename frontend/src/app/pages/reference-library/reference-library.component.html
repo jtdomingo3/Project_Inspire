@@ -43,6 +43,7 @@
             <span class="tag">{{ item.category }}</span>
             <p>{{ item.description }}</p>
             <div class="card-actions">
+              <button type="button" class="card-btn" (click)="openPreview(item)">View</button>
               <button type="button" class="card-btn" (click)="openEdit(item)">Edit</button>
               <button type="button" class="delete-btn" (click)="deleteResource(item)">Delete</button>
               <span class="filename">{{ item.file_name }}</span>
@@ -76,7 +77,6 @@
             <option value="Strategies">Strategies</option>
             <option value="Tips">Tips</option>
             <option value="Templates">Templates</option>
-            <option value="Videos">Videos</option>
             <option value="References">References</option>
           </select>
         </label>
@@ -115,7 +115,6 @@
             <option value="Strategies">Strategies</option>
             <option value="Tips">Tips</option>
             <option value="Templates">Templates</option>
-            <option value="Videos">Videos</option>
             <option value="References">References</option>
           </select>
         </label>
@@ -124,6 +123,33 @@
           <button type="button" class="header-btn" [disabled]="uploading()" (click)="uploadReference()">{{ uploading() ? 'Uploading...' : 'Upload Reference' }}</button>
           <button type="button" class="card-btn" (click)="closeUpload()">Cancel</button>
         </div>
+      </section>
+    </div>
+  }
+
+  @if (previewModalOpen()) {
+    <div class="modal-backdrop" (click)="closePreview()">
+      <section class="modal-panel preview-panel" (click)="$event.stopPropagation()">
+        <div class="preview-header">
+          <h3>Reference Preview</h3>
+          <button type="button" class="card-btn" (click)="closePreview()">Close</button>
+        </div>
+
+        <p class="preview-title">{{ previewTitle() }}</p>
+
+        @if (previewMode() === 'pdf') {
+          <iframe class="preview-frame" [src]="previewUrl()" title="PDF preview"></iframe>
+        } @else if (previewMode() === 'docx') {
+          <div #docxPreviewHost class="preview-docx" [class.hidden]="previewRenderFailed()"></div>
+          @if (previewLoading()) {
+            <p class="preview-placeholder">Loading document preview...</p>
+          }
+          @if (previewRenderFailed()) {
+            <pre class="preview-text">{{ previewText() }}</pre>
+          }
+        } @else {
+          <p class="preview-placeholder">Preview is not available for this file type.</p>
+        }
       </section>
     </div>
   }

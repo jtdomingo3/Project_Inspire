@@ -43,6 +43,22 @@ export class InspireApiService {
     );
   }
 
+  getReferenceFileUrl(fileName: string): string {
+    return `/api/resource-library/file/${encodeURIComponent(fileName)}`;
+  }
+
+  getReferenceFileBuffer(fileName: string): Observable<ArrayBuffer> {
+    return this.http.get(`/api/resource-library/file/${encodeURIComponent(fileName)}`, {
+      responseType: 'arraybuffer'
+    });
+  }
+
+  getReferencePreviewText(fileName: string): Observable<string> {
+    return this.http.get<{ success?: boolean; text?: string }>(`/api/resource-library/preview-text/${encodeURIComponent(fileName)}`).pipe(
+      map((response) => response.text ?? '')
+    );
+  }
+
   updateResourceLibraryItem(fileName: string, payload: { title: string; description: string; category?: string }): Observable<{ success: boolean; item: ResourceLibraryItem }> {
     return this.http.put<{ success: boolean; item: ResourceLibraryItem }>(`/api/resource-library/${encodeURIComponent(fileName)}`, payload);
   }

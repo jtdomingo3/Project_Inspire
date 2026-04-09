@@ -1,6 +1,8 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild, computed, inject, signal } from '@angular/core';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { FormsModule } from '@angular/forms';
+import { firstValueFrom } from 'rxjs';
 
 import { ResourceLibraryItem } from '../../core/models/inspire-api.models';
 import { InspireApiService } from '../../core/services/inspire-api.service';
@@ -14,6 +16,8 @@ import { InspireApiService } from '../../core/services/inspire-api.service';
 })
 export class ReferenceLibraryComponent implements OnInit {
   private readonly api = inject(InspireApiService);
+  private readonly sanitizer = inject(DomSanitizer);
+  @ViewChild('docxPreviewHost') private docxPreviewHost?: ElementRef<HTMLDivElement>;
 
   readonly resources = signal<ResourceLibraryItem[]>([]);
   readonly loading = signal(true);
@@ -21,14 +25,13 @@ export class ReferenceLibraryComponent implements OnInit {
   readonly uploading = signal(false);
   readonly error = signal<string | null>(null);
   readonly searchQuery = signal('');
-  readonly activeCategory = signal<'All' | 'Strategies' | 'Tips' | 'Templates' | 'Videos' | 'References'>('All');
+  readonly activeCategory = signal<'All' | 'Strategies' | 'Tips' | 'Templates' | 'References'>('All');
 
-  readonly categories: Array<'All' | 'Strategies' | 'Tips' | 'Templates' | 'Videos' | 'References'> = [
+  readonly categories: Array<'All' | 'Strategies' | 'Tips' | 'Templates' | 'References'> = [
     'All',
     'Strategies',
     'Tips',
     'Templates',
-    'Videos',
     'References'
   ];
 
@@ -46,15 +49,22 @@ export class ReferenceLibraryComponent implements OnInit {
 
   readonly editModalOpen = signal(false);
   readonly uploadModalOpen = signal(false);
+  readonly previewModalOpen = signal(false);
+  readonly previewMode = signal<'pdf' | 'docx' | 'unsupported'>('unsupported');
+  readonly previewLoading = signal(false);
+  readonly previewTitle = signal('');
+  readonly previewUrl = signal<SafeResourceUrl | null>(null);
+  readonly previewText = signal('');
+  readonly previewRenderFailed = signal(false);
   readonly selectedItem = signal<ResourceLibraryItem | null>(null);
 
   editTitle = '';
   editDescription = '';
-  editCategory: 'Strategies' | 'Tips' | 'Templates' | 'Videos' | 'References' = 'References';
+  editCategory: 'Strategies' | 'Tips' | 'Templates' | 'References' = 'References';
 
   uploadTitle = '';
   uploadDescription = '';
-  uploadCategory: 'Strategies' | 'Tips' | 'Templates' | 'Videos' | 'References' = 'References';
+  uploadCategory: 'Strategies' | 'Tips' | 'Templates' | 'References' = 'References';
   uploadFile: File | null = null;
 
   ngOnInit(): void {
@@ -76,7 +86,7 @@ export class ReferenceLibraryComponent implements OnInit {
     });
   }
 
-  setCategory(category: 'All' | 'Strategies' | 'Tips' | 'Templates' | 'Videos' | 'References'): void {
+  setCategory(category: 'All' | 'Strategies' | 'Tips' | 'Templates' | 'References'): void {
     this.activeCategory.set(category);
   }
 
@@ -157,6 +167,52 @@ export class ReferenceLibraryComponent implements OnInit {
     this.uploadFile = null;
   }
 
+  openPreview(item: ResourceLibraryItem): void {
+    const fileName = item.file_name || '';
+    const lower = fileName.toLowerCase();
+
+    this.previewTitle.set(item.title || fileName);
+    this.previewText.set('');
+    this.previewRenderFailed.set(false);
+    this.previewUrl.set(null);
+    this.previewLoading.set(false);
+
+    if (lower.endsWith('.pdf')) {
+      this.previewMode.set('pdf');
+      this.previewUrl.set(this.sanitizer.bypassSecurityTrustResourceUrl(this.api.getReferenceFileUrl(fileName)));
+      this.previewModalOpen.set(true);
+      return;
+    }
+
+    if (lower.endsWith('.docx')) {
+      this.previewMode.set('docx');
+      this.previewModalOpen.set(true);
+      this.previewLoading.set(true);
+      window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => {
+          void this.renderDocxPreview(fileName);
+        });
+      });
+      return;
+    }
+
+    this.previewMode.set('unsupported');
+    this.previewModalOpen.set(true);
+  }
+
+  closePreview(): void {
+    this.previewModalOpen.set(false);
+    this.previewLoading.set(false);
+    this.previewUrl.set(null);
+    this.previewText.set('');
+    this.previewRenderFailed.set(false);
+
+    const host = this.docxPreviewHost?.nativeElement;
+    if (host) {
+      host.innerHTML = '';
+    }
+  }
+
   onFileChange(event: Event): void {
     const input = event.target as HTMLInputElement;
     this.uploadFile = input.files?.[0] || null;
@@ -217,11 +273,73 @@ export class ReferenceLibraryComponent implements OnInit {
     });
   }
 
-  private normalizeCategory(value: string): 'Strategies' | 'Tips' | 'Templates' | 'Videos' | 'References' {
-    if (value === 'Strategies' || value === 'Tips' || value === 'Templates' || value === 'Videos' || value === 'References') {
+  private normalizeCategory(value: string): 'Strategies' | 'Tips' | 'Templates' | 'References' {
+    if (value === 'Strategies' || value === 'Tips' || value === 'Templates' || value === 'References') {
       return value;
     }
 
     return 'References';
+  }
+
+  private async renderDocxPreview(fileName: string): Promise<void> {
+    try {
+      const host = await this.waitForDocxHost();
+      if (!host) {
+        this.previewRenderFailed.set(true);
+        this.previewText.set('DOCX preview container was unavailable. Showing text fallback.');
+        this.api.getReferencePreviewText(fileName).subscribe({
+          next: (text) => {
+            this.previewText.set(text || 'Unable to render this DOCX file.');
+            this.previewLoading.set(false);
+          },
+          error: (error) => {
+            this.previewText.set(this.api.describeError(error));
+            this.previewLoading.set(false);
+          }
+        });
+        return;
+      }
+
+      host.innerHTML = '';
+      const buffer = await firstValueFrom(this.api.getReferenceFileBuffer(fileName));
+      const docxPreview = await import('docx-preview');
+      await docxPreview.renderAsync(buffer, host, host, {
+        className: 'docx',
+        inWrapper: true,
+        breakPages: true,
+        renderHeaders: true,
+        renderFooters: true,
+        renderFootnotes: true,
+        useBase64URL: true
+      });
+      this.previewLoading.set(false);
+    } catch (error) {
+      this.previewRenderFailed.set(true);
+      this.api.getReferencePreviewText(fileName).subscribe({
+        next: (text) => {
+          this.previewText.set(text || 'Unable to render this DOCX file.');
+          this.previewLoading.set(false);
+        },
+        error: (fallbackError) => {
+          this.previewText.set(this.api.describeError(fallbackError || error));
+          this.previewLoading.set(false);
+        }
+      });
+    }
+  }
+
+  private async waitForDocxHost(maxAttempts = 20): Promise<HTMLDivElement | null> {
+    for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+      const host = this.docxPreviewHost?.nativeElement;
+      if (host) {
+        return host;
+      }
+
+      await new Promise<void>((resolve) => {
+        window.setTimeout(() => resolve(), 25);
+      });
+    }
+
+    return null;
   }
 }

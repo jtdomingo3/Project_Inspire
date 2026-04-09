@@ -6,6 +6,7 @@ import express from 'express';
 
 import { projectRoot, referencesDir, supportedModels, surveyQuestions } from './config.js';
 import { generateLessonPlan } from './openrouter.js';
+import { loadReferenceTextByFileName } from './reference-loader.js';
 import {
   deleteLesson,
   deleteObservation,
@@ -157,10 +158,13 @@ function normalizeUserPayload(body) {
 
 function normalizeResourcePayload(body) {
   const payload = ensureObject(body, 'Request body');
+  const requestedCategory = normalizeText(payload.category, 'References');
+  const allowedCategories = new Set(['Strategies', 'Tips', 'Templates', 'References']);
+  const category = allowedCategories.has(requestedCategory) ? requestedCategory : 'References';
   return {
     title: normalizeText(payload.title),
     description: normalizeText(payload.description),
-    category: normalizeText(payload.category, 'References')
+    category
   };
 }
 
@@ -276,6 +280,33 @@ app.get('/api/references', async (_request, response) => {
 app.get('/api/resource-library', async (_request, response) => {
   const items = await getReferenceLibraryItems();
   sendJson(response, 200, { items });
+});
+
+app.get('/api/resource-library/file/:fileName', async (request, response) => {
+  try {
+    const fileName = sanitizeReferenceFileName(decodeURIComponent(request.params.fileName));
+    const targetPath = path.join(referencesDir, fileName);
+    const extension = path.extname(fileName).toLowerCase();
+
+    await fs.access(targetPath);
+    response.setHeader('Content-Disposition', `inline; filename="${fileName}"`);
+    response.setHeader('Content-Type', extension === '.pdf'
+      ? 'application/pdf'
+      : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+    response.sendFile(targetPath);
+  } catch (error) {
+    sendJson(response, 404, { success: false, error: String(error.message || error) });
+  }
+});
+
+app.get('/api/resource-library/preview-text/:fileName', async (request, response) => {
+  try {
+    const fileName = sanitizeReferenceFileName(decodeURIComponent(request.params.fileName));
+    const text = await loadReferenceTextByFileName(fileName);
+    sendJson(response, 200, { success: true, file_name: fileName, text });
+  } catch (error) {
+    sendJson(response, 400, { success: false, error: String(error.message || error) });
+  }
 });
 
 app.put('/api/resource-library/:fileName', async (request, response) => {

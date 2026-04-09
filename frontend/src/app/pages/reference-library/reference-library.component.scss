@@ -183,6 +183,83 @@
   gap: 10px;
 }
 
+.preview-panel {
+  width: min(980px, calc(100vw - 30px));
+  height: min(86vh, 840px);
+  display: grid;
+  grid-template-rows: auto auto 1fr;
+  position: relative;
+}
+
+.preview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.preview-title {
+  margin: 0;
+  color: #225c37;
+  font-weight: 700;
+}
+
+.preview-frame {
+  width: 100%;
+  height: 100%;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.preview-text {
+  margin: 0;
+  height: 100%;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+  padding: 12px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+
+.preview-docx {
+  height: 100%;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #f7f8f9;
+  padding: 12px;
+}
+
+.preview-docx.hidden {
+  display: none;
+}
+
+:host ::ng-deep .preview-docx .docx-render-wrapper {
+  padding: 0;
+}
+
+:host ::ng-deep .preview-docx .docx-render {
+  background: transparent;
+}
+
+.preview-placeholder {
+  margin: 0;
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  color: var(--muted);
+  background: #fbfdfb;
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: 14px;
+}
+
 .modal-panel h3 {
   margin: 0;
   font-size: 1.25rem;
