@@ -21,7 +21,10 @@
       >
         <h3>{{ category.id }}. {{ category.title }}</h3>
         <p>{{ category.summary }}</p>
-        <button type="button" class="detail-btn" (click)="selectCategory(category); $event.stopPropagation()">View Details</button>
+        <div class="card-actions">
+          <button type="button" class="detail-btn" (click)="selectCategory(category); $event.stopPropagation()">View Details</button>
+          <button type="button" class="detail-btn" (click)="openEditModal(category); $event.stopPropagation()">Edit</button>
+        </div>
       </article>
     }
   </div>
@@ -50,7 +53,7 @@
   @if (addModalOpen()) {
     <div class="modal-backdrop" (click)="closeAddModal()">
       <section class="modal-panel" (click)="$event.stopPropagation()">
-        <h3>Add New Difficulty</h3>
+        <h3>{{ editMode() ? 'Edit Difficulty' : 'Add New Difficulty' }}</h3>
 
         <label>
           <span>Title</span>
@@ -73,7 +76,7 @@
         </label>
 
         <div class="modal-actions">
-          <button type="button" class="add-btn" (click)="addDifficulty()">Save Difficulty</button>
+          <button type="button" class="add-btn" (click)="saveDifficulty()">{{ editMode() ? 'Save Changes' : 'Save Difficulty' }}</button>
           <button type="button" class="detail-btn" (click)="closeAddModal()">Cancel</button>
         </div>
       </section>

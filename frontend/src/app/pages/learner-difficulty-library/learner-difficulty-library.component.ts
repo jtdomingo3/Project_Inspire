@@ -231,6 +231,8 @@ export class LearnerDifficultyLibraryComponent {
 
   readonly selected = signal<DifficultyCategory>(this.categories()[0]);
   readonly addModalOpen = signal(false);
+  readonly editMode = signal(false);
+  readonly editingId = signal<number | null>(null);
 
   draftTitle = '';
   draftSummary = '';
@@ -242,15 +244,30 @@ export class LearnerDifficultyLibraryComponent {
   }
 
   openAddModal(): void {
+    this.editMode.set(false);
+    this.editingId.set(null);
+    this.resetDraft();
+    this.addModalOpen.set(true);
+  }
+
+  openEditModal(category: DifficultyCategory): void {
+    this.editMode.set(true);
+    this.editingId.set(category.id);
+    this.draftTitle = category.title;
+    this.draftSummary = category.summary;
+    this.draftIndicators = category.indicators.join('\n');
+    this.draftTips = category.tips.join('\n');
     this.addModalOpen.set(true);
   }
 
   closeAddModal(): void {
     this.addModalOpen.set(false);
+    this.editMode.set(false);
+    this.editingId.set(null);
     this.resetDraft();
   }
 
-  addDifficulty(): void {
+  saveDifficulty(): void {
     const title = this.draftTitle.trim();
     const summary = this.draftSummary.trim();
     const indicators = this.parseList(this.draftIndicators);
@@ -260,7 +277,8 @@ export class LearnerDifficultyLibraryComponent {
       return;
     }
 
-    const nextId = this.categories().reduce((max, item) => Math.max(max, item.id), 0) + 1;
+    const editingId = this.editingId();
+    const nextId = editingId ?? (this.categories().reduce((max, item) => Math.max(max, item.id), 0) + 1);
     const nextCategory: DifficultyCategory = {
       id: nextId,
       title,
@@ -269,7 +287,12 @@ export class LearnerDifficultyLibraryComponent {
       tips
     };
 
-    this.categories.update((current) => [...current, nextCategory]);
+    if (editingId) {
+      this.categories.update((current) => current.map((item) => item.id === editingId ? nextCategory : item));
+    } else {
+      this.categories.update((current) => [...current, nextCategory]);
+    }
+
     this.selected.set(nextCategory);
     this.closeAddModal();
   }
