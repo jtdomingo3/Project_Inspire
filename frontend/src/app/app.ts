@@ -143,13 +143,13 @@ export class App {
 
     if (savedAuth) {
       try {
-        const parsed = JSON.parse(savedAuth) as { role?: 'teacher' | 'researcher' | 'admin'; name?: string; roleLabel?: string; username?: string };
+        const parsed = JSON.parse(savedAuth) as { role?: 'teacher' | 'researcher' | 'admin'; name?: string; roleLabel?: string; username?: string; school?: string };
         if (parsed.role === 'admin') {
-          this.setAuthenticatedState('admin', parsed.name || 'Janice D. Quinones', parsed.roleLabel || 'Admin', parsed.username || 'admin');
+          this.setAuthenticatedState('admin', parsed.name || 'Janice D. Quinones', parsed.roleLabel || 'Admin', parsed.username || 'admin', parsed.school || 'San Felipe National High School · Basud, Camarines Norte');
         } else if (parsed.role === 'researcher') {
-          this.setAuthenticatedState('researcher', parsed.name || 'Research Coordinator', parsed.roleLabel || 'Researcher', parsed.username || 'researcher');
+          this.setAuthenticatedState('researcher', parsed.name || 'Research Coordinator', parsed.roleLabel || 'Researcher', parsed.username || 'researcher', parsed.school || 'San Felipe National High School · Basud, Camarines Norte');
         } else if (parsed.role === 'teacher') {
-          this.setAuthenticatedState('teacher', parsed.name || 'Janice D. Quinones', parsed.roleLabel || 'Teacher', parsed.username || 'teacher');
+          this.setAuthenticatedState('teacher', parsed.name || 'Janice D. Quinones', parsed.roleLabel || 'Teacher', parsed.username || 'teacher', parsed.school || 'San Felipe National High School · Basud, Camarines Norte');
         }
       } catch {
         window.localStorage.removeItem('inspire-demo-auth');
@@ -194,7 +194,13 @@ export class App {
         }
 
         const role = response.user.role === 'admin' || response.user.role === 'researcher' ? response.user.role : 'teacher';
-        this.setAuthenticatedState(role, response.user.display_name, this.api.roleLabel(role), response.user.username);
+        this.setAuthenticatedState(
+          role,
+          response.user.display_name,
+          this.api.roleLabel(role),
+          response.user.username,
+          response.user.affiliated_school || 'San Felipe National High School · Basud, Camarines Norte'
+        );
         this.notificationsOpen.set(false);
         this.router.navigateByUrl('/dashboard');
       },
@@ -235,12 +241,12 @@ export class App {
     return this.api.canManageAccounts(this.currentRole());
   }
 
-  private setAuthenticatedState(role: 'teacher' | 'researcher' | 'admin', name: string, roleLabel: string, username: string): void {
+  private setAuthenticatedState(role: 'teacher' | 'researcher' | 'admin', name: string, roleLabel: string, username: string, school: string): void {
     this.isAuthenticated.set(true);
     this.currentRole.set(role);
     this.currentUserName.set(name);
     this.currentUserRoleLabel.set(roleLabel);
     this.loginError.set('');
-    window.localStorage.setItem('inspire-demo-auth', JSON.stringify({ role, name, roleLabel, username }));
+    window.localStorage.setItem('inspire-demo-auth', JSON.stringify({ role, name, roleLabel, username, school }));
   }
 }

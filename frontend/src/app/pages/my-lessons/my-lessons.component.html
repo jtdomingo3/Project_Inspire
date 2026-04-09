@@ -53,54 +53,207 @@
         </table>
       }
     </section>
+
+    @if (viewingLesson()) {
+      <section class="card lesson-view-panel">
+        <div class="lesson-view-header">
+          <div>
+            <p class="eyebrow">Lesson Plans · View</p>
+            <h3>{{ viewingPlan().title || viewingLesson()!.title }}</h3>
+            <p class="lesson-meta">{{ viewingPlan().subject || viewingLesson()!.subject }} · {{ viewingPlan().grade || viewingLesson()!.grade }} · {{ viewingPlan().quarter || viewingLesson()!.quarter }}</p>
+          </div>
+          <div class="lesson-view-actions">
+            <button type="button" class="action-button" (click)="closeView()">Close View</button>
+            <button type="button" class="action-button" (click)="printLesson()">Print</button>
+            <button type="button" class="action-button" (click)="exportPdf()">Export PDF</button>
+          </div>
+        </div>
+
+        <div class="lesson-content">
+          <div class="dlp-grid">
+            <div><strong>School:</strong> {{ currentSchool() }}</div>
+            <div><strong>Grade Level:</strong> {{ viewingPlan().grade || 'N/A' }}</div>
+            <div><strong>Quarter:</strong> {{ viewingPlan().quarter || 'N/A' }}</div>
+            <div><strong>Teacher:</strong> {{ currentTeacher() }}</div>
+            <div><strong>Learning Area:</strong> {{ viewingPlan().subject || 'N/A' }}</div>
+            <div><strong>Teaching Date:</strong> {{ lessonDateTime(viewingLesson()) }}</div>
+          </div>
+
+          <h4 class="section-title">I. CURRICULUM CONTENT, STANDARDS AND LESSON COMPETENCIES</h4>
+
+          <div class="section-block">
+            <h5>A. Content Standards</h5>
+            <p>{{ viewingPlan().content_standards || 'No content standards provided.' }}</p>
+          </div>
+
+          <div class="section-block">
+            <h5>B. Performance Standards</h5>
+            <p>{{ viewingPlan().performance_standards || 'No performance standards provided.' }}</p>
+          </div>
+
+          <div class="section-block">
+            <h5>C. Learning Competencies and Objectives</h5>
+            <ul>
+              @for (item of detailLines(viewingPlan().competencies); track item) {
+                <li>{{ item }}</li>
+              } @empty {
+                <li>No competencies provided.</li>
+              }
+            </ul>
+          </div>
+
+          <div class="section-block">
+            <h5>D. Content</h5>
+            <p><strong>Topic:</strong> {{ viewingPlan().content || viewingPlan().title || 'N/A' }}</p>
+            <p><strong>Lesson:</strong> {{ viewingPlan().title || 'N/A' }}</p>
+          </div>
+
+          <div class="section-block">
+            <h5>E. Integration</h5>
+            <p><strong>Inclusive Education Focus:</strong> {{ viewingPlan().difficulty || 'N/A' }}</p>
+            <p>{{ viewingPlan().integration || 'No integration notes provided.' }}</p>
+          </div>
+
+          <div class="support-grid">
+            <div class="support-box">
+              <h6>Accommodations</h6>
+              <ul>
+                @for (item of accommodationItems(); track item) {
+                  <li>{{ item }}</li>
+                } @empty {
+                  <li>No accommodations specified.</li>
+                }
+              </ul>
+            </div>
+            <div class="support-box alt">
+              <h6>Modifications</h6>
+              <ul>
+                @for (item of modificationItems(); track item) {
+                  <li>{{ item }}</li>
+                } @empty {
+                  <li>No modifications specified.</li>
+                }
+              </ul>
+            </div>
+          </div>
+
+          <h4 class="section-title">II. LEARNING RESOURCES</h4>
+          <ul>
+            @for (item of detailLines(viewingPlan().resources); track item) {
+              <li>{{ item }}</li>
+            } @empty {
+              <li>No resources provided.</li>
+            }
+          </ul>
+
+          <h4 class="section-title">III. TEACHING AND LEARNING PROCEDURE</h4>
+
+          <div class="section-block">
+            <h5>A. Activating Prior Knowledge</h5>
+            <ul>
+              @for (item of detailLines(viewingPlan().prior_knowledge); track item) {
+                <li>{{ item }}</li>
+              } @empty {
+                <li>No prior-knowledge notes provided.</li>
+              }
+            </ul>
+          </div>
+
+          <div class="section-block">
+            <h5>B. Establishing Lesson Purpose</h5>
+            <p>{{ viewingPlan().lesson_purpose || 'No lesson purpose provided.' }}</p>
+          </div>
+
+          <div class="section-block">
+            <h5>C. Developing and Deepening Understanding</h5>
+            <ul>
+              @for (item of detailLines(viewingPlan().developing); track item) {
+                <li>{{ item }}</li>
+              } @empty {
+                <li>No developing activities provided.</li>
+              }
+            </ul>
+          </div>
+
+          <div class="section-block">
+            <h5>D. Making Generalization</h5>
+            <p>{{ viewingPlan().generalization || 'No generalization notes provided.' }}</p>
+          </div>
+
+          <div class="section-block">
+            <h5>E. Evaluating Learning</h5>
+            <ul>
+              @for (item of detailLines(viewingPlan().evaluation); track item) {
+                <li>{{ item }}</li>
+              } @empty {
+                <li>No evaluation methods provided.</li>
+              }
+            </ul>
+          </div>
+
+          <div class="section-block">
+            <h5>F. Teacher's Remarks</h5>
+            <p>{{ viewingPlan().remarks || 'No remarks provided.' }}</p>
+          </div>
+
+          <div class="section-block">
+            <h5>G. Reflection</h5>
+            <p>{{ viewingPlan().reflection || 'No reflection notes provided.' }}</p>
+          </div>
+
+          <div class="signature-grid">
+            <div>
+              <strong>PREPARED BY:</strong>
+              <p>{{ currentTeacher() }}</p>
+            </div>
+            <div>
+              <strong>REVIEWED BY:</strong>
+              <p>Department Head</p>
+            </div>
+            <div>
+              <strong>NOTED BY:</strong>
+              <p>School Principal</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    }
   }
 
   @if (modalMode() && selectedLesson()) {
     <div class="modal-backdrop" (click)="closeModal()">
       <section class="modal-panel" (click)="$event.stopPropagation()">
-        @if (modalMode() === 'view') {
-          <h3>{{ selectedLesson()!.title }}</h3>
-          <p><strong>Subject:</strong> {{ selectedLesson()!.subject }}</p>
-          <p><strong>Grade:</strong> {{ selectedLesson()!.grade }}</p>
-          <p><strong>Difficulty:</strong> {{ selectedLesson()!.difficulty }}</p>
-          <p><strong>Status:</strong> {{ selectedLesson()!.status || 'draft' }}</p>
-          <p><strong>Objectives:</strong> {{ selectedLesson()!.objectives }}</p>
+        <h3>Edit Lesson</h3>
+        <form [formGroup]="form" (ngSubmit)="saveEdit()" class="edit-form">
+          <label>
+            <span>Title</span>
+            <input type="text" formControlName="title">
+          </label>
+          <label>
+            <span>Subject</span>
+            <input type="text" formControlName="subject">
+          </label>
+          <label>
+            <span>Grade</span>
+            <input type="text" formControlName="grade">
+          </label>
+          <label>
+            <span>Difficulty</span>
+            <input type="text" formControlName="difficulty">
+          </label>
+          <label>
+            <span>Status</span>
+            <input type="text" formControlName="status">
+          </label>
+          <label>
+            <span>Objectives</span>
+            <textarea rows="3" formControlName="objectives"></textarea>
+          </label>
           <div class="modal-actions">
-            <button type="button" class="btn btn-primary" (click)="closeModal()">Close</button>
+            <button type="submit" class="btn btn-primary" [disabled]="saving()">{{ saving() ? 'Saving...' : 'Save' }}</button>
+            <button type="button" class="btn" (click)="closeModal()">Cancel</button>
           </div>
-        } @else {
-          <h3>Edit Lesson</h3>
-          <form [formGroup]="form" (ngSubmit)="saveEdit()" class="edit-form">
-            <label>
-              <span>Title</span>
-              <input type="text" formControlName="title">
-            </label>
-            <label>
-              <span>Subject</span>
-              <input type="text" formControlName="subject">
-            </label>
-            <label>
-              <span>Grade</span>
-              <input type="text" formControlName="grade">
-            </label>
-            <label>
-              <span>Difficulty</span>
-              <input type="text" formControlName="difficulty">
-            </label>
-            <label>
-              <span>Status</span>
-              <input type="text" formControlName="status">
-            </label>
-            <label>
-              <span>Objectives</span>
-              <textarea rows="3" formControlName="objectives"></textarea>
-            </label>
-            <div class="modal-actions">
-              <button type="submit" class="btn btn-primary" [disabled]="saving()">{{ saving() ? 'Saving...' : 'Save' }}</button>
-              <button type="button" class="btn" (click)="closeModal()">Cancel</button>
-            </div>
-          </form>
-        }
+        </form>
       </section>
     </div>
   }

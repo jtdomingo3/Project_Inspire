@@ -7,6 +7,7 @@ export interface LessonDraft {
   difficulty: string;
   indicators: string;
   supportTypes: string;
+  subcategories?: string;
   customSupport: string;
   deliveryMode: string;
 }
@@ -20,6 +21,7 @@ export interface BackendLessonDraft {
   difficulty: string;
   indicators: string;
   support_types: string;
+  subcategories?: string;
   custom_support: string;
   delivery_mode: string;
 }
@@ -55,11 +57,13 @@ export interface LessonRecord {
   difficulty: string;
   indicators: string;
   support_types: string;
+  subcategories?: string;
   custom_support: string;
   delivery_mode: string;
   ai_model_used?: string;
   reference_docs_used?: string[];
   generated_output?: string;
+  generated_parsed?: Record<string, unknown>;
   status?: string;
   created_at?: string;
   updated_at?: string;
@@ -113,6 +117,7 @@ export interface UserAccount {
   id: number;
   username: string;
   display_name: string;
+  affiliated_school?: string;
   role: 'teacher' | 'researcher' | 'admin' | string;
   active: boolean;
   created_at?: string;

@@ -61,6 +61,7 @@ function buildLessonPlanPrompt(lessonData, selectedRefs) {
     `Learner difficulty: ${lessonData.difficulty || 'N/A'}`,
     `Learner indicators: ${lessonData.indicators || 'N/A'}`,
     `Support types: ${lessonData.support_types || 'N/A'}`,
+    `Difficulty subcategories: ${lessonData.subcategories || 'N/A'}`,
     `Custom support notes: ${lessonData.custom_support || 'N/A'}`,
     `Delivery mode: ${lessonData.delivery_mode || 'N/A'}`
   ];
@@ -72,7 +73,7 @@ function buildLessonPlanPrompt(lessonData, selectedRefs) {
     'If any field has no content, use an empty string.',
     '',
     'Required JSON keys: content_standards, performance_standards, competencies, content, integration, resources, prior_knowledge, lesson_purpose, developing, generalization, evaluation, remarks, reflection, custom_support, observations.',
-    'Also include these optional metadata keys if available: subject, grade, quarter, title, difficulty, indicators, support_types, delivery_mode.',
+    'Also include these optional metadata keys if available: subject, grade, quarter, title, difficulty, subcategories, indicators, support_types, delivery_mode.',
     '',
     'Example output format:',
     '{',
@@ -124,6 +125,7 @@ function createFallbackPlan(lessonData, selectedRefs, source) {
     difficulty: lessonData.difficulty || '',
     indicators: lessonData.indicators || '',
     support_types: lessonData.support_types || '',
+    subcategories: lessonData.subcategories || '',
     delivery_mode: lessonData.delivery_mode || ''
   };
 }
@@ -156,6 +158,140 @@ function buildOpenRouterMessages(lessonData, selectedRefs, referenceChunks) {
   });
 
   return systemMessages;
+}
+
+function formatLessonPlanOutput(data) {
+  const lines = [];
+  
+  // Header
+  lines.push('DAILY LESSON PLAN');
+  lines.push('');
+  lines.push('School: ___________________________     Grade Level: ' + (data.grade || '____') + '     Quarter: ' + (data.quarter || '____'));
+  lines.push('Teacher: _____________________________________________________');
+  lines.push('Learning Area: ' + (data.subject || 'Mathematics'));
+  lines.push('Teaching Date and Time: ________________________');
+  lines.push('');
+  lines.push('═══════════════════════════════════════════════════════════════');
+  lines.push('');
+  
+  // Section I: Curriculum Content, Standards and Lesson Competencies
+  lines.push('I. CURRICULUM CONTENT, STANDARDS AND LESSON COMPETENCIES');
+  lines.push('');
+  
+  if (data.content_standards) {
+    lines.push('A. Content Standards');
+    lines.push(data.content_standards);
+    lines.push('');
+  }
+  
+  if (data.performance_standards) {
+    lines.push('B. Performance Standards');
+    lines.push(data.performance_standards);
+    lines.push('');
+  }
+  
+  if (data.competencies) {
+    lines.push('C. Learning Competencies and Objectives');
+    lines.push(data.competencies);
+    lines.push('');
+  }
+  
+  if (data.content) {
+    lines.push('D. Content');
+    lines.push('Topic: ' + (data.title || 'Lesson Topic'));
+    lines.push(data.content);
+    lines.push('');
+  }
+  
+  if (data.integration) {
+    lines.push('E. Integration');
+    lines.push('Inclusive Education Focus: ' + (data.difficulty || 'Differentiated supports for diverse learners'));
+    lines.push(data.integration);
+    lines.push('');
+  }
+  
+  if (data.custom_support) {
+    lines.push('F. Observed Manifestations & Accommodations');
+    lines.push(data.custom_support);
+    lines.push('');
+  }
+  
+  lines.push('═══════════════════════════════════════════════════════════════');
+  lines.push('');
+  
+  // Section II: Learning Resources
+  lines.push('II. LEARNING RESOURCES');
+  if (data.resources) {
+    lines.push(data.resources);
+  }
+  lines.push('');
+  
+  lines.push('═══════════════════════════════════════════════════════════════');
+  lines.push('');
+  
+  // Section III: Teaching and Learning Procedure
+  lines.push('III. TEACHING AND LEARNING PROCEDURE');
+  lines.push('');
+  
+  if (data.prior_knowledge) {
+    lines.push('A. Activating Prior Knowledge');
+    lines.push('Duration: 5 minutes');
+    lines.push(data.prior_knowledge);
+    lines.push('');
+  }
+  
+  if (data.lesson_purpose) {
+    lines.push('B. Establishing Lesson Purpose');
+    lines.push('Duration: 5 minutes');
+    lines.push(data.lesson_purpose);
+    lines.push('');
+  }
+  
+  if (data.developing) {
+    lines.push('C. Developing and Deepening Understanding');
+    lines.push('Duration: 25 minutes');
+    lines.push('Teacher\'s Activity:');
+    lines.push(data.developing);
+    lines.push('');
+  }
+  
+  if (data.generalization) {
+    lines.push('D. Making Generalization');
+    lines.push('Duration: 5 minutes');
+    lines.push(data.generalization);
+    lines.push('');
+  }
+  
+  if (data.evaluation) {
+    lines.push('E. Evaluating Learning');
+    lines.push('Duration: 10 minutes');
+    lines.push('Adaptive Assessment Methods:');
+    lines.push(data.evaluation);
+    lines.push('');
+  }
+  
+  if (data.remarks) {
+    lines.push('F. Teacher\'s Remarks');
+    lines.push(data.remarks);
+    lines.push('');
+  }
+  
+  if (data.reflection) {
+    lines.push('G. Reflection');
+    lines.push(data.reflection);
+    lines.push('');
+  }
+  
+  lines.push('═══════════════════════════════════════════════════════════════');
+  lines.push('');
+  
+  lines.push('PREPARED BY: ___________________________');
+  lines.push('');
+  lines.push('REVIEWED BY: ___________________________');
+  lines.push('');
+  lines.push('NOTED BY: ___________________________');
+  
+  return lines.join('\n');
 }
 
 async function callOpenRouter(messages, apiKey, model) {
@@ -202,10 +338,11 @@ export async function generateLessonPlan(lessonData, options = {}) {
 
   if (!apiKey) {
     const fallbackPlan = createFallbackPlan(lessonData, selectedRefs, 'no-api-key');
+    const formatted = formatLessonPlanOutput(fallbackPlan);
     return {
       success: true,
       source: 'fallback',
-      output: JSON.stringify(fallbackPlan),
+      output: formatted,
       parsed: fallbackPlan,
       selected_refs: selectedRefs,
       model
@@ -215,21 +352,23 @@ export async function generateLessonPlan(lessonData, options = {}) {
   try {
     const content = await callOpenRouter(messages, apiKey, model);
     const parsed = extractJsonObject(content) || createFallbackPlan(lessonData, selectedRefs, 'openrouter-parse-fallback');
+    const formatted = formatLessonPlanOutput(parsed);
     return {
       success: true,
       source: 'openrouter',
-      output: JSON.stringify(parsed),
+      output: formatted,
       parsed,
       selected_refs: selectedRefs,
       model
     };
   } catch (error) {
     const fallbackPlan = createFallbackPlan(lessonData, selectedRefs, 'openrouter-error');
+    const formatted = formatLessonPlanOutput(fallbackPlan);
     return {
       success: true,
       source: 'fallback',
       warning: String(error?.message || error),
-      output: JSON.stringify(fallbackPlan),
+      output: formatted,
       parsed: fallbackPlan,
       selected_refs: selectedRefs,
       model

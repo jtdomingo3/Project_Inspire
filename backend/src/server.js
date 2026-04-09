@@ -71,11 +71,13 @@ function normalizeLessonPayload(body) {
     difficulty: normalizeText(lessonData.difficulty),
     indicators: normalizeText(lessonData.indicators),
     support_types: normalizeText(lessonData.support_types ?? lessonData.supportTypes),
+    subcategories: normalizeText(lessonData.subcategories),
     custom_support: normalizeText(lessonData.custom_support ?? lessonData.customSupport),
     delivery_mode: normalizeText(lessonData.delivery_mode ?? lessonData.deliveryMode),
     ai_model_used: normalizeText(payload.model),
     reference_docs_used: normalizeArray(payload.references ?? payload.selected_refs),
     generated_output: normalizeText(payload.generated_output),
+    generated_parsed: (payload.generated_parsed && typeof payload.generated_parsed === 'object' && !Array.isArray(payload.generated_parsed)) ? payload.generated_parsed : undefined,
     status: normalizeText(payload.status, 'draft'),
     lesson_data: lessonData
   };
@@ -127,6 +129,7 @@ function sanitizeUser(user) {
     id: Number(user.id),
     username: normalizeText(user.username).toLowerCase(),
     display_name: normalizeText(user.display_name),
+    affiliated_school: normalizeText(user.affiliated_school),
     role: normalizeText(user.role).toLowerCase(),
     active: user.active !== false,
     created_at: user.created_at,
@@ -146,6 +149,7 @@ function normalizeUserPayload(body) {
     username: normalizeText(payload.username).toLowerCase(),
     password: normalizeText(payload.password, 'password123'),
     display_name: normalizeText(payload.display_name ?? payload.displayName, 'Unnamed User'),
+    affiliated_school: normalizeText(payload.affiliated_school ?? payload.affiliatedSchool, 'San Felipe National High School · Basud, Camarines Norte'),
     role,
     active: payload.active !== false
   };
@@ -395,6 +399,7 @@ app.post('/api/generate', async (request, response) => {
       ...normalizeLessonPayload(request.body),
       title: normalizeText(lessonData.title, 'Untitled Lesson'),
       generated_output: generation.output,
+      generated_parsed: generation.parsed,
       status: 'final',
       ai_model_used: generation.model,
       reference_docs_used: generation.selected_refs,

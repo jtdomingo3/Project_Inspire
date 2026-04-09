@@ -24,6 +24,7 @@ export class AccountManagementComponent implements OnInit {
     id: 0,
     username: '',
     display_name: '',
+    affiliated_school: 'San Felipe National High School · Basud, Camarines Norte',
     role: 'teacher',
     password: 'password123',
     active: true
@@ -53,6 +54,7 @@ export class AccountManagementComponent implements OnInit {
       id: account.id,
       username: account.username,
       display_name: account.display_name,
+      affiliated_school: account.affiliated_school || 'San Felipe National High School · Basud, Camarines Norte',
       role: account.role,
       password: 'password123',
       active: account.active
@@ -64,6 +66,7 @@ export class AccountManagementComponent implements OnInit {
       id: 0,
       username: '',
       display_name: '',
+      affiliated_school: 'San Felipe National High School · Basud, Camarines Norte',
       role: 'teacher',
       password: 'password123',
       active: true
@@ -84,6 +87,7 @@ export class AccountManagementComponent implements OnInit {
       id: this.form.id || undefined,
       username,
       display_name: displayName,
+      affiliated_school: this.form.affiliated_school.trim(),
       role: this.form.role,
       password: this.form.password,
       active: this.form.active

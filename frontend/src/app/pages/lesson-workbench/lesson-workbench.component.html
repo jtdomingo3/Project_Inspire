@@ -1,17 +1,11 @@
 <section class="workspace-shell">
   <div class="page-header card">
     <div>
-      <p class="eyebrow">Lesson workbench</p>
-      <h2>Draft the lesson, select references, and generate the plan.</h2>
-      <p>
-        Fill out the lesson details to generate and save real lesson plans for your account.
-      </p>
+      <p class="eyebrow">Lesson Plans · New</p>
+      <h2>New Inclusive Lesson Plan</h2>
     </div>
 
-    <div class="page-chip">
-      <span class="dot"></span>
-      <span>Proxying through /api</span>
-    </div>
+    <p class="wizard-note">Follow the 5-step wizard to tell INSPIRE about your class.</p>
   </div>
 
   @if (loading()) {
@@ -21,97 +15,235 @@
   } @else {
     <div class="layout">
       <form class="card form-panel" [formGroup]="form" (ngSubmit)="generate()">
-        <div class="form-grid">
-          <label>
-            <span>Subject</span>
-            <input type="text" formControlName="subject">
-          </label>
-
-          <label>
-            <span>Grade</span>
-            <input type="text" formControlName="grade">
-          </label>
-
-          <label>
-            <span>Quarter</span>
-            <input type="text" formControlName="quarter">
-          </label>
-
-          <label>
-            <span>Lesson title</span>
-            <input type="text" formControlName="title">
-          </label>
-
-          <label class="full-span">
-            <span>Learning objectives</span>
-            <textarea rows="4" formControlName="objectives"></textarea>
-          </label>
-
-          <label>
-            <span>Learner difficulty</span>
-            <input type="text" formControlName="difficulty">
-          </label>
-
-          <label>
-            <span>Observed indicators</span>
-            <input type="text" formControlName="indicators">
-          </label>
-
-          <label>
-            <span>Support types</span>
-            <input type="text" formControlName="supportTypes">
-          </label>
-
-          <label>
-            <span>Delivery mode</span>
-            <input type="text" formControlName="deliveryMode">
-          </label>
-
-          <label class="full-span">
-            <span>Custom support notes</span>
-            <textarea rows="3" formControlName="customSupport"></textarea>
-          </label>
-
-          <label class="full-span">
-            <span>Model</span>
-            <select formControlName="model">
-              @for (model of models(); track model) {
-                <option [value]="model">{{ model }}</option>
-              }
-            </select>
-          </label>
+        <div class="step-row">
+          @for (step of steps; track step; let idx = $index) {
+            <button type="button" class="step-pill" [class.active]="currentStep() === idx + 1" (click)="goToStep(idx + 1)">
+              <span>{{ idx + 1 }}. {{ step }}</span>
+              <i [style.width.%]="stepProgress(idx)"></i>
+            </button>
+          }
         </div>
 
-        <div class="support-card">
-          <p class="eyebrow">Support checklist</p>
-          <div class="support-list">
-            @for (support of supportChecklist; track support) {
-              <span class="support-pill">{{ support }}</span>
-            }
-          </div>
-        </div>
-
-        <div class="reference-card">
-          <p class="eyebrow">Reference documents</p>
-          <div class="reference-list">
-            @for (reference of references(); track reference) {
-              <label class="reference-pill">
-                <input
-                  type="checkbox"
-                  [checked]="selectedReferences().includes(reference)"
-                  (change)="toggleReference(reference, $any($event.target).checked)"
-                >
-                <span>{{ reference }}</span>
+        @if (currentStep() === 1) {
+          <section class="wizard-panel">
+            <h3>Step 1 - Lesson Details</h3>
+            <div class="form-grid">
+              <label>
+                <span>Subject Area</span>
+                <select formControlName="subject">
+                  <option value="" disabled>Select subject area (e.g., Mathematics)</option>
+                  @for (subject of subjectOptions; track subject) {
+                    <option [value]="subject">{{ subject }}</option>
+                  }
+                </select>
               </label>
-            } @empty {
-              <p>No reference documents are loaded.</p>
-            }
-          </div>
-        </div>
+              <label>
+                <span>Grade Level</span>
+                <select formControlName="grade">
+                  <option value="" disabled>Select grade level (e.g., Grade 8)</option>
+                  @for (grade of gradeOptions; track grade) {
+                    <option [value]="grade">{{ grade }}</option>
+                  }
+                </select>
+              </label>
+              <label>
+                <span>Quarter</span>
+                <select formControlName="quarter">
+                  <option value="" disabled>Select quarter (e.g., Q1)</option>
+                  @for (quarter of quarterOptions; track quarter) {
+                    <option [value]="quarter">{{ quarter }}</option>
+                  }
+                </select>
+              </label>
+              <label class="full-span">
+                <span>Topic / Lesson Title</span>
+                <input type="text" formControlName="title" placeholder="Fractions and Decimals">
+              </label>
+              <label class="full-span">
+                <span>Learning Objectives</span>
+                <textarea rows="3" formControlName="objectives" placeholder="Describe 2-3 specific, observable learning objectives for your class."></textarea>
+              </label>
+              <label class="full-span">
+                <span>Number of learners with SEN in class</span>
+                <input type="number" min="0" formControlName="senCount" placeholder="e.g., 3">
+              </label>
+            </div>
+          </section>
+        }
 
-        <button type="submit" class="primary-button" [disabled]="generating()">
-          {{ generating() ? 'Generating plan...' : 'Generate daily lesson plan' }}
-        </button>
+        @if (currentStep() === 2) {
+          <section class="wizard-panel">
+            <h3>Step 2 - Learner Difficulty Profile</h3>
+            <p class="hint">Select the learner's difficulty category and subcategory, based on screening or existing records.</p>
+            <label class="toggle-line">
+              <input type="checkbox" [checked]="allowMultipleDifficulty()" (change)="onMultipleDifficultyToggle($any($event.target).checked)">
+              <span>This class has learners with multiple difficulty types (select up to 3 categories).</span>
+            </label>
+
+            <div class="difficulty-grid">
+              @for (difficulty of difficultyOptions; track difficulty; let idx = $index) {
+                <button
+                  type="button"
+                  class="difficulty-card"
+                  [class.selected]="selectedDifficulties().includes(difficulty)"
+                  (click)="toggleDifficulty(difficulty, !selectedDifficulties().includes(difficulty))"
+                >
+                  <small>{{ (idx + 1).toString().padStart(2, '0') }}</small>
+                  <strong>{{ difficulty }}</strong>
+                  <span class="pick-mark" [class.visible]="selectedDifficulties().includes(difficulty)">✓</span>
+                </button>
+              }
+            </div>
+
+            @if (activeSubcategories().length) {
+              <div class="subcategory-box">
+                <p class="subheading">Subcategory</p>
+                @for (subcategory of activeSubcategories(); track subcategory) {
+                  <label class="check-row">
+                    <input
+                      type="checkbox"
+                      [checked]="selectedSubcategories().includes(subcategory)"
+                      (change)="toggleSubcategory(subcategory, $any($event.target).checked)"
+                    >
+                    <span>{{ subcategory }}</span>
+                  </label>
+                }
+              </div>
+            }
+          </section>
+        }
+
+        @if (currentStep() === 3) {
+          <section class="wizard-panel">
+            <h3>Step 3 - Observable Indicators</h3>
+            <p class="hint">Tick the indicators you observe for: {{ selectedDifficulties()[0] || 'Not specified' }}</p>
+
+            <div class="indicator-grid">
+              @for (indicator of indicatorOptions; track indicator) {
+                <label class="check-row">
+                  <input type="checkbox" [checked]="selectedIndicators().includes(indicator)" (change)="toggleIndicator(indicator, $any($event.target).checked)">
+                  <span>{{ indicator }}</span>
+                </label>
+              }
+            </div>
+
+            <div class="custom-row">
+              <input
+                type="text"
+                [value]="customIndicatorDraft()"
+                (input)="setCustomIndicatorDraft($any($event.target).value)"
+                placeholder="Add custom observed manifestation"
+              >
+              <button type="button" class="inline-btn" (click)="addCustomIndicator()">Add Indicator</button>
+            </div>
+
+            @if (customIndicators().length) {
+              <div class="chip-row">
+                @for (indicator of customIndicators(); track indicator) {
+                  <button type="button" class="chip" (click)="removeCustomIndicator(indicator)">{{ indicator }} ×</button>
+                }
+              </div>
+            }
+          </section>
+        }
+
+        @if (currentStep() === 4) {
+          <section class="wizard-panel">
+            <h3>Step 4 - Support Type Selection</h3>
+            <p class="hint">What type of inclusive support do you need for this lesson plan? You can select multiple options.</p>
+            <div class="support-list">
+              @for (support of supportChecklist; track support) {
+                <label class="check-row inline">
+                  <input type="checkbox" [checked]="selectedSupports().includes(support)" (change)="toggleSupport(support, $any($event.target).checked)">
+                  <span>{{ support }}</span>
+                </label>
+              }
+            </div>
+
+            <label class="full-span">
+              <span>Add custom support or strategy</span>
+              <textarea rows="3" formControlName="customSupport" placeholder="Describe additional supports, accommodations, or modifications needed for this lesson."></textarea>
+            </label>
+
+            <label class="delivery-select">
+              <span>Lesson Delivery Mode</span>
+              <select formControlName="deliveryMode">
+                @for (mode of deliveryModes; track mode) {
+                  <option [value]="mode">{{ mode }}</option>
+                }
+              </select>
+            </label>
+          </section>
+        }
+
+        @if (currentStep() === 5) {
+          <section class="wizard-panel">
+            <h3>Step 5 - Review & Generate</h3>
+            <p class="hint">Review the summary below, then let INSPIRE draft an inclusive lesson plan for you.</p>
+
+            <div class="review-box">
+              <p><strong>Subject:</strong> {{ form.controls.subject.value }} <strong>Grade:</strong> {{ form.controls.grade.value }} <strong>Quarter:</strong> {{ form.controls.quarter.value }}</p>
+              <p><strong>Topic:</strong> {{ form.controls.title.value }}</p>
+              <p><strong>Difficulty:</strong> {{ form.controls.difficulty.value || 'Not specified' }}</p>
+              <p><strong>Subcategories:</strong> {{ form.controls.subcategories.value || 'Not specified' }}</p>
+              <p><strong>Indicators selected:</strong> {{ selectedIndicators().length + customIndicators().length }}</p>
+              <p><strong>Support Types:</strong> {{ form.controls.supportTypes.value }}</p>
+            </div>
+
+            <div class="review-grid">
+              <label>
+                <span>Reviewed by</span>
+                <input type="text" formControlName="reviewedBy">
+              </label>
+              <label>
+                <span>Noted by</span>
+                <input type="text" formControlName="notedBy">
+              </label>
+            </div>
+
+            <label class="full-span">
+              <span>Choose AI Model</span>
+              <select formControlName="model">
+                @for (model of models(); track model) {
+                  <option [value]="model">{{ model }}</option>
+                }
+              </select>
+            </label>
+
+            <div class="reference-card">
+              <p class="eyebrow">Load reference documents (select by title)</p>
+              <div class="reference-list">
+                @for (reference of resourceLibrary(); track reference.file_name) {
+                  <label class="reference-pill">
+                    <input
+                      type="checkbox"
+                      [checked]="selectedReferences().includes(reference.file_name)"
+                      (change)="toggleReference(reference.file_name, $any($event.target).checked)"
+                    >
+                    <div>
+                      <strong>{{ reference.title }}</strong>
+                      <small>{{ reference.file_name }}</small>
+                    </div>
+                  </label>
+                } @empty {
+                  <p>No reference documents are loaded.</p>
+                }
+              </div>
+            </div>
+          </section>
+        }
+
+        <div class="wizard-actions">
+          <button type="button" class="secondary-button" [disabled]="currentStep() === 1" (click)="prevStep()">← Back</button>
+
+          @if (currentStep() < 5) {
+            <button type="button" class="primary-button" (click)="nextStep()">Next →</button>
+          } @else {
+            <button type="submit" class="generate-button" [disabled]="generating()">
+              {{ generating() ? 'Generating plan...' : 'Generate Lesson Plan' }}
+            </button>
+          }
+        </div>
       </form>
 
       <aside class="card result-panel">
@@ -120,14 +252,16 @@
             <p class="eyebrow">Output</p>
             <h3>Generated plan</h3>
           </div>
-          <span class="result-status">{{ selectedReferences().length }} references selected</span>
         </div>
+        <span class="result-status">{{ selectedReferences().length }} references selected</span>
 
         @if (generatedOutput()) {
-          <pre>{{ generatedOutput() }}</pre>
+          <div class="lesson-plan-output">
+            <pre>{{ generatedOutput() }}</pre>
+          </div>
         } @else {
           <p class="placeholder">
-            Submit the form to render the JSON payload returned by the backend and store the lesson locally.
+            Submit the form to generate a Daily Lesson Plan and store it locally.
           </p>
         }
 

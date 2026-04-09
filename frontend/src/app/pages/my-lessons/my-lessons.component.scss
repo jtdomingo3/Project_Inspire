@@ -12,7 +12,8 @@
 
 .page-header,
 .status-panel,
-.table-panel {
+.table-panel,
+.lesson-view-panel {
   padding: 22px;
 }
 
@@ -76,6 +77,132 @@
   background: #fff1f2;
 }
 
+.lesson-view-panel {
+  display: grid;
+  gap: 14px;
+}
+
+.lesson-view-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.lesson-view-header h3 {
+  margin: 0;
+}
+
+.lesson-meta {
+  margin: 6px 0 0;
+  color: var(--muted);
+}
+
+.lesson-view-actions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.lesson-content {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #fff;
+  max-height: 72vh;
+  overflow: auto;
+  padding: 16px;
+}
+
+.dlp-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border: 1px solid #d3e1d7;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.dlp-grid div {
+  padding: 10px 12px;
+  border-right: 1px solid #d3e1d7;
+  border-bottom: 1px solid #d3e1d7;
+  font-size: 0.92rem;
+}
+
+.dlp-grid div:nth-child(3n) {
+  border-right: none;
+}
+
+.section-title {
+  margin: 16px 0 10px;
+  padding-bottom: 6px;
+  border-bottom: 2px solid #1f6a3b;
+  color: #154e2d;
+  font-size: 1.05rem;
+}
+
+.section-block {
+  border-bottom: 1px dashed #d6e2d9;
+  padding: 8px 0 10px;
+}
+
+.section-block h5 {
+  margin: 0 0 6px;
+  color: #1f6a3b;
+}
+
+.section-block p {
+  margin: 0;
+}
+
+.section-block ul,
+.lesson-content > ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.support-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.support-box {
+  border: 1px solid #a9d8d4;
+  background: #ecf8f7;
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.support-box.alt {
+  border-color: #e8d8a8;
+  background: #fff8e8;
+}
+
+.support-box h6 {
+  margin: 0 0 6px;
+  font-size: 0.95rem;
+}
+
+.support-box ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.signature-grid {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  border-top: 1px solid #d3e1d7;
+  padding-top: 12px;
+}
+
+.signature-grid p {
+  margin: 6px 0 0;
+}
+
 .modal-backdrop {
   position: fixed;
   inset: 0;
@@ -128,5 +255,23 @@
   .page-header {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .lesson-view-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .dlp-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dlp-grid div {
+    border-right: none;
+  }
+
+  .support-grid,
+  .signature-grid {
+    grid-template-columns: 1fr;
   }
 }

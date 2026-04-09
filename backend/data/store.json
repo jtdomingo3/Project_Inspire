@@ -8,6 +8,44 @@
   },
   "lessons": [
     {
+      "subject": "English",
+      "grade": "ALS",
+      "quarter": "Q1",
+      "title": "Basics of Mathematics",
+      "objectives": "Understand concept of Math",
+      "difficulty": "Difficulty in Communication | Difficulty in Mobility | Difficulty in Basic Learning and Applying Knowledge",
+      "indicators": "Struggles to complete tasks within the allotted time | Shows inconsistent performance across similar tasks",
+      "support_types": "Differentiated Activities, Modifications, Behavior Support Strategies",
+      "subcategories": "2.2 Difficulty in Writing (Dysgraphia)",
+      "custom_support": "",
+      "delivery_mode": "Face-to-face",
+      "ai_model_used": "openai/gpt-oss-20b:free",
+      "reference_docs_used": [
+        "DO_s2020_021-transition.pdf",
+        "DO_s2021_044.pdf",
+        "DSM-5.pdf",
+        "LEGAL BASIS.docx"
+      ],
+      "generated_output": "DAILY LESSON PLAN\n\nSchool: ___________________________     Grade Level: ALS     Quarter: Q1\nTeacher: _____________________________________________________\nLearning Area: English\nTeaching Date and Time: ________________________\n\n═══════════════════════════════════════════════════════════════\n\nI. CURRICULUM CONTENT, STANDARDS AND LESSON COMPETENCIES\n\nA. Content Standards\nEnglish: Learners are expected to improve and effectively use their communicative, as well as social, skills through learning opportunities in oral and written communication. Math: Learners are expected to recognize and organize numbers according to value up to 20 and demonstrate understanding of the concept of whole numbers.\n\nB. Performance Standards\nDemonstrate understanding of whole numbers; recognize and organize numbers up to 20; count objects with one-to-one correspondence up to quantities of 20; improve oral and written communication skills.\n\nC. Learning Competencies and Objectives\nOral Language, Vocabulary, Writing, Number Values, Counting, One-to-One Correspondence\n\nD. Content\nTopic: Basics of Mathematics\n1. Introduction to numbers 1-10 using large print and tactile cards.\n2. Counting objects with one-to-one correspondence up to 20 using manipulatives.\n3. Simple oral counting drills integrated with English vocabulary (e.g., \"one apple\", \"two bananas\").\n4. Guided writing activity: tracing numbers and writing simple number words with support.\n5. Group activity: matching number cards to written words.\n\nE. Integration\nInclusive Education Focus: Difficulty in Communication | Difficulty in Mobility | Difficulty in Basic Learning and Applying Knowledge\nEnglish and Math concepts are blended by using number words in oral and written language activities, reinforcing both counting and vocabulary skills.\n\nF. Observed Manifestations & Accommodations\nUse large print and tactile numbers; allow extra time for writing; provide a writing guide with number shapes; use a speech‑to‑text tool for written responses if needed.\n\n═══════════════════════════════════════════════════════════════\n\nII. LEARNING RESOURCES\nLarge print number cards, tactile number blocks, manipulatives (buttons, beads), simple worksheets with high-contrast print, assistive writing tools (large grip pens), audio recordings of number words, whiteboard with large markers.\n\n═══════════════════════════════════════════════════════════════\n\nIII. TEACHING AND LEARNING PROCEDURE\n\nA. Activating Prior Knowledge\nDuration: 5 minutes\nBasic familiarity with numbers 1-5, ability to identify simple shapes, basic oral language skills.\n\nB. Establishing Lesson Purpose\nDuration: 5 minutes\nTo introduce and reinforce basic mathematical concepts of counting and number recognition while simultaneously developing oral and written English communication skills.\n\nC. Developing and Deepening Understanding\nDuration: 25 minutes\nTeacher's Activity:\nNumber sense, oral language fluency, writing accuracy, fine motor skills for writing numbers, self‑reliance in completing tasks.\n\nD. Making Generalization\nDuration: 5 minutes\nStudents will apply counting skills in everyday contexts (e.g., counting items in a grocery list) and use number words in simple sentences.\n\nE. Evaluating Learning\nDuration: 10 minutes\nAdaptive Assessment Methods:\nObservation of counting accuracy, oral questioning about number words, completion of a simple matching worksheet, teacher check‑list of writing attempts.\n\nF. Teacher's Remarks\nProvide seating close to teacher to reduce mobility strain; use a small table to accommodate assistive devices.\n\nG. Reflection\nConsider whether the tactile materials helped maintain engagement; assess if the oral‑written integration supported students with dysgraphia.\n\n═══════════════════════════════════════════════════════════════\n\nPREPARED BY: ___________________________\n\nREVIEWED BY: ___________________________\n\nNOTED BY: ___________________________",
+      "status": "final",
+      "lesson_data": {
+        "subject": "English",
+        "grade": "ALS",
+        "quarter": "Q1",
+        "title": "Basics of Mathematics",
+        "objectives": "Understand concept of Math",
+        "difficulty": "Difficulty in Communication | Difficulty in Mobility | Difficulty in Basic Learning and Applying Knowledge",
+        "indicators": "Struggles to complete tasks within the allotted time | Shows inconsistent performance across similar tasks",
+        "support_types": "Differentiated Activities, Modifications, Behavior Support Strategies",
+        "subcategories": "2.2 Difficulty in Writing (Dysgraphia)",
+        "custom_support": "",
+        "delivery_mode": "Face-to-face"
+      },
+      "id": 3,
+      "updated_at": "2026-04-09T09:17:40.066Z",
+      "created_at": "2026-04-09T09:17:40.066Z"
+    },
+    {
       "id": 1,
       "subject": "Mathematics",
       "grade": "Grade 5",

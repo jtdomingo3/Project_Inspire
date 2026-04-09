@@ -96,6 +96,7 @@ export class InspireApiService {
       difficulty: lessonDraft.difficulty,
       indicators: lessonDraft.indicators,
       support_types: lessonDraft.supportTypes,
+      subcategories: lessonDraft.subcategories,
       custom_support: lessonDraft.customSupport,
       delivery_mode: lessonDraft.deliveryMode
     };
@@ -151,6 +152,7 @@ export class InspireApiService {
       difficulty: 'Reading comprehension',
       indicators: 'Needs chunked directions, needs visual supports',
       supportTypes: 'Visual aids, guided practice, peer support',
+      subcategories: '',
       customSupport: 'Allow oral responses and provide worked examples.',
       deliveryMode: 'Whole class with small-group support'
     };
@@ -224,7 +226,7 @@ export class InspireApiService {
     );
   }
 
-  saveAccount(payload: Partial<UserAccount> & { username: string; role: string; display_name: string; password?: string; active?: boolean; id?: number }): Observable<{ success: boolean; user: UserAccount }> {
+  saveAccount(payload: Partial<UserAccount> & { username: string; role: string; display_name: string; affiliated_school?: string; password?: string; active?: boolean; id?: number }): Observable<{ success: boolean; user: UserAccount }> {
     if (payload.id) {
       return this.http.put<{ success: boolean; user: UserAccount }>(`/api/admin/accounts/${payload.id}`, payload);
     }
