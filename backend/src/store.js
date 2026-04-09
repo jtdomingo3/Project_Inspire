@@ -5,25 +5,120 @@ import { dataFilePath, referencesDir, supportedModels, surveyQuestions } from '.
 
 const defaultStore = () => ({
   meta: {
-    nextLessonId: 1,
-    nextReflectionId: 1,
-    nextObservationId: 1,
+    nextLessonId: 3,
+    nextReflectionId: 3,
+    nextObservationId: 3,
     nextSurveyId: 3,
     nextUserId: 4
   },
-  lessons: [],
-  reflections: [],
-  observations: [],
+  lessons: [
+    {
+      id: 1,
+      subject: 'Mathematics',
+      grade: 'Grade 5',
+      quarter: 'Quarter 1',
+      title: 'Example - Comparing Fractions with Visual Models',
+      objectives: 'Example objective: compare simple fractions using visual representations and manipulatives.',
+      difficulty: 'Reading comprehension',
+      indicators: 'Needs chunked instructions and repeated modeling',
+      support_types: 'Visual aids, guided practice, peer support',
+      custom_support: 'Example support: provide sentence starters and oral response options.',
+      delivery_mode: 'Whole class with small-group support',
+      status: 'example',
+      created_at: '2026-04-01T08:00:00.000Z',
+      updated_at: '2026-04-01T08:00:00.000Z'
+    },
+    {
+      id: 2,
+      subject: 'Science',
+      grade: 'Grade 6',
+      quarter: 'Quarter 2',
+      title: 'Example - Ecosystems and Food Webs',
+      objectives: 'Example objective: describe relationships in a local ecosystem using a class-made food web.',
+      difficulty: 'Sustained attention',
+      indicators: 'Needs short tasks with visual prompts',
+      support_types: 'Graphic organizer, movement breaks, paired discussion',
+      custom_support: 'Example support: use color-coded cards for producers and consumers.',
+      delivery_mode: 'Stations with teacher check-ins',
+      status: 'example',
+      created_at: '2026-04-02T08:00:00.000Z',
+      updated_at: '2026-04-02T08:00:00.000Z'
+    }
+  ],
+  reflections: [
+    {
+      id: 1,
+      date: '2026-04-03',
+      subject: 'Example - Mathematics',
+      grade: 'Grade 5',
+      lesson_plan_linked: 'Example - Comparing Fractions with Visual Models',
+      strategies_used: 'Used concrete fraction strips and think-pair-share.',
+      learner_response: 'Most learners engaged better after visual scaffolds were introduced.',
+      worked_well: 'Guided examples and peer support increased participation.',
+      needs_improvement: 'Need clearer pacing for independent practice.',
+      effectiveness_rating: 4,
+      inspire_confidence_rating: 4,
+      challenges: 'A few learners needed repeated instructions.',
+      next_steps: 'Prepare shorter task chunks and add recap prompts.',
+      created_at: '2026-04-03T10:00:00.000Z',
+      updated_at: '2026-04-03T10:00:00.000Z'
+    },
+    {
+      id: 2,
+      date: '2026-04-05',
+      subject: 'Example - Science',
+      grade: 'Grade 6',
+      lesson_plan_linked: 'Example - Ecosystems and Food Webs',
+      strategies_used: 'Used station rotation and visual anchor charts.',
+      learner_response: 'Learners collaborated well in small groups.',
+      worked_well: 'Station prompts supported independent work.',
+      needs_improvement: 'Time management between stations.',
+      effectiveness_rating: 4,
+      inspire_confidence_rating: 5,
+      challenges: 'Noise levels increased during transitions.',
+      next_steps: 'Add timed cues and assign transition roles.',
+      created_at: '2026-04-05T10:00:00.000Z',
+      updated_at: '2026-04-05T10:00:00.000Z'
+    }
+  ],
+  observations: [
+    {
+      id: 1,
+      observation_date: '2026-04-04',
+      teacher_observed: 'Example Teacher A',
+      subject: 'Example - Mathematics, Grade 5',
+      focus: 'Differentiated instruction',
+      phase: 'Mid-implementation',
+      rating: 4,
+      notes: 'Learners benefited from visual cues and flexible grouping.',
+      created_at: '2026-04-04T09:00:00.000Z',
+      updated_at: '2026-04-04T09:00:00.000Z'
+    },
+    {
+      id: 2,
+      observation_date: '2026-04-06',
+      teacher_observed: 'Example Teacher B',
+      subject: 'Example - Science, Grade 6',
+      focus: 'Classroom management',
+      phase: 'Post-implementation',
+      rating: 5,
+      notes: 'Clear routines and transitions improved class flow.',
+      created_at: '2026-04-06T09:00:00.000Z',
+      updated_at: '2026-04-06T09:00:00.000Z'
+    }
+  ],
   surveys: [
     {
       id: 1,
       survey_type: 'pre',
+      example_label: 'Example survey response',
       question_responses: { q1: 2, q2: 2, q3: 3, q4: 2, q5: 2 },
       completed_at: '2026-04-01T08:00:00.000Z'
     },
     {
       id: 2,
       survey_type: 'post',
+      example_label: 'Example survey response',
       question_responses: { q1: 4, q2: 4, q3: 4, q4: 4, q5: 4 },
       completed_at: '2026-04-08T08:00:00.000Z'
     }

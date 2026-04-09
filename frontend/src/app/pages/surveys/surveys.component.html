@@ -79,6 +79,9 @@
                 <strong>{{ survey.survey_type | uppercase }}</strong>
                 <span>{{ survey.completed_at | date:'mediumDate' }}</span>
               </div>
+              @if (survey.example_label) {
+                <p class="example-line">{{ survey.example_label }}</p>
+              }
               <p class="summary-line">Answered: {{ answeredCount(survey) }} items</p>
               <p class="summary-line">Overall average: {{ averageScore(survey) }}/5</p>
               <p class="summary-line">Section A avg: {{ sectionAverage(survey, 0, 10) }}/5</p>

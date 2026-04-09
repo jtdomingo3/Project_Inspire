@@ -99,6 +99,7 @@ export interface ObservationRecord {
 export interface SurveyRecord {
   id: number;
   survey_type: 'pre' | 'post' | string;
+  example_label?: string;
   question_responses: Record<string, number>;
   completed_at: string;
 }
