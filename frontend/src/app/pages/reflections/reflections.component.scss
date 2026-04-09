@@ -72,6 +72,23 @@
   margin-right: 5px;
 }
 
+.action-group {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  gap: 5px;
+  white-space: nowrap;
+}
+
+.action-group .action-button {
+  margin-right: 0;
+}
+
+.action-button.danger {
+  color: #be123c;
+  border-color: #fecdd3;
+  background: #fff1f2;
+}
+
 .empty-state {
   color: var(--muted);
   text-align: center;
@@ -101,6 +118,11 @@
   border-radius: 12px;
   box-shadow: var(--shadow-soft);
   padding: 14px;
+}
+
+.modal-panel h3 {
+  margin: 0 0 12px;
+  font-family: 'Fraunces', serif;
 }
 
 .form-grid {

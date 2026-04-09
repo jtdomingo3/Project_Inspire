@@ -70,6 +70,48 @@ h2 {
   padding: 16px;
 }
 
+.action-button {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+  color: #1f6a3b;
+  padding: 4px 8px;
+  font-size: 0.76rem;
+  margin-right: 6px;
+}
+
+.action-button.danger {
+  border-color: #fecdd3;
+  color: #be123c;
+  background: #fff1f2;
+}
+
+.view-panel {
+  margin-top: 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #fff;
+  padding: 12px;
+}
+
+.view-panel h3 {
+  margin: 0 0 8px;
+  font-family: 'Fraunces', serif;
+}
+
+.view-panel p {
+  margin: 6px 0;
+}
+
+.clear-btn {
+  margin-top: 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+  color: #1f6a3b;
+  padding: 6px 10px;
+}
+
 .grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

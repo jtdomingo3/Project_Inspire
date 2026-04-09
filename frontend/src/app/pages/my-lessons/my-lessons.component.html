@@ -26,6 +26,7 @@
               <th>Difficulty</th>
               <th>Status</th>
               <th>Updated</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -37,11 +38,70 @@
                 <td>{{ lesson.difficulty }}</td>
                 <td>{{ lesson.status || 'draft' }}</td>
                 <td>{{ lesson.updated_at | date:'MMM d, y, h:mm a' }}</td>
+                <td>
+                  <div class="action-group">
+                    <button type="button" class="action-button" (click)="openView(lesson)">View</button>
+                    <button type="button" class="action-button" (click)="openEdit(lesson)">Edit</button>
+                    <button type="button" class="action-button danger" [disabled]="isDeleting(lesson.id)" (click)="deleteLesson(lesson)">
+                      {{ isDeleting(lesson.id) ? 'Deleting...' : 'Delete' }}
+                    </button>
+                  </div>
+                </td>
               </tr>
             }
           </tbody>
         </table>
       }
     </section>
+  }
+
+  @if (modalMode() && selectedLesson()) {
+    <div class="modal-backdrop" (click)="closeModal()">
+      <section class="modal-panel" (click)="$event.stopPropagation()">
+        @if (modalMode() === 'view') {
+          <h3>{{ selectedLesson()!.title }}</h3>
+          <p><strong>Subject:</strong> {{ selectedLesson()!.subject }}</p>
+          <p><strong>Grade:</strong> {{ selectedLesson()!.grade }}</p>
+          <p><strong>Difficulty:</strong> {{ selectedLesson()!.difficulty }}</p>
+          <p><strong>Status:</strong> {{ selectedLesson()!.status || 'draft' }}</p>
+          <p><strong>Objectives:</strong> {{ selectedLesson()!.objectives }}</p>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-primary" (click)="closeModal()">Close</button>
+          </div>
+        } @else {
+          <h3>Edit Lesson</h3>
+          <form [formGroup]="form" (ngSubmit)="saveEdit()" class="edit-form">
+            <label>
+              <span>Title</span>
+              <input type="text" formControlName="title">
+            </label>
+            <label>
+              <span>Subject</span>
+              <input type="text" formControlName="subject">
+            </label>
+            <label>
+              <span>Grade</span>
+              <input type="text" formControlName="grade">
+            </label>
+            <label>
+              <span>Difficulty</span>
+              <input type="text" formControlName="difficulty">
+            </label>
+            <label>
+              <span>Status</span>
+              <input type="text" formControlName="status">
+            </label>
+            <label>
+              <span>Objectives</span>
+              <textarea rows="3" formControlName="objectives"></textarea>
+            </label>
+            <div class="modal-actions">
+              <button type="submit" class="btn btn-primary" [disabled]="saving()">{{ saving() ? 'Saving...' : 'Save' }}</button>
+              <button type="button" class="btn" (click)="closeModal()">Cancel</button>
+            </div>
+          </form>
+        }
+      </section>
+    </div>
   }
 </section>

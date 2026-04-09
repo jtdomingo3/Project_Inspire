@@ -23,6 +23,9 @@ export class ReflectionsComponent implements OnInit {
   readonly saving = signal(false);
   readonly error = signal<string | null>(null);
   readonly modalOpen = signal(false);
+  readonly editingReflectionId = signal<number | null>(null);
+  readonly viewingReflection = signal<ReflectionRecord | null>(null);
+  readonly deletingReflectionId = signal<number | null>(null);
 
   readonly form = this.fb.group({
     date: [new Date().toISOString().slice(0, 10), Validators.required],
@@ -69,10 +72,17 @@ export class ReflectionsComponent implements OnInit {
 
     this.saving.set(true);
     const payload = this.form.getRawValue();
+    const editingId = this.editingReflectionId();
+    const request$ = editingId ? this.api.updateReflection(editingId, payload) : this.api.saveReflection(payload);
 
-    this.api.saveReflection(payload).subscribe({
+    request$.subscribe({
       next: ({ reflection }) => {
-        this.reflections.update((current) => [reflection, ...current]);
+        if (editingId) {
+          this.reflections.update((current) => current.map((item) => item.id === reflection.id ? reflection : item));
+        } else {
+          this.reflections.update((current) => [reflection, ...current]);
+        }
+
         this.saving.set(false);
         this.closeModal(true);
       },
@@ -84,14 +94,68 @@ export class ReflectionsComponent implements OnInit {
   }
 
   openModal(): void {
+    this.editingReflectionId.set(null);
     this.modalOpen.set(true);
     if (this.lessons().length > 0 && !this.form.controls.lesson_plan_linked.value) {
       this.form.controls.lesson_plan_linked.setValue(this.lessons()[0].title);
     }
   }
 
+  openEdit(reflection: ReflectionRecord): void {
+    this.editingReflectionId.set(reflection.id);
+    this.modalOpen.set(true);
+    this.form.reset({
+      date: reflection.date,
+      subject: reflection.subject,
+      grade: reflection.grade,
+      lesson_plan_linked: reflection.lesson_plan_linked,
+      strategies_used: reflection.strategies_used,
+      learner_response: reflection.learner_response,
+      worked_well: reflection.worked_well || '',
+      needs_improvement: reflection.needs_improvement || '',
+      effectiveness_rating: reflection.effectiveness_rating,
+      inspire_confidence_rating: reflection.inspire_confidence_rating,
+      challenges: reflection.challenges,
+      next_steps: reflection.next_steps
+    });
+  }
+
+  openView(reflection: ReflectionRecord): void {
+    this.viewingReflection.set(reflection);
+  }
+
+  closeView(): void {
+    this.viewingReflection.set(null);
+  }
+
+  deleteReflection(reflection: ReflectionRecord): void {
+    if (!confirm('Delete this reflection log? This action cannot be undone.')) {
+      return;
+    }
+
+    this.deletingReflectionId.set(reflection.id);
+    this.api.deleteReflection(reflection.id).subscribe({
+      next: () => {
+        this.reflections.update((current) => current.filter((item) => item.id !== reflection.id));
+        if (this.viewingReflection()?.id === reflection.id) {
+          this.viewingReflection.set(null);
+        }
+        this.deletingReflectionId.set(null);
+      },
+      error: (error) => {
+        this.error.set(this.api.describeError(error));
+        this.deletingReflectionId.set(null);
+      }
+    });
+  }
+
+  isDeleting(reflectionId: number): boolean {
+    return this.deletingReflectionId() === reflectionId;
+  }
+
   closeModal(reset = false): void {
     this.modalOpen.set(false);
+    this.editingReflectionId.set(null);
 
     if (reset) {
       this.form.reset({

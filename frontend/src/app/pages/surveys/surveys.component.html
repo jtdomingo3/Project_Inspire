@@ -38,7 +38,7 @@
             <section class="question-section">
               <h3>{{ section.title }}</h3>
 
-              @for (question of section.questions; track question) {
+              @for (question of section.questions; track $index) {
                 <article class="question-row">
                   <div class="question-title">{{ section.startIndex + $index + 1 }}. {{ question }}</div>
                   <div class="likert-group" role="radiogroup" [attr.aria-label]="question">
@@ -46,7 +46,7 @@
                       <label class="likert-option">
                         <input
                           type="radio"
-                          [name]="'q-' + (section.startIndex + $index)"
+                          [name]="activeTab() + '-q-' + (section.startIndex + $index)"
                           [checked]="isSelected(section.startIndex + $index, rating)"
                           (change)="setResponse(section.startIndex + $index, rating)"
                         >

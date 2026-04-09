@@ -7,7 +7,10 @@ import express from 'express';
 import { projectRoot, referencesDir, supportedModels, surveyQuestions } from './config.js';
 import { generateLessonPlan } from './openrouter.js';
 import {
+  deleteLesson,
+  deleteObservation,
   deleteSurvey,
+  deleteReflection,
   deleteReferenceMetadata,
   deleteUser,
   findUserByCredentials,
@@ -370,6 +373,16 @@ app.put('/api/lessons/:id', async (request, response) => {
   }
 });
 
+app.delete('/api/lessons/:id', async (request, response) => {
+  const deleted = await deleteLesson(request.params.id);
+  if (!deleted) {
+    sendJson(response, 404, { success: false, error: 'Lesson not found' });
+    return;
+  }
+
+  sendJson(response, 200, { success: true });
+});
+
 app.post('/api/generate', async (request, response) => {
   try {
     const payload = ensureObject(request.body, 'Request body');
@@ -416,6 +429,26 @@ app.post('/api/reflections', async (request, response) => {
   }
 });
 
+app.put('/api/reflections/:id', async (request, response) => {
+  try {
+    const body = normalizeReflectionPayload(request.body);
+    const record = await upsertReflection({ ...body, id: Number(request.params.id) });
+    sendJson(response, 200, { success: true, reflection: record });
+  } catch (error) {
+    sendJson(response, 400, { success: false, error: String(error.message || error) });
+  }
+});
+
+app.delete('/api/reflections/:id', async (request, response) => {
+  const deleted = await deleteReflection(request.params.id);
+  if (!deleted) {
+    sendJson(response, 404, { success: false, error: 'Reflection not found' });
+    return;
+  }
+
+  sendJson(response, 200, { success: true });
+});
+
 app.get('/api/observations', async (_request, response) => {
   const store = await readStore();
   sendJson(response, 200, { observations: store.observations });
@@ -429,6 +462,26 @@ app.post('/api/observations', async (request, response) => {
   } catch (error) {
     sendJson(response, 400, { success: false, error: String(error.message || error) });
   }
+});
+
+app.put('/api/observations/:id', async (request, response) => {
+  try {
+    const body = normalizeObservationPayload(request.body);
+    const record = await upsertObservation({ ...body, id: Number(request.params.id) });
+    sendJson(response, 200, { success: true, observation: record });
+  } catch (error) {
+    sendJson(response, 400, { success: false, error: String(error.message || error) });
+  }
+});
+
+app.delete('/api/observations/:id', async (request, response) => {
+  const deleted = await deleteObservation(request.params.id);
+  if (!deleted) {
+    sendJson(response, 404, { success: false, error: 'Observation not found' });
+    return;
+  }
+
+  sendJson(response, 200, { success: true });
 });
 
 app.get('/api/surveys/questions', async (_request, response) => {

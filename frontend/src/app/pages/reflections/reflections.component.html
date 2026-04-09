@@ -35,8 +35,13 @@
               <td>{{ stars(reflection.effectiveness_rating) }}</td>
               <td>Yes</td>
               <td>
-                <button type="button" class="action-button">View</button>
-                <button type="button" class="action-button">Edit</button>
+                <div class="action-group">
+                  <button type="button" class="action-button" (click)="openView(reflection)">View</button>
+                  <button type="button" class="action-button" (click)="openEdit(reflection)">Edit</button>
+                  <button type="button" class="action-button danger" [disabled]="isDeleting(reflection.id)" (click)="deleteReflection(reflection)">
+                    {{ isDeleting(reflection.id) ? 'Deleting...' : 'Delete' }}
+                  </button>
+                </div>
               </td>
             </tr>
           } @empty {
@@ -52,6 +57,7 @@
   @if (modalOpen()) {
     <div class="modal-backdrop" (click)="closeModal()">
       <section class="modal-panel" (click)="$event.stopPropagation()">
+        <h3>{{ editingReflectionId() ? 'Edit Reflection' : 'New Reflection' }}</h3>
         <form [formGroup]="form" (ngSubmit)="submit()">
           <div class="form-grid">
             <label>
@@ -132,11 +138,32 @@
 
           <div class="modal-actions">
             <button class="submit-button" type="submit" [disabled]="saving()">
-              {{ saving() ? 'Saving reflection...' : 'Submit Reflection' }}
+              {{ saving() ? 'Saving reflection...' : (editingReflectionId() ? 'Save Changes' : 'Submit Reflection') }}
             </button>
             <button class="cancel-button" type="button" (click)="closeModal()">Cancel</button>
           </div>
         </form>
+      </section>
+    </div>
+  }
+
+  @if (viewingReflection()) {
+    <div class="modal-backdrop" (click)="closeView()">
+      <section class="modal-panel" (click)="$event.stopPropagation()">
+        <h3>Reflection Details</h3>
+        <p><strong>Date:</strong> {{ viewingReflection()!.date | date:'MMM d, y' }}</p>
+        <p><strong>Subject:</strong> {{ viewingReflection()!.subject }}</p>
+        <p><strong>Grade:</strong> {{ viewingReflection()!.grade }}</p>
+        <p><strong>Lesson Plan:</strong> {{ viewingReflection()!.lesson_plan_linked }}</p>
+        <p><strong>Strategies Used:</strong> {{ viewingReflection()!.strategies_used }}</p>
+        <p><strong>Learner Response:</strong> {{ viewingReflection()!.learner_response }}</p>
+        <p><strong>Worked Well:</strong> {{ viewingReflection()!.worked_well }}</p>
+        <p><strong>Needs Improvement:</strong> {{ viewingReflection()!.needs_improvement }}</p>
+        <p><strong>Challenges:</strong> {{ viewingReflection()!.challenges }}</p>
+        <p><strong>Next Steps:</strong> {{ viewingReflection()!.next_steps }}</p>
+        <div class="modal-actions">
+          <button class="submit-button" type="button" (click)="closeView()">Close</button>
+        </div>
       </section>
     </div>
   }

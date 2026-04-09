@@ -24,6 +24,7 @@
             <th>Focus</th>
             <th>Phase</th>
             <th>Rating</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -35,14 +36,35 @@
               <td>{{ observation.focus }}</td>
               <td>{{ observation.phase }}</td>
               <td>{{ observation.rating }}</td>
+              <td>
+                <button type="button" class="action-button" (click)="openView(observation)">View</button>
+                <button type="button" class="action-button" (click)="openEdit(observation)">Edit</button>
+                <button type="button" class="action-button danger" [disabled]="isDeleting(observation.id)" (click)="deleteObservation(observation)">
+                  {{ isDeleting(observation.id) ? 'Deleting...' : 'Delete' }}
+                </button>
+              </td>
             </tr>
           } @empty {
             <tr>
-              <td colspan="6" class="empty-state">No observations yet. Click New Observation to add one.</td>
+              <td colspan="7" class="empty-state">No observations yet. Click New Observation to add one.</td>
             </tr>
           }
         </tbody>
       </table>
+
+      @if (viewingObservation()) {
+        <section class="view-panel">
+          <h3>Observation Details</h3>
+          <p><strong>Date:</strong> {{ viewingObservation()!.observation_date | date:'MMM d, y' }}</p>
+          <p><strong>Teacher:</strong> {{ viewingObservation()!.teacher_observed }}</p>
+          <p><strong>Subject:</strong> {{ viewingObservation()!.subject }}</p>
+          <p><strong>Focus:</strong> {{ viewingObservation()!.focus }}</p>
+          <p><strong>Phase:</strong> {{ viewingObservation()!.phase }}</p>
+          <p><strong>Rating:</strong> {{ viewingObservation()!.rating }}</p>
+          <p><strong>Notes:</strong> {{ viewingObservation()!.notes }}</p>
+          <button type="button" class="clear-btn" (click)="clearView()">Close</button>
+        </section>
+      }
     </section>
   } @else {
     <form class="card form-panel" [formGroup]="form" (ngSubmit)="submit()">
@@ -95,7 +117,7 @@
 
       <div class="actions-row">
         <button type="submit" class="submit-btn" [disabled]="saving()">
-          {{ saving() ? 'Saving observation...' : 'Submit Observation' }}
+          {{ saving() ? 'Saving observation...' : (editingObservationId() ? 'Save Changes' : 'Submit Observation') }}
         </button>
       </div>
     </form>

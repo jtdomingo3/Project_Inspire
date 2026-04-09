@@ -67,6 +67,14 @@ export class InspireApiService {
     );
   }
 
+  updateLesson(id: number, lesson: Partial<LessonRecord> & { lesson_data?: LessonDraft; model?: string; references?: string[] }): Observable<{ success: boolean; lesson: LessonRecord }> {
+    return this.http.put<{ success: boolean; lesson: LessonRecord }>(`/api/lessons/${id}`, lesson);
+  }
+
+  deleteLesson(id: number): Observable<{ success: boolean }> {
+    return this.http.delete<{ success: boolean }>(`/api/lessons/${id}`);
+  }
+
   saveLesson(lesson: Partial<LessonRecord> & { lesson_data?: LessonDraft; model?: string; references?: string[] }): Observable<{ success: boolean; lesson: LessonRecord }> {
     return this.http.post<{ success: boolean; lesson: LessonRecord }>('/api/lessons', lesson);
   }
@@ -158,6 +166,14 @@ export class InspireApiService {
     return this.http.post<{ success: boolean; reflection: ReflectionRecord }>('/api/reflections', payload);
   }
 
+  updateReflection(id: number, payload: Omit<ReflectionRecord, 'id' | 'created_at' | 'updated_at'>): Observable<{ success: boolean; reflection: ReflectionRecord }> {
+    return this.http.put<{ success: boolean; reflection: ReflectionRecord }>(`/api/reflections/${id}`, payload);
+  }
+
+  deleteReflection(id: number): Observable<{ success: boolean }> {
+    return this.http.delete<{ success: boolean }>(`/api/reflections/${id}`);
+  }
+
   getObservations(): Observable<ObservationRecord[]> {
     return this.http.get<{ observations?: ObservationRecord[] }>('/api/observations').pipe(
       map((response) => response.observations ?? [])
@@ -166,6 +182,14 @@ export class InspireApiService {
 
   saveObservation(payload: Omit<ObservationRecord, 'id' | 'created_at'>): Observable<{ success: boolean; observation: ObservationRecord }> {
     return this.http.post<{ success: boolean; observation: ObservationRecord }>('/api/observations', payload);
+  }
+
+  updateObservation(id: number, payload: Omit<ObservationRecord, 'id' | 'created_at'>): Observable<{ success: boolean; observation: ObservationRecord }> {
+    return this.http.put<{ success: boolean; observation: ObservationRecord }>(`/api/observations/${id}`, payload);
+  }
+
+  deleteObservation(id: number): Observable<{ success: boolean }> {
+    return this.http.delete<{ success: boolean }>(`/api/observations/${id}`);
   }
 
   getSurveyQuestions(): Observable<SurveyQuestionsResponse> {

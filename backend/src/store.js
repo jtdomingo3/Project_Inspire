@@ -474,6 +474,19 @@ export async function upsertLesson(record) {
   return nextRecord;
 }
 
+export async function deleteLesson(id) {
+  const store = await readStore();
+  const currentLength = store.lessons.length;
+  store.lessons = store.lessons.filter((item) => Number(item.id) !== Number(id));
+
+  if (store.lessons.length === currentLength) {
+    return false;
+  }
+
+  await writeStore(store);
+  return true;
+}
+
 export async function upsertReflection(record) {
   const store = await readStore();
   const id = record.id ? Number(record.id) : nextNumericId(store.reflections);
@@ -496,6 +509,19 @@ export async function upsertReflection(record) {
   return nextRecord;
 }
 
+export async function deleteReflection(id) {
+  const store = await readStore();
+  const currentLength = store.reflections.length;
+  store.reflections = store.reflections.filter((item) => Number(item.id) !== Number(id));
+
+  if (store.reflections.length === currentLength) {
+    return false;
+  }
+
+  await writeStore(store);
+  return true;
+}
+
 export async function upsertObservation(record) {
   const store = await readStore();
   const id = record.id ? Number(record.id) : nextNumericId(store.observations);
@@ -516,6 +542,19 @@ export async function upsertObservation(record) {
 
   await writeStore(store);
   return nextRecord;
+}
+
+export async function deleteObservation(id) {
+  const store = await readStore();
+  const currentLength = store.observations.length;
+  store.observations = store.observations.filter((item) => Number(item.id) !== Number(id));
+
+  if (store.observations.length === currentLength) {
+    return false;
+  }
+
+  await writeStore(store);
+  return true;
 }
 
 export async function upsertSurvey(record) {

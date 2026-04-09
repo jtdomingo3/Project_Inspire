@@ -21,6 +21,9 @@ export class ObservationsComponent implements OnInit {
   readonly saving = signal(false);
   readonly error = signal<string | null>(null);
   readonly activeTab = signal<'list' | 'new'>('list');
+  readonly editingObservationId = signal<number | null>(null);
+  readonly viewingObservation = signal<ObservationRecord | null>(null);
+  readonly deletingObservationId = signal<number | null>(null);
 
   readonly phases = ['Pre-Intervention', 'During Intervention', 'Post-Intervention'] as const;
   readonly focuses = ['Accommodation Use', 'Modification Use', 'Differentiation', 'Learner Participation', 'Strategy Application'] as const;
@@ -57,12 +60,21 @@ export class ObservationsComponent implements OnInit {
     this.saving.set(true);
 
     const raw = this.form.getRawValue();
-    this.api.saveObservation({
+    const payload = {
       ...raw,
       rating: Number(raw.rating)
-    }).subscribe({
+    };
+
+    const editingId = this.editingObservationId();
+    const request$ = editingId ? this.api.updateObservation(editingId, payload) : this.api.saveObservation(payload);
+
+    request$.subscribe({
       next: ({ observation }) => {
-        this.observations.update((current) => [observation, ...current]);
+        if (editingId) {
+          this.observations.update((current) => current.map((item) => item.id === observation.id ? observation : item));
+        } else {
+          this.observations.update((current) => [observation, ...current]);
+        }
         this.saving.set(false);
         this.activeTab.set('list');
         this.resetForm();
@@ -75,7 +87,58 @@ export class ObservationsComponent implements OnInit {
   }
 
   setTab(tab: 'list' | 'new'): void {
+    if (tab === 'new' && this.activeTab() !== 'new') {
+      this.editingObservationId.set(null);
+      this.resetForm();
+    }
     this.activeTab.set(tab);
+  }
+
+  openView(observation: ObservationRecord): void {
+    this.viewingObservation.set(observation);
+  }
+
+  clearView(): void {
+    this.viewingObservation.set(null);
+  }
+
+  openEdit(observation: ObservationRecord): void {
+    this.editingObservationId.set(observation.id);
+    this.activeTab.set('new');
+    this.form.reset({
+      observation_date: observation.observation_date,
+      teacher_observed: observation.teacher_observed,
+      subject: observation.subject,
+      focus: observation.focus,
+      phase: observation.phase,
+      rating: String(observation.rating),
+      notes: observation.notes
+    });
+  }
+
+  deleteObservation(observation: ObservationRecord): void {
+    if (!confirm('Delete this observation? This action cannot be undone.')) {
+      return;
+    }
+
+    this.deletingObservationId.set(observation.id);
+    this.api.deleteObservation(observation.id).subscribe({
+      next: () => {
+        this.observations.update((current) => current.filter((item) => item.id !== observation.id));
+        if (this.viewingObservation()?.id === observation.id) {
+          this.viewingObservation.set(null);
+        }
+        this.deletingObservationId.set(null);
+      },
+      error: (error) => {
+        this.error.set(this.api.describeError(error));
+        this.deletingObservationId.set(null);
+      }
+    });
+  }
+
+  isDeleting(observationId: number): boolean {
+    return this.deletingObservationId() === observationId;
   }
 
   private resetForm(): void {
@@ -88,6 +151,7 @@ export class ObservationsComponent implements OnInit {
       rating: '',
       notes: ''
     });
+    this.editingObservationId.set(null);
     this.form.markAsPristine();
     this.form.markAsUntouched();
   }
