@@ -1,0 +1,96 @@
+<section class="page-shell">
+  <div class="page-header card">
+    <div>
+      <p class="eyebrow">Classroom observations</p>
+      <h2>Capture observations tied to inclusive teaching practices.</h2>
+      <p>Observation entries are persisted locally and can be used in the admin dashboard.</p>
+    </div>
+  </div>
+
+  <div class="layout">
+    <form class="card form-panel" [formGroup]="form" (ngSubmit)="submit()">
+      <div class="grid">
+        <label>
+          <span>Date of observation</span>
+          <input type="date" formControlName="observation_date">
+        </label>
+        <label>
+          <span>Teacher observed</span>
+          <input type="text" formControlName="teacher_observed">
+        </label>
+        <label>
+          <span>Subject / grade</span>
+          <input type="text" formControlName="subject">
+        </label>
+        <label>
+          <span>Observation focus</span>
+          <select formControlName="focus">
+            @for (focus of ['Accommodation Use', 'Modification Use', 'Differentiation', 'Learner Participation', 'Strategy Application']; track focus) {
+              <option [value]="focus">{{ focus }}</option>
+            }
+          </select>
+        </label>
+        <label>
+          <span>Phase</span>
+          <select formControlName="phase">
+            @for (phase of ['Pre-Intervention', 'During Intervention', 'Post-Intervention']; track phase) {
+              <option [value]="phase">{{ phase }}</option>
+            }
+          </select>
+        </label>
+        <label>
+          <span>Rating</span>
+          <select formControlName="rating">
+            @for (rating of [1, 2, 3, 4, 5]; track rating) {
+              <option [value]="rating">{{ rating }}</option>
+            }
+          </select>
+        </label>
+        <label class="full-span">
+          <span>Observation notes</span>
+          <textarea rows="4" formControlName="notes"></textarea>
+        </label>
+      </div>
+
+      <button type="submit" class="primary-button" [disabled]="saving()">
+        {{ saving() ? 'Saving observation...' : 'Submit observation' }}
+      </button>
+    </form>
+
+    <aside class="card list-panel">
+      <p class="eyebrow">Saved observations</p>
+      @if (error()) {
+        <p class="error">{{ error() }}</p>
+      }
+
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Teacher</th>
+            <th>Subject</th>
+            <th>Focus</th>
+            <th>Phase</th>
+            <th>Rating</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (observation of observations(); track observation.id) {
+            <tr>
+              <td>{{ observation.observation_date }}</td>
+              <td>{{ observation.teacher_observed }}</td>
+              <td>{{ observation.subject }}</td>
+              <td>{{ observation.focus }}</td>
+              <td>{{ observation.phase }}</td>
+              <td>{{ observation.rating }}</td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="6">No observations saved yet.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </aside>
+  </div>
+</section>

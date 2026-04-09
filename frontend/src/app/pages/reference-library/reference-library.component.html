@@ -1,0 +1,129 @@
+<section class="library-shell">
+  <div class="library-header">
+    <div>
+      <div class="breadcrumbs">Tools · Resource Library</div>
+      <h2>Inclusive Teaching Resource Library</h2>
+    </div>
+    <button type="button" class="header-btn" (click)="openUpload()">Upload Reference</button>
+  </div>
+
+  <div class="toolbar card">
+    <input
+      type="search"
+      class="search-input"
+      placeholder="Search resources (e.g., Dyslexia, ADHD, templates)"
+      [ngModel]="searchQuery()"
+      (ngModelChange)="searchQuery.set($event)"
+    >
+
+    <div class="chip-row">
+      @for (category of categories; track category) {
+        <button
+          type="button"
+          class="chip"
+          [class.active]="activeCategory() === category"
+          (click)="setCategory(category)"
+        >
+          {{ category }}
+        </button>
+      }
+    </div>
+  </div>
+
+  @if (loading()) {
+    <section class="card status-panel">Loading resource library...</section>
+  } @else if (error()) {
+    <section class="card status-panel error-panel">{{ error() }}</section>
+  } @else {
+    <section class="card grid-panel">
+      <div class="resource-grid">
+        @for (item of filteredResources(); track item.id) {
+          <article class="resource-card">
+            <h3>{{ item.title }}</h3>
+            <span class="tag">{{ item.category }}</span>
+            <p>{{ item.description }}</p>
+            <div class="card-actions">
+              <button type="button" class="card-btn" (click)="openEdit(item)">Edit</button>
+              <span class="filename">{{ item.file_name }}</span>
+            </div>
+          </article>
+        } @empty {
+          <p class="empty-state">No resources match your filters.</p>
+        }
+      </div>
+    </section>
+  }
+
+  @if (editModalOpen()) {
+    <div class="modal-backdrop" (click)="closeEdit()">
+      <section class="modal-panel" (click)="$event.stopPropagation()">
+        <h3>Edit Resource</h3>
+
+        <label>
+          <span>Title</span>
+          <input type="text" [(ngModel)]="editTitle" [ngModelOptions]="{ standalone: true }">
+        </label>
+
+        <label>
+          <span>Description</span>
+          <textarea rows="3" [(ngModel)]="editDescription" [ngModelOptions]="{ standalone: true }"></textarea>
+        </label>
+
+        <label>
+          <span>Category</span>
+          <select [(ngModel)]="editCategory" [ngModelOptions]="{ standalone: true }">
+            <option value="Strategies">Strategies</option>
+            <option value="Tips">Tips</option>
+            <option value="Templates">Templates</option>
+            <option value="Videos">Videos</option>
+            <option value="References">References</option>
+          </select>
+        </label>
+
+        <div class="modal-actions">
+          <button type="button" class="header-btn" [disabled]="saving()" (click)="saveEdit()">{{ saving() ? 'Saving...' : 'Save Changes' }}</button>
+          <button type="button" class="card-btn" (click)="closeEdit()">Cancel</button>
+        </div>
+      </section>
+    </div>
+  }
+
+  @if (uploadModalOpen()) {
+    <div class="modal-backdrop" (click)="closeUpload()">
+      <section class="modal-panel" (click)="$event.stopPropagation()">
+        <h3>Upload New Reference</h3>
+
+        <label>
+          <span>File (PDF or DOCX)</span>
+          <input type="file" accept=".pdf,.docx" (change)="onFileChange($event)">
+        </label>
+
+        <label>
+          <span>Title</span>
+          <input type="text" [(ngModel)]="uploadTitle" [ngModelOptions]="{ standalone: true }" placeholder="Resource title">
+        </label>
+
+        <label>
+          <span>Description</span>
+          <textarea rows="3" [(ngModel)]="uploadDescription" [ngModelOptions]="{ standalone: true }" placeholder="What this resource is for"></textarea>
+        </label>
+
+        <label>
+          <span>Category</span>
+          <select [(ngModel)]="uploadCategory" [ngModelOptions]="{ standalone: true }">
+            <option value="Strategies">Strategies</option>
+            <option value="Tips">Tips</option>
+            <option value="Templates">Templates</option>
+            <option value="Videos">Videos</option>
+            <option value="References">References</option>
+          </select>
+        </label>
+
+        <div class="modal-actions">
+          <button type="button" class="header-btn" [disabled]="uploading()" (click)="uploadReference()">{{ uploading() ? 'Uploading...' : 'Upload Reference' }}</button>
+          <button type="button" class="card-btn" (click)="closeUpload()">Cancel</button>
+        </div>
+      </section>
+    </div>
+  }
+</section>

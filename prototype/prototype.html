@@ -1,0 +1,3649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Project INSPIRE – Inclusive Teaching Prototype</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --color-primary: #1e4d2b;
+      --color-primary-light: #2e7d4f;
+      --color-accent: #f7c948;
+      --color-accent-red: #e05c3a;
+      --color-accent-teal: #3aada8;
+      --color-bg: #f5f5f0;
+      --color-surface: #ffffff;
+      --color-text: #1a2c1e;
+      --color-text-muted: #5a7a62;
+      --color-border: #d4e0d6;
+
+      --sidebar-width: 260px;
+      --topbar-height: 180px;
+    }
+
+    body[data-theme="dark"] {
+      --color-bg: #121a14;
+      --color-surface: #19241c;
+      --color-text: #f4f7f2;
+      --color-text-muted: #9fb3a5;
+      --color-border: #2d3a30;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--color-bg);
+      color: var(--color-text);
+    }
+
+    img {
+      max-width: 100%;
+      display: block;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    button {
+      font-family: inherit;
+      cursor: pointer;
+      border-radius: 8px;
+      border: none;
+    }
+
+    .btn {
+      padding: 8px 14px;
+      font-size: 0.9rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-primary {
+      background: var(--color-primary);
+      color: #ffffff;
+    }
+
+    .btn-primary:hover {
+      background: var(--color-primary-light);
+    }
+
+    .btn-secondary {
+      background: #ffffff;
+      color: var(--color-primary);
+      border: 1px solid var(--color-border);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--color-text);
+      border: 1px solid transparent;
+    }
+
+    .btn-cta {
+      background: var(--color-accent);
+      color: var(--color-text);
+    }
+
+    .btn-danger {
+      background: var(--color-accent-red);
+      color: #ffffff;
+    }
+
+    .btn-small {
+      padding: 4px 8px;
+      font-size: 0.8rem;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 18px;
+      padding: 2px 6px;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      background: var(--color-accent);
+      color: var(--color-text);
+    }
+
+    .badge-status-final {
+      background: var(--color-accent-teal);
+      color: #ffffff;
+    }
+
+    .badge-status-draft {
+      background: var(--color-accent-red);
+      color: #ffffff;
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      border: 1px solid var(--color-border);
+      background: rgba(247, 201, 72, 0.12);
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      margin: 2px;
+      background: rgba(58, 173, 168, 0.12);
+      color: var(--color-primary);
+    }
+
+    .card {
+      background: var(--color-surface);
+      border-radius: 12px;
+      border: 1px solid var(--color-border);
+      box-shadow: 0 2px 8px rgba(30, 77, 43, 0.08);
+      padding: 16px;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .card-title {
+      font-family: "Nunito", system-ui, sans-serif;
+      font-weight: 700;
+      font-size: 1rem;
+    }
+
+    .section-title {
+      font-family: "Nunito", system-ui, sans-serif;
+      font-weight: 700;
+      font-size: 1.1rem;
+      margin: 0 0 8px;
+    }
+
+    .muted {
+      color: var(--color-text-muted);
+      font-size: 0.9rem;
+    }
+
+    .layout-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .layout-col-2 {
+      flex: 1 1 calc(50% - 8px);
+      min-width: 260px;
+    }
+
+    .layout-col-3 {
+      flex: 1 1 calc(33.33% - 10px);
+      min-width: 260px;
+    }
+
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    .table th,
+    .table td {
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--color-border);
+      text-align: left;
+    }
+
+    .table th {
+      background: rgba(30, 77, 43, 0.05);
+      font-weight: 600;
+    }
+
+    .table tr:nth-child(even) td {
+      background: rgba(30, 77, 43, 0.02);
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    input[type="number"],
+    input[type="date"],
+    select,
+    textarea {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--color-border);
+      font-family: inherit;
+      font-size: 0.9rem;
+      background: var(--color-surface);
+      color: var(--color-text);
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      outline: 2px solid var(--color-primary-light);
+      border-color: var(--color-primary-light);
+    }
+
+    textarea {
+      min-height: 70px;
+      resize: vertical;
+    }
+
+    label {
+      font-size: 0.85rem;
+      font-weight: 500;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .form-group {
+      margin-bottom: 12px;
+    }
+
+    .inline-fields {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .inline-fields .form-group {
+      flex: 1 1 160px;
+    }
+
+    /* Topbar & Sidebar */
+
+    #app-shell {
+      display: none;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    .topbar {
+      height: var(--topbar-height);
+      background: linear-gradient(135deg, #1e4d2b 0%, #2e7d4f 50%, #1e4d2b 100%);
+      border-bottom: 3px solid var(--color-accent);
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      box-shadow: 0 4px 12px rgba(30, 77, 43, 0.3);
+    }
+
+    .topbar-left {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 2px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: "Nunito", system-ui, sans-serif;
+      font-weight: 800;
+      color: #ffffff;
+      font-size: 1.5rem;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+    }
+
+    .logo-tagline {
+      font-size: 0.75rem;
+      color: var(--color-accent);
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      margin-left: 30px;
+    }
+
+    .logo-icon {
+      width: 28px;
+      height: 28px;
+      fill: var(--color-accent);
+    }
+
+    .topbar-center {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      padding: 0 24px;
+    }
+
+    .topbar-image {
+      height: 160px;
+      max-width: 100%;
+      width: auto;
+      object-fit: contain;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.95);
+      padding: 8px 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .icon-btn {
+      background: rgba(255,255,255,0.15);
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.3);
+      padding: 6px 8px;
+      font-size: 1.1rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+    }
+
+    .icon-btn:hover {
+      background: rgba(255,255,255,0.25);
+      border-color: var(--color-border);
+    }
+
+    #sidebar-toggle {
+      display: none;
+    }
+
+    .notifications {
+      position: relative;
+    }
+
+    .notif-badge {
+      position: absolute;
+      top: 0;
+      right: 0;
+      transform: translate(40%, -40%);
+    }
+
+    .notif-dropdown {
+      position: absolute;
+      right: 0;
+      margin-top: 6px;
+      width: 260px;
+      background: var(--color-surface);
+      border-radius: 10px;
+      border: 1px solid var(--color-border);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+      padding: 8px;
+      font-size: 0.85rem;
+      display: none;
+      z-index: 30;
+    }
+
+    .notif-item {
+      padding: 6px 6px;
+      border-radius: 6px;
+    }
+
+    .notif-item + .notif-item {
+      margin-top: 4px;
+    }
+
+    .notif-item:hover {
+      background: rgba(30, 77, 43, 0.06);
+    }
+
+    .user-info {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      font-size: 0.85rem;
+      color: #ffffff;
+      background: rgba(255,255,255,0.1);
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+
+    .user-name {
+      font-weight: 600;
+      color: #ffffff;
+    }
+
+    .user-role {
+      color: var(--color-accent);
+      font-size: 0.75rem;
+    }
+
+    .app-body {
+      display: flex;
+      flex: 1;
+      min-height: calc(100vh - var(--topbar-height));
+    }
+
+    .sidebar {
+      width: var(--sidebar-width);
+      background: var(--color-surface);
+      border-right: 1px solid var(--color-border);
+      padding: 12px 8px 16px;
+      position: sticky;
+      top: var(--topbar-height);
+      align-self: flex-start;
+      max-height: calc(100vh - var(--topbar-height));
+      overflow-y: auto;
+      z-index: 15;
+    }
+
+    .sidebar-section-title {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--color-text-muted);
+      margin: 10px 12px 4px;
+    }
+
+    .nav-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      color: var(--color-text);
+      border-left: 3px solid transparent;
+      margin: 2px 4px;
+    }
+
+    .nav-item span.icon {
+      width: 20px;
+      text-align: center;
+    }
+
+    .nav-item:hover {
+      background: rgba(30, 77, 43, 0.06);
+    }
+
+    .nav-item.active {
+      background: var(--color-primary);
+      color: #ffffff;
+      border-left-color: var(--color-accent);
+    }
+
+    .nav-divider {
+      border: none;
+      border-bottom: 1px dashed var(--color-border);
+      margin: 8px 0;
+    }
+
+    .nav-item.disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .main {
+      flex: 1;
+      padding: 16px 18px 40px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .view {
+      display: none;
+    }
+
+    .view-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .breadcrumbs {
+      font-size: 0.8rem;
+      color: var(--color-text-muted);
+      margin-bottom: 4px;
+    }
+
+    .kpi-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .kpi-card {
+      flex: 1 1 160px;
+      min-width: 160px;
+      padding: 12px 14px;
+    }
+
+    .kpi-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--color-text-muted);
+      margin-bottom: 4px;
+    }
+
+    .kpi-value {
+      font-family: "Nunito", system-ui, sans-serif;
+      font-size: 1.4rem;
+      font-weight: 800;
+    }
+
+    .tag-success {
+      background: rgba(58, 173, 168, 0.16);
+      color: var(--color-primary);
+      padding: 2px 6px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+    }
+
+    /* Login */
+
+    #login {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: radial-gradient(circle at top left, rgba(247, 201, 72, 0.15), transparent 60%),
+                  radial-gradient(circle at bottom right, rgba(46, 125, 79, 0.25), transparent 55%),
+                  var(--color-bg);
+    }
+
+    .login-card {
+      max-width: 520px;
+      width: 100%;
+      background: var(--color-surface);
+      border-radius: 16px;
+      border: 1px solid var(--color-border);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+      padding: 18px 18px 20px;
+    }
+
+    .login-card img {
+      border-radius: 10px;
+      margin-bottom: 12px;
+      border: 1px solid var(--color-border);
+    }
+
+    .login-title {
+      font-family: "Nunito", system-ui, sans-serif;
+      font-size: 1.4rem;
+      font-weight: 800;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .login-subtitle {
+      font-size: 0.9rem;
+      color: var(--color-text-muted);
+      margin-bottom: 16px;
+    }
+
+    .demo-notice {
+      font-size: 0.8rem;
+      color: var(--color-text-muted);
+      margin-top: 8px;
+    }
+
+    /* Wizard */
+
+    .wizard {
+      margin-top: 4px;
+    }
+
+    .wizard-steps {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    .wizard-step {
+      flex: 1;
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(30, 77, 43, 0.14);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .wizard-step-fill {
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: 0;
+      background: var(--color-primary);
+      transition: width 0.25s ease;
+    }
+
+    .wizard-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      color: var(--color-text-muted);
+      margin-bottom: 6px;
+    }
+
+    .wizard-nav {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 12px;
+      gap: 8px;
+    }
+
+    .wizard-nav .btn {
+      flex: 1;
+      justify-content: center;
+    }
+
+    .step-panel {
+      display: none;
+    }
+
+    .step-panel.active {
+      display: block;
+    }
+
+    .difficulty-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    .difficulty-card {
+      position: relative;
+      padding: 10px;
+      border-radius: 12px;
+      border: 1px solid var(--color-border);
+      cursor: pointer;
+      background: var(--color-surface);
+    }
+
+    .difficulty-card:hover {
+      border-color: var(--color-primary-light);
+      box-shadow: 0 2px 6px rgba(30, 77, 43, 0.12);
+    }
+
+    .difficulty-card.selected {
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 2px rgba(247, 201, 72, 0.9);
+    }
+
+    .difficulty-number {
+      font-size: 0.75rem;
+      color: var(--color-text-muted);
+    }
+
+    .difficulty-name {
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-top: 2px;
+    }
+
+    .difficulty-badge {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 16px;
+      height: 16px;
+      border-radius: 999px;
+      border: 2px solid var(--color-primary);
+      background: var(--color-accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      color: var(--color-primary);
+    }
+
+    .difficulty-badge::before {
+      content: "✓";
+    }
+
+    .badge-hidden {
+      display: none;
+    }
+
+    .subcategories {
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 10px;
+      background: rgba(30, 77, 43, 0.03);
+      border: 1px dashed var(--color-border);
+    }
+
+    .subcategories-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .indicator-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      columns: 2;
+      column-gap: 16px;
+    }
+
+    .indicator-item {
+      break-inside: avoid-column;
+      margin-bottom: 4px;
+      font-size: 0.85rem;
+    }
+
+    .support-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    /* Lesson view */
+
+    .accordion-section {
+      margin-bottom: 10px;
+    }
+
+    .accordion-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      padding: 6px 0;
+    }
+
+    .accordion-header h4 {
+      margin: 0;
+      font-size: 0.95rem;
+    }
+
+    .accordion-body {
+      padding: 4px 0 6px;
+      font-size: 0.9rem;
+    }
+
+    .tips-box {
+      background: rgba(58, 173, 168, 0.15);
+      border-left: 3px solid var(--color-accent-teal);
+      padding: 8px 10px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+    }
+
+    .referral-box {
+      background: rgba(224, 92, 58, 0.12);
+      border-left: 3px solid var(--color-accent-red);
+      padding: 8px 10px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+    }
+
+    .lesson-meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      font-size: 0.86rem;
+      margin-top: 6px;
+    }
+
+    /* DLP (Daily Lesson Plan) Styles */
+
+    .dlp-section {
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px dashed var(--color-border);
+    }
+
+    .dlp-section:last-of-type {
+      border-bottom: none;
+    }
+
+    .dlp-label {
+      font-weight: 600;
+      color: var(--color-primary);
+      font-size: 0.9rem;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .dlp-label::before {
+      content: "";
+      width: 4px;
+      height: 16px;
+      background: var(--color-accent);
+      border-radius: 2px;
+    }
+
+    .dlp-content {
+      font-size: 0.9rem;
+      line-height: 1.6;
+      padding-left: 10px;
+    }
+
+    .dlp-content ul {
+      margin: 0;
+      padding-left: 20px;
+    }
+
+    .dlp-content p {
+      margin: 0 0 6px;
+    }
+
+    /* Library cards */
+
+    .lib-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 12px;
+    }
+
+    .lib-card-title {
+      font-weight: 600;
+      margin-bottom: 4px;
+      font-size: 0.95rem;
+    }
+
+    .lib-detail {
+      margin-top: 12px;
+    }
+
+    /* Tabs */
+
+    .tabs {
+      display: inline-flex;
+      border-radius: 999px;
+      border: 1px solid var(--color-border);
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+
+    .tab {
+      padding: 6px 14px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      background: transparent;
+      border-radius: 0;
+    }
+
+    .tab.active {
+      background: var(--color-primary);
+      color: #ffffff;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* Resource cards & modal */
+
+    .resource-filters {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+
+    .resource-tabs {
+      display: inline-flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+
+    .resource-tab {
+      padding: 4px 10px;
+      font-size: 0.8rem;
+      border-radius: 999px;
+      border: 1px solid var(--color-border);
+      background: transparent;
+    }
+
+    .resource-tab.active {
+      background: var(--color-primary);
+      color: #ffffff;
+    }
+
+    .resource-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 10px;
+    }
+
+    .resource-card-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.4);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 40;
+    }
+
+    .modal {
+      background: var(--color-surface);
+      border-radius: 12px;
+      border: 1px solid var(--color-border);
+      max-width: 520px;
+      width: 94%;
+      max-height: 80vh;
+      overflow-y: auto;
+      padding: 16px;
+    }
+
+    /* Surveys */
+
+    .survey-question {
+      margin-bottom: 10px;
+      font-size: 0.9rem;
+    }
+
+    .likert-scale {
+      display: flex;
+      gap: 6px;
+      margin-top: 4px;
+      font-size: 0.8rem;
+    }
+
+    .likert-scale label {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      font-size: 0.75rem;
+    }
+
+    .likert-scale input {
+      margin: 0;
+    }
+
+    .survey-note {
+      font-size: 0.8rem;
+      color: var(--color-text-muted);
+      margin-bottom: 8px;
+    }
+
+    /* Charts */
+
+    .charts-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 12px;
+      margin-top: 10px;
+    }
+
+    .chart {
+      height: 220px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .chart-body {
+      flex: 1;
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+      padding: 6px 4px 4px;
+      border-radius: 8px;
+      background: rgba(30, 77, 43, 0.03);
+    }
+
+    .chart-bar {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      font-size: 0.75rem;
+      color: var(--color-text-muted);
+      gap: 4px;
+    }
+
+    .chart-bar-inner {
+      width: 100%;
+      border-radius: 6px 6px 0 0;
+      background: linear-gradient(180deg, var(--color-primary-light), var(--color-primary));
+    }
+
+    .chart-bar-inner.alt {
+      background: linear-gradient(180deg, var(--color-accent-teal), var(--color-primary-light));
+    }
+
+    /* Toasts */
+
+    #toast-container {
+      position: fixed;
+      right: 16px;
+      bottom: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 50;
+    }
+
+    .toast {
+      background: var(--color-surface);
+      border-radius: 10px;
+      border: 1px solid var(--color-border);
+      padding: 8px 12px;
+      font-size: 0.85rem;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.18);
+      min-width: 220px;
+    }
+
+    /* Spinner & AI overlay */
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      border: 4px solid rgba(255, 255, 255, 0.3);
+      border-top-color: var(--color-accent);
+      animation: spin 1s linear infinite;
+    }
+
+    .generation-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 60;
+    }
+
+    .generation-dialog {
+      background: var(--color-surface);
+      border-radius: 14px;
+      padding: 18px 22px;
+      text-align: center;
+      max-width: 340px;
+      width: 90%;
+      border: 1px solid var(--color-border);
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.3);
+    }
+
+    .generation-dialog h3 {
+      font-family: "Nunito", system-ui, sans-serif;
+      margin: 10px 0 4px;
+      font-size: 1.05rem;
+    }
+
+    .generation-dialog p {
+      font-size: 0.9rem;
+      color: var(--color-text-muted);
+    }
+
+    /* Stars */
+
+    .star-row {
+      display: flex;
+      gap: 4px;
+      font-size: 1.1rem;
+    }
+
+    .star-input {
+      cursor: pointer;
+      color: var(--color-border);
+    }
+
+    .star-input.active {
+      color: var(--color-accent);
+    }
+
+    /* Responsive */
+
+    @media (max-width: 768px) {
+      :root {
+        --sidebar-width: 240px;
+      }
+
+      #sidebar-toggle {
+        display: inline-flex;
+      }
+
+      .sidebar {
+        position: fixed;
+        top: var(--topbar-height);
+        left: 0;
+        height: calc(100vh - var(--topbar-height));
+        transform: translateX(-100%);
+        transition: transform 0.22s ease;
+        background: var(--color-surface);
+      }
+
+      .sidebar.open {
+        transform: translateX(0);
+      }
+
+      .app-body {
+        flex-direction: column;
+      }
+
+      .main {
+        padding: 14px 14px 32px;
+      }
+
+      .topbar-center {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body data-theme="light">
+  <!-- Login View -->
+  <div id="login" class="view" style="display:flex;">
+    <div class="login-card">
+      <img src="image.jpg" alt="No Learners Left Behind header" onerror="this.onerror=null; this.src='https://drive.google.com/uc?export=view&id=1s2G3oXBVkyBntHpkA9iqtULdVDpzXM1E';">
+      <div class="login-title">
+        <svg class="logo-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M9 21h6v-1.5H9V21zm3-19C7.93 2 5 4.92 5 8.5c0 2.17 1.08 4.09 2.77 5.26L8 15.5c0 .83.67 1.5 1.5 1.5h5c.83 0 1.5-.67 1.5-1.5l.23-1.74C17.92 12.59 19 10.67 19 8.5 19 4.92 16.07 2 12 2z"></path>
+        </svg>
+        INSPIRE
+      </div>
+      <div class="login-subtitle">
+        Welcome to Project INSPIRE — an AI-supported planning companion for teachers of learners with special needs.
+      </div>
+
+      <form onsubmit="return false;">
+        <div class="form-group">
+          <label for="login-email">Email</label>
+          <input type="email" id="login-email" placeholder="janice.quiñones@deped.gov.ph">
+        </div>
+        <div class="form-group">
+          <label for="login-password">Password</label>
+          <input type="password" id="login-password" placeholder="••••••••">
+        </div>
+      </form>
+
+      <div style="display:flex; flex-direction:column; gap:8px; margin-top:8px;">
+        <button class="btn btn-primary" id="btn-login-teacher">Login as Teacher</button>
+        <button class="btn btn-secondary" id="btn-login-admin">Login as Admin / Researcher</button>
+      </div>
+      <div class="demo-notice">
+        Demo Mode — click any button to enter. No real authentication is performed.
+      </div>
+    </div>
+  </div>
+
+  <!-- Authenticated Shell -->
+  <div id="app-shell">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button id="sidebar-toggle" class="icon-btn" aria-label="Toggle navigation">☰</button>
+        <div class="logo">
+          <svg class="logo-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M9 21h6v-1.5H9V21zm3-19C7.93 2 5 4.92 5 8.5c0 2.17 1.08 4.09 2.77 5.26L8 15.5c0 .83.67 1.5 1.5 1.5h5c.83 0 1.5-.67 1.5-1.5l.23-1.74C17.92 12.59 19 10.67 19 8.5 19 4.92 16.07 2 12 2z"></path>
+          </svg>
+          <span>INSPIRE</span>
+        </div>
+        <div class="logo-tagline">Inclusive Teaching Platform</div>
+      </div>
+      <div class="topbar-center">
+        <img src="image.jpg" alt="No Learners Left Behind header" class="topbar-image" onerror="this.onerror=null; this.src='https://drive.google.com/uc?export=view&id=1s2G3oXBVkyBntHpkA9iqtULdVDpzXM1E';">
+      </div>
+      <div class="topbar-right">
+        <button id="theme-toggle" class="icon-btn" aria-label="Toggle dark mode">🌙</button>
+        <div class="notifications">
+          <button id="notif-btn" class="icon-btn" aria-label="Notifications">
+            🔔
+            <span class="badge notif-badge">3</span>
+          </button>
+          <div id="notif-dropdown" class="notif-dropdown">
+            <div class="section-title" style="font-size:0.85rem;">Notifications</div>
+            <div class="notif-item">
+              Your lesson plan <strong>"Fractions Activity"</strong> was saved.
+            </div>
+            <div class="notif-item">
+              Reminder: Submit reflection log for April 4 lesson.
+            </div>
+            <div class="notif-item">
+              Pre-intervention survey is now available.
+            </div>
+          </div>
+        </div>
+        <div class="user-info">
+          <div class="user-name">Janice D. Quiñones</div>
+          <div class="user-role" id="user-role-label">Teacher</div>
+        </div>
+      </div>
+    </header>
+
+    <div class="app-body">
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-section-title">Main</div>
+        <ul class="nav-list">
+          <li><a href="#dashboard" class="nav-item" data-view="dashboard"><span class="icon">📋</span>Dashboard</a></li>
+        </ul>
+        <div class="sidebar-section-title" style="margin-top:10px;">Lesson Plans</div>
+        <ul class="nav-list">
+          <li><a href="#new-lesson" class="nav-item" data-view="new-lesson"><span class="icon">📝</span>New Lesson Plan</a></li>
+          <li><a href="#my-lessons" class="nav-item" data-view="my-lessons"><span class="icon">📂</span>My Lessons</a></li>
+          <li><a href="#learner-lib" class="nav-item" data-view="learner-lib"><span class="icon">👁</span>Learner Difficulty Library</a></li>
+          <li><a href="#reflections" class="nav-item" data-view="reflections"><span class="icon">📓</span>Reflection Logs</a></li>
+          <li><a href="#observations" class="nav-item" data-view="observations"><span class="icon">👀</span>Classroom Observations</a></li>
+          <li><a href="#resources" class="nav-item" data-view="resources"><span class="icon">📚</span>Resource Library</a></li>
+          <li><a href="#surveys" class="nav-item" data-view="surveys"><span class="icon">📊</span>Pre/Post Survey</a></li>
+        </ul>
+
+        <hr class="nav-divider">
+
+        <div class="sidebar-section-title">Admin only</div>
+        <ul class="nav-list">
+          <li><a href="#admin" class="nav-item" data-view="admin" id="nav-admin"><span class="icon">📈</span>Analytics Dashboard</a></li>
+        </ul>
+
+        <hr class="nav-divider">
+
+        <ul class="nav-list">
+          <li><a href="#profile" class="nav-item" data-view="profile"><span class="icon">👤</span>My Profile</a></li>
+          <li><a href="#login" class="nav-item" id="nav-logout"><span class="icon">🚪</span>Logout</a></li>
+        </ul>
+      </aside>
+
+      <main class="main">
+        <!-- Dashboard -->
+        <section id="dashboard" class="view">
+          <div class="breadcrumbs">Home · Dashboard</div>
+          <div class="view-header">
+            <h2 class="section-title">Teacher Dashboard</h2>
+            <span class="muted">San Felipe National High School · Basud, Camarines Norte</span>
+          </div>
+
+          <div class="kpi-row">
+            <div class="card kpi-card">
+              <div class="kpi-label">Lesson Plans Created</div>
+              <div class="kpi-value">12</div>
+            </div>
+            <div class="card kpi-card">
+              <div class="kpi-label">Reflections Submitted</div>
+              <div class="kpi-value">8</div>
+            </div>
+            <div class="card kpi-card">
+              <div class="kpi-label">Learners Profiled</div>
+              <div class="kpi-value">5</div>
+            </div>
+            <div class="card kpi-card">
+              <div class="kpi-label">Strategies Generated</div>
+              <div class="kpi-value">34</div>
+            </div>
+          </div>
+
+          <div class="layout-row" style="margin-bottom:18px;">
+            <div class="layout-col-3">
+              <div class="card">
+                <div class="card-title">Quick Actions</div>
+                <div style="display:flex; flex-direction:column; gap:8px; margin-top:6px;">
+                  <button class="btn btn-primary" data-nav="#new-lesson">➕ Create New Lesson Plan</button>
+                  <button class="btn btn-secondary" data-nav="#reflection-new">📓 Write Reflection</button>
+                  <button class="btn btn-secondary" data-nav="#resources">📚 Browse Resources</button>
+                </div>
+              </div>
+            </div>
+            <div class="layout-col-3">
+              <div class="card">
+                <div class="card-header">
+                  <div class="card-title">Upcoming Reminders</div>
+                </div>
+                <ul style="padding-left:18px; margin:0; font-size:0.9rem;">
+                  <li>Post-intervention survey due: Sept 1, 2026</li>
+                  <li>Submit reflection log for last week</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Recent Lesson Plans</div>
+            </div>
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Title</th>
+                  <th>Subject</th>
+                  <th>Grade</th>
+                  <th>Difficulty Category</th>
+                  <th>Date</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Fractions Activity Plan</td>
+                  <td>Math</td>
+                  <td>Grade 8</td>
+                  <td>Difficulty in Reading</td>
+                  <td>Apr 5, 2026</td>
+                  <td><span class="badge badge-status-final">✅ Final</span></td>
+                  <td><button class="btn btn-small btn-secondary" data-nav="#lesson-view">Open</button></td>
+                </tr>
+                <tr>
+                  <td>Short Story Analysis</td>
+                  <td>English</td>
+                  <td>Grade 9</td>
+                  <td>ADHD</td>
+                  <td>Apr 3, 2026</td>
+                  <td><span class="badge badge-status-final">✅ Final</span></td>
+                  <td><button class="btn btn-small btn-secondary" data-nav="#lesson-view">Open</button></td>
+                </tr>
+                <tr>
+                  <td>Science Lab Safety</td>
+                  <td>Science</td>
+                  <td>Grade 7</td>
+                  <td>Difficulty in Mobility</td>
+                  <td>Mar 30, 2026</td>
+                  <td><span class="badge badge-status-draft">📝 Draft</span></td>
+                  <td><button class="btn btn-small btn-secondary" data-nav="#lesson-view">Open</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- New Lesson Plan Wizard -->
+        <section id="new-lesson" class="view">
+          <div class="breadcrumbs">Lesson Plans · New</div>
+          <div class="view-header">
+            <h2 class="section-title">New Inclusive Lesson Plan</h2>
+            <span class="muted">Follow the 5-step wizard to tell INSPIRE about your class.</span>
+          </div>
+
+          <div class="card wizard">
+            <div class="wizard-labels">
+              <span>1. Details</span>
+              <span>2. Difficulty</span>
+              <span>3. Indicators</span>
+              <span>4. Support</span>
+              <span>5. Review</span>
+            </div>
+            <div class="wizard-steps">
+              <div class="wizard-step"><div class="wizard-step-fill" id="wizard-fill-1"></div></div>
+              <div class="wizard-step"><div class="wizard-step-fill" id="wizard-fill-2"></div></div>
+              <div class="wizard-step"><div class="wizard-step-fill" id="wizard-fill-3"></div></div>
+              <div class="wizard-step"><div class="wizard-step-fill" id="wizard-fill-4"></div></div>
+              <div class="wizard-step"><div class="wizard-step-fill" id="wizard-fill-5"></div></div>
+            </div>
+
+            <!-- Step 1 -->
+            <div class="step-panel active" data-step="1">
+              <h3 class="section-title">Step 1 — Lesson Details</h3>
+              <div class="inline-fields">
+                <div class="form-group">
+                  <label for="lesson-subject">Subject Area</label>
+                  <select id="lesson-subject">
+                    <option>English</option>
+                    <option>Math</option>
+                    <option>Science</option>
+                    <option>Filipino</option>
+                    <option>Araling Panlipunan</option>
+                    <option>TLE</option>
+                    <option>MAPEH</option>
+                    <option>Values Ed</option>
+                    <option>Other</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="lesson-grade">Grade Level</label>
+                  <select id="lesson-grade">
+                    <option>Grade 7</option>
+                    <option>Grade 8</option>
+                    <option>Grade 9</option>
+                    <option>Grade 10</option>
+                    <option>Grade 11</option>
+                    <option>Grade 12</option>
+                    <option>ALS</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="lesson-quarter">Quarter</label>
+                  <select id="lesson-quarter">
+                    <option>Q1</option>
+                    <option>Q2</option>
+                    <option>Q3</option>
+                    <option>Q4</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-group" style="margin-top:8px;">
+                <label for="lesson-title">Topic / Lesson Title</label>
+                <input type="text" id="lesson-title" placeholder="Fractions and Decimals">
+              </div>
+              <div class="form-group">
+                <label for="lesson-objectives">Learning Objectives</label>
+                <textarea id="lesson-objectives" rows="3" placeholder="Describe 2–3 specific, observable learning objectives for your class."></textarea>
+              </div>
+              <div class="form-group">
+                <label for="lesson-sen-count">Number of learners with SEN in class</label>
+                <input type="number" id="lesson-sen-count" min="0" value="1">
+              </div>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="step-panel" data-step="2">
+              <h3 class="section-title">Step 2 — Learner Difficulty Profile</h3>
+              <p class="muted">Select the learner's difficulty category and subcategory, based on screening or existing records.</p>
+
+              <div class="form-group" style="margin-top:6px;">
+                <label><input type="checkbox" id="multi-difficulty"> This class has learners with multiple difficulty types (select up to 3 categories).</label>
+              </div>
+
+              <div class="difficulty-grid" id="difficulty-grid">
+                <!-- Cards will be populated by JS -->
+              </div>
+
+              <div id="subcategory-container" class="subcategories" style="display:none;">
+                <div class="subcategories-title">Subcategory</div>
+                <div id="subcategory-options"></div>
+              </div>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="step-panel" data-step="3">
+              <h3 class="section-title">Step 3 — Observable Indicators</h3>
+              <p class="muted" id="indicator-intro">Based on your selected difficulty category, tick the indicators you observe in your learner.</p>
+              <ul id="indicator-list" class="indicator-list">
+                <!-- Filled via JS -->
+              </ul>
+              <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-start; margin-top:12px;">
+                <input type="text" id="custom-indicator-input" placeholder="Add custom observed manifestation" style="flex:1 1 260px; padding:8px 10px; border-radius:8px; border:1px solid var(--color-border); font-family:inherit; font-size:0.9rem;">
+                <button class="btn btn-secondary btn-small" id="btn-add-custom-indicator" type="button">Add Indicator</button>
+              </div>
+            </div>
+
+            <!-- Step 4 -->
+            <div class="step-panel" data-step="4">
+              <h3 class="section-title">Step 4 — Support Type Selection</h3>
+              <p class="muted">What type of inclusive support do you need for this lesson plan? You can select multiple options.</p>
+
+              <div class="support-tags">
+                <label><input type="checkbox" class="support-type" value="Accommodations" checked> Accommodations</label>
+                <label><input type="checkbox" class="support-type" value="Modifications" checked> Modifications</label>
+                <label><input type="checkbox" class="support-type" value="Differentiated Activities" checked> Differentiated Activities</label>
+                <label><input type="checkbox" class="support-type" value="Adaptive Assessment Methods" checked> Adaptive Assessment Methods</label>
+                <label><input type="checkbox" class="support-type" value="Behavior Support Strategies"> Behavior Support Strategies</label>
+                <label><input type="checkbox" class="support-type" value="Scaffolding / ZPD-aligned Support"> Scaffolding / ZPD-aligned Support</label>
+                <label><input type="checkbox" class="support-type" value="Resource Recommendations"> Resource Recommendations</label>
+              </div>
+
+              <div class="form-group" style="margin-top:12px;">
+                <label for="custom-support-text">Add custom support or strategy</label>
+                <textarea id="custom-support-text" rows="3" placeholder="Describe additional supports, accommodations, or modifications needed for this lesson."></textarea>
+              </div>
+
+              <div class="form-group" style="margin-top:12px; max-width:260px;">
+                <label for="delivery-mode">Lesson Delivery Mode</label>
+                <select id="delivery-mode">
+                  <option>Face-to-face</option>
+                  <option>Modular</option>
+                  <option>Online</option>
+                  <option>Blended</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Step 5 -->
+            <div class="step-panel" data-step="5">
+              <h3 class="section-title">Step 5 — Review & Generate</h3>
+              <p class="muted">Review the summary below, then let INSPIRE draft an inclusive lesson plan for you.</p>
+
+              <div class="card" style="margin-top:8px; background:rgba(30,77,43,0.02);">
+                <div class="card-header">
+                  <div class="card-title">Lesson Summary</div>
+                </div>
+                <div style="font-size:0.9rem;">
+                  <div class="lesson-meta-row">
+                    <span><strong>Subject:</strong> <span id="summary-subject">Math</span></span>
+                    <span><strong>Grade:</strong> <span id="summary-grade">Grade 8</span></span>
+                    <span><strong>Quarter:</strong> <span id="summary-quarter">Q3</span></span>
+                    <span><strong>Topic:</strong> <span id="summary-title">Fractions and Decimals</span></span>
+                  </div>
+                  <div class="lesson-meta-row" style="margin-top:6px;">
+                    <span><strong>Difficulty:</strong> <span id="summary-difficulty">2.1 Difficulty in Reading (Dyslexia)</span></span>
+                    <span><strong>Indicators selected:</strong> <span id="summary-indicators-count">0</span></span>
+                  </div>
+                  <div class="lesson-meta-row" style="margin-top:6px;">
+                    <span><strong>Support Types:</strong> <span id="summary-support-types">Accommodations, Modifications, Differentiated Activities, Adaptive Assessment Methods</span></span>
+                  </div>
+                  <div class="lesson-meta-row" style="margin-top:6px; gap:10px; flex-wrap:wrap;">
+                    <span><strong>Reviewed by:</strong> <input id="summary-reviewed-by" type="text" placeholder="Department Head" style="width:220px; padding:6px 10px; border-radius:8px; border:1px solid var(--color-border); font-family:inherit;"></span>
+                    <span><strong>Noted by:</strong> <input id="summary-noted-by" type="text" placeholder="School Principal" style="width:220px; padding:6px 10px; border-radius:8px; border:1px solid var(--color-border); font-family:inherit;"></span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="model-select">Choose AI Model</label>
+                <select id="model-select">
+                  <option value="openai/gpt-oss-20b:free">openai/gpt-oss-20b:free</option>
+                  <option value="qwen/qwen3.6-plus">qwen/qwen3.6-plus</option>
+                  <option value="stepfun/step-3.5-flash">stepfun/step-3.5-flash</option>
+                  <option value="qwen/qwen3.6-plus-preview">qwen/qwen3.6-plus-preview</option>
+                  <option value="nvidia/nemotron-3-super-120b-a12b:free">nvidia/nemotron-3-super-120b-a12b:free</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="reference-select">Load reference documents</label>
+                <select id="reference-select" multiple size="5" style="min-height:120px;">
+                  <option value="DO_s2020_021-transition.pdf" selected>DO_s2020_021-transition.pdf</option>
+                  <option value="DO_s2021_044.pdf" selected>DO_s2021_044.pdf</option>
+                  <option value="DSM-5.pdf" selected>DSM-5.pdf</option>
+                  <option value="LEGAL BASIS.docx" selected>LEGAL BASIS.docx</option>
+                  <option value="QUINONES_JANICE_ACTION RESEARCH_PROPOSAL.pdf" selected>QUINONES_JANICE_ACTION RESEARCH_PROPOSAL.pdf</option>
+                  <option value="REVISED K TO 12 DLP.docx" selected>REVISED K TO 12 DLP.docx</option>
+                  <option value="assessment-checklist.docx" selected>assessment-checklist.docx</option>
+                </select>
+                <p class="muted" style="margin-top:6px;">Hold Ctrl / Cmd to select multiple references.</p>
+              </div>
+              <div style="margin-top:12px; display:flex; justify-content:flex-end;">
+                <button class="btn btn-cta" id="btn-generate-lesson">⚡ Generate Lesson Plan</button>
+              </div>
+            </div>
+
+            <div class="wizard-nav">
+              <button class="btn btn-secondary" id="wizard-prev">← Back</button>
+              <button class="btn btn-primary" id="wizard-next">Next →</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- My Lessons -->
+        <section id="my-lessons" class="view">
+          <div class="breadcrumbs">Lesson Plans · My Lessons</div>
+          <div class="view-header">
+            <h2 class="section-title">My Lesson Plans</h2>
+            <button class="btn btn-primary" data-nav="#new-lesson">+ New Lesson Plan</button>
+          </div>
+
+          <div class="card" style="margin-bottom:10px;">
+            <div class="inline-fields">
+              <div class="form-group">
+                <label>Subject</label>
+                <select>
+                  <option>All</option>
+                  <option>Math</option>
+                  <option>English</option>
+                  <option>Science</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Grade</label>
+                <select>
+                  <option>All</option>
+                  <option>Grade 7</option>
+                  <option>Grade 8</option>
+                  <option>Grade 9</option>
+                  <option>Grade 10</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Difficulty Category</label>
+                <select>
+                  <option>All</option>
+                  <option>Difficulty in Reading</option>
+                  <option>ADHD</option>
+                  <option>Difficulty in Mobility</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Date Range</label>
+                <input type="text" placeholder="Any time">
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Title</th>
+                  <th>Subject</th>
+                  <th>Grade</th>
+                  <th>Difficulty</th>
+                  <th>Support Types</th>
+                  <th>Date</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Fractions Activity Plan</td>
+                  <td>Math</td>
+                  <td>Grade 8</td>
+                  <td>2.1 Reading (Dyslexia)</td>
+                  <td>Accommodations, Differentiation</td>
+                  <td>Apr 5, 2026</td>
+                  <td><span class="badge badge-status-final">Final</span></td>
+                  <td>
+                    <button class="btn btn-small btn-secondary" data-nav="#lesson-view">👁</button>
+                    <button class="btn btn-small btn-secondary">✏️</button>
+                    <button class="btn btn-small btn-secondary">🖨️</button>
+                    <button class="btn btn-small btn-danger">🗑️</button>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Short Story Analysis</td>
+                  <td>English</td>
+                  <td>Grade 9</td>
+                  <td>11.A ADHD — Inattention</td>
+                  <td>Accommodations, Behavior Support</td>
+                  <td>Apr 3, 2026</td>
+                  <td><span class="badge badge-status-final">Final</span></td>
+                  <td>
+                    <button class="btn btn-small btn-secondary" data-nav="#lesson-view">👁</button>
+                    <button class="btn btn-small btn-secondary">✏️</button>
+                    <button class="btn btn-small btn-secondary">🖨️</button>
+                    <button class="btn btn-small btn-danger">🗑️</button>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Science Lab Safety</td>
+                  <td>Science</td>
+                  <td>Grade 7</td>
+                  <td>4. Difficulty in Mobility</td>
+                  <td>Accommodations, Modifications</td>
+                  <td>Mar 30, 2026</td>
+                  <td><span class="badge badge-status-draft">Draft</span></td>
+                  <td>
+                    <button class="btn btn-small btn-secondary" data-nav="#lesson-view">👁</button>
+                    <button class="btn btn-small btn-secondary">✏️</button>
+                    <button class="btn btn-small btn-secondary">🖨️</button>
+                    <button class="btn btn-small btn-danger">🗑️</button>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Parts of the Microscope</td>
+                  <td>Science</td>
+                  <td>Grade 8</td>
+                  <td>3. Difficulty in Communication</td>
+                  <td>Visual Supports, Differentiation</td>
+                  <td>Mar 20, 2026</td>
+                  <td><span class="badge badge-status-final">Final</span></td>
+                  <td>
+                    <button class="btn btn-small btn-secondary" data-nav="#lesson-view">👁</button>
+                    <button class="btn btn-small btn-secondary">✏️</button>
+                    <button class="btn btn-small btn-secondary">🖨️</button>
+                    <button class="btn btn-small btn-danger">🗑️</button>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Local Government Roles</td>
+                  <td>Araling Panlipunan</td>
+                  <td>Grade 9</td>
+                  <td>8. Difficulty in Performing Adaptive Skills</td>
+                  <td>Accommodations</td>
+                  <td>Mar 15, 2026</td>
+                  <td><span class="badge badge-status-draft">Draft</span></td>
+                  <td>
+                    <button class="btn btn-small btn-secondary" data-nav="#lesson-view">👁</button>
+                    <button class="btn btn-small btn-secondary">✏️</button>
+                    <button class="btn btn-small btn-secondary">🖨️</button>
+                    <button class="btn btn-small btn-danger">🗑️</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Lesson View -->
+        <section id="lesson-view" class="view">
+          <div class="breadcrumbs">Lesson Plans · View</div>
+          <div class="view-header">
+            <h2 class="section-title">Daily Lesson Plan <span class="badge badge-status-final" id="lv-status-badge" style="margin-left:10px;">Final</span></h2>
+            <div style="display:flex; flex-wrap:wrap; gap:6px;">
+              <button class="btn btn-secondary btn-small">✏️ Edit</button>
+              <button class="btn btn-secondary btn-small">🖨️ Print</button>
+              <button class="btn btn-secondary btn-small">⬇️ Export PDF</button>
+              <button class="btn btn-primary btn-small" id="btn-mark-final">Mark as Final</button>
+            </div>
+          </div>
+
+          <div class="card" style="padding:0; overflow:hidden;">
+            <!-- DLP Header Table -->
+            <table class="dlp-table" style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+              <tbody>
+                <tr>
+                  <td style="width:50%; padding:10px; border:1px solid var(--color-border); background:rgba(30,77,43,0.05);">
+                    <strong>School:</strong> <span id="lv-school">San Felipe National High School</span>
+                  </td>
+                  <td style="width:25%; padding:10px; border:1px solid var(--color-border); background:rgba(30,77,43,0.05);">
+                    <strong>Grade Level:</strong> <span id="lv-grade">8</span>
+                  </td>
+                  <td style="width:25%; padding:10px; border:1px solid var(--color-border); background:rgba(30,77,43,0.05);">
+                    <strong>Quarter:</strong> <span id="lv-quarter">1</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:10px; border:1px solid var(--color-border); background:rgba(30,77,43,0.05);">
+                    <strong>Teacher:</strong> <span id="lv-teacher">Janice D. Quiñones</span>
+                  </td>
+                  <td colspan="2" style="padding:10px; border:1px solid var(--color-border); background:rgba(30,77,43,0.05);">
+                    <strong>Learning Area:</strong> <span id="lv-subject">Mathematics</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td colspan="3" style="padding:10px; border:1px solid var(--color-border); background:rgba(30,77,43,0.05);">
+                    <strong>Teaching Date and Time:</strong> <span id="lv-date">April 5, 2026 | 8:00 AM - 9:00 AM</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+
+            <!-- Section I: Curriculum Content -->
+            <div style="padding:16px;">
+              <h3 style="color:var(--color-primary); margin:0 0 12px; font-size:1rem; border-bottom:2px solid var(--color-primary); padding-bottom:6px;">
+                I. CURRICULUM CONTENT, STANDARDS AND LESSON COMPETENCIES
+              </h3>
+
+              <div class="dlp-section">
+                <div class="dlp-label">A. Content Standards</div>
+                <div class="dlp-content" id="lv-content-standards">
+                  The learner demonstrates understanding of key concepts of fractions and decimals, including their relationship and conversions.
+                </div>
+              </div>
+
+              <div class="dlp-section">
+                <div class="dlp-label">B. Performance Standards</div>
+                <div class="dlp-content" id="lv-performance-standards">
+                  The learner is able to formulate real-life problems involving fractions and decimals and solve these using appropriate strategies.
+                </div>
+              </div>
+
+              <div class="dlp-section">
+                <div class="dlp-label">C. Learning Competencies and Objectives</div>
+                <div class="dlp-content" id="lv-competencies">
+                  <ul style="margin:0; padding-left:20px;">
+                    <li>Convert between fractions and decimals with denominators of 10, 100, and 1000. (M8NS-Ia-1)</li>
+                    <li>Solve one-step word problems involving fractions and decimals using visual models.</li>
+                    <li>Explain solutions orally using fraction and decimal language.</li>
+                  </ul>
+                </div>
+              </div>
+
+              <div class="dlp-section">
+                <div class="dlp-label">D. Content</div>
+                <div class="dlp-content" id="lv-content">
+                  <strong>Topic:</strong> <span id="lv-topic">Fractions and Decimals</span><br>
+                  <strong>Lesson:</strong> Converting Fractions to Decimals and Vice Versa
+                </div>
+              </div>
+
+              <div class="dlp-section">
+                <div class="dlp-label">E. Integration</div>
+                <div class="dlp-content" id="lv-integration">
+                  <div class="tips-box" style="margin-bottom:10px;">
+                    <strong>Inclusive Education Focus:</strong> This lesson integrates support strategies for learners with <strong id="lv-difficulty-pill">Difficulty in Reading (Dyslexia)</strong>
+                  </div>
+                  <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:10px;">
+                    <div style="background:rgba(58,173,168,0.1); padding:10px; border-radius:8px; border-left:3px solid var(--color-accent-teal);">
+                      <strong style="color:var(--color-primary);">Accommodations:</strong>
+                      <ul style="margin:6px 0 0; padding-left:18px; font-size:0.85rem;">
+                        <li>Large, bold fonts (Arial/Comic Sans, 14pt min)</li>
+                        <li>Oral responses instead of written answers</li>
+                        <li>Preferential seating near the board</li>
+                        <li>Extended time (1.5× standard time)</li>
+                      </ul>
+                    </div>
+                    <div style="background:rgba(247,201,72,0.15); padding:10px; border-radius:8px; border-left:3px solid var(--color-accent);">
+                      <strong style="color:var(--color-primary);">Modifications:</strong>
+                      <ul style="margin:6px 0 0; padding-left:18px; font-size:0.85rem;">
+                        <li>Reduced problems (10 to 5)</li>
+                        <li>Simplified word problems</li>
+                        <li>Focus on concept mastery over speed</li>
+                        <li>Visual aids and manipulatives allowed</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="dlp-section">
+                <div class="dlp-label">F. Observed Manifestations</div>
+                <div class="dlp-content" id="lv-custom-indicators">
+                  <em>No additional manifestations specified.</em>
+                </div>
+              </div>
+
+              <div class="dlp-section">
+                <div class="dlp-label">G. Additional Support Notes</div>
+                <div class="dlp-content" id="lv-custom-support">
+                  <em>No additional support notes specified.</em>
+                </div>
+              </div>
+
+              <!-- Section II: Learning Resources -->
+              <h3 style="color:var(--color-primary); margin:20px 0 12px; font-size:1rem; border-bottom:2px solid var(--color-primary); padding-bottom:6px;">
+                II. LEARNING RESOURCES
+              </h3>
+
+              <div class="dlp-section">
+                <div class="dlp-content" id="lv-resources">
+                  <ul style="margin:0; padding-left:20px;">
+                    <li>Mathematics 8 Learner’s Module, DepEd</li>
+                    <li>Fraction strips and decimal cards (printed)</li>
+                    <li>Visual aids: Fraction-Decimal Conversion Chart</li>
+                    <li>Worksheets with large fonts for SEN learners</li>
+                    <li>Manipulatives: Base-ten blocks</li>
+                  </ul>
+                </div>
+              </div>
+
+              <!-- Section III: Teaching and Learning Procedure -->
+              <h3 style="color:var(--color-primary); margin:20px 0 12px; font-size:1rem; border-bottom:2px solid var(--color-primary); padding-bottom:6px;">
+                III. TEACHING AND LEARNING PROCEDURE
+              </h3>
+
+              <div class="dlp-section">
+                <div class="dlp-label">A. Activating Prior Knowledge</div>
+                <div class="dlp-content" id="lv-prior-knowledge">
+                  <p><strong>Duration:</strong> 5 minutes</p>
+                  <ul style="margin:6px 0 0; padding-left:20px;">
+                    <li>Review previous lesson on basic fractions using visual fraction strips.</li>
+                    <li>Ask learners to identify fractions represented by shaded parts (oral responses accepted for SEN learners).</li>
+                    <li>Use color-coded materials to help learners with dyslexia distinguish numerator from denominator.</li>
+                  </ul>
+                </div>
+              </div>
+
+              <div class="dlp-section">
+                <div class="dlp-label">B. Establishing Lesson Purpose</div>
+                <div class="dlp-content" id="lv-lesson-purpose">
+                  <p><strong>Duration:</strong> 5 minutes</p>
+                  <ul style="margin:6px 0 0; padding-left:20px;">
+                    <li>Present real-life scenario: "How do we use fractions and decimals when shopping or measuring?"</li>
+                    <li>Display learning objectives using large, clear fonts on visual aids.</li>
+                    <li>Read objectives aloud for learners who benefit from auditory input.</li>
+                  </ul>
+                </div>
+              </div>
+
+              <div class="dlp-section">
+                <div class="dlp-label">C. Developing and Deepening Understanding</div>
+                <div class="dlp-content" id="lv-developing">
+                  <p><strong>Duration:</strong> 25 minutes</p>
+
+                  <p style="margin-top:10px;"><strong>Teacher’s Activity:</strong></p>
+                  <ul style="margin:6px 0 0; padding-left:20px;">
+                    <li>Model fraction-to-decimal conversion using think-aloud strategy.</li>
+                    <li>Use step-by-step visual guides with icons (read, underline, compute, check).</li>
+                    <li>Demonstrate using manipulatives alongside written examples.</li>
+                  </ul>
+
+                  <p style="margin-top:10px;"><strong>Learner’s Activity (Differentiated):</strong></p>
+                  <table class="table" style="margin-top:6px;">
+                    <thead>
+                      <tr>
+                        <th>Learner Group</th>
+                        <th>Activity</th>
+                        <th>Materials</th>
+                        <th>Time</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>SEN Learner</td>
+                        <td>Match fraction cards to decimal cards with peer support</td>
+                        <td>Large-print card set</td>
+                        <td>15 min</td>
+                      </tr>
+                      <tr>
+                        <td>Peer Group</td>
+                        <td>Solve fraction-decimal word problems in pairs</td>
+                        <td>Worksheet</td>
+                        <td>15 min</td>
+                      </tr>
+                      <tr>
+                        <td>Advanced</td>
+                        <td>Create own word problems and exchange with peers</td>
+                        <td>Notebook</td>
+                        <td>15 min</td>
+                      </tr>
+                    </tbody>
+                  </table>
+
+                  <div class="tips-box" style="margin-top:10px;">
+                    <strong>Scaffolding Strategy:</strong> Pair the focus learner with a patient peer tutor trained to read directions aloud.
+                  </div>
+                </div>
+              </div>
+
+              <div class="dlp-section">
+                <div class="dlp-label">D. Making Generalization</div>
+                <div class="dlp-content" id="lv-generalization">
+                  <p><strong>Duration:</strong> 5 minutes</p>
+                  <ul style="margin:6px 0 0; padding-left:20px;">
+                    <li>Ask learners: "How do we convert a fraction to a decimal?"</li>
+                    <li>Allow oral responses; use visual summary chart for reference.</li>
+                    <li>Summarize key points using color-coded fraction strips (red for numerator, blue for denominator).</li>
+                  </ul>
+                </div>
+              </div>
+
+              <div class="dlp-section">
+                <div class="dlp-label">E. Evaluating Learning</div>
+                <div class="dlp-content" id="lv-evaluation">
+                  <p><strong>Duration:</strong> 10 minutes</p>
+                  <p><strong>Adaptive Assessment Methods:</strong></p>
+                  <ul style="margin:6px 0 0; padding-left:20px;">
+                    <li>Use oral recitation instead of written quiz for SEN learners.</li>
+                    <li>Collect portfolio of completed fraction manipulative activities.</li>
+                    <li>Observe participation and problem-solving strategies during group work.</li>
+                    <li>5-item practical assessment (reduced from 10 for SEN learners).</li>
+                  </ul>
+                </div>
+              </div>
+
+              <div class="dlp-section">
+                <div class="dlp-label">F. Teacher’s Remarks</div>
+                <div class="dlp-content" id="lv-remarks">
+                  <textarea style="width:100%; min-height:60px; border:1px dashed var(--color-border); border-radius:6px; padding:8px; font-size:0.85rem;" placeholder="Notes on lesson delivery, learner engagement, and areas for improvement..."></textarea>
+                </div>
+              </div>
+
+              <div class="dlp-section">
+                <div class="dlp-label">G. Reflection</div>
+                <div class="dlp-content" id="lv-reflection">
+                  <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:10px; font-size:0.85rem;">
+                    <div>
+                      <label>No. of learners who earned 80%:</label>
+                      <input type="text" style="width:100%; margin-top:4px; text-align:center;" placeholder="_____ out of _____">
+                    </div>
+                    <div>
+                      <label>No. of learners needing remediation:</label>
+                      <input type="text" style="width:100%; margin-top:4px; text-align:center;" placeholder="_____ learners">
+                    </div>
+                    <div>
+                      <label>Remedial activities to be given:</label>
+                      <input type="text" style="width:100%; margin-top:4px;" placeholder="Describe activities...">
+                    </div>
+                    <div>
+                      <label>Teaching strategies that worked:</label>
+                      <input type="text" style="width:100%; margin-top:4px;" placeholder="List strategies...">
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Referral Note -->
+              <div class="referral-box" style="margin-top:16px;">
+                <strong>Referral Note:</strong> If reading difficulties persist across subjects despite accommodations, coordinate with the school’s SpEd focal person for further assessment and potential referral to allied professionals.
+              </div>
+
+              <!-- Footer Signatures -->
+              <div style="margin-top:24px; display:grid; grid-template-columns:repeat(3, 1fr); gap:16px; text-align:center; font-size:0.85rem;">
+                <div>
+                  <div style="border-top:1px solid var(--color-text); padding-top:8px; margin-top:40px;">
+                    <strong>PREPARED BY:</strong><br>
+                    <span id="lv-prepared-by">Janice D. Quiñones</span><br>
+                    <span style="font-size:0.8rem; color:var(--color-text-muted);">Subject Teacher</span>
+                  </div>
+                </div>
+                <div>
+                  <div style="border-top:1px solid var(--color-text); padding-top:8px; margin-top:40px;">
+                    <strong>REVIEWED BY:</strong><br>
+                    <input id="lv-reviewed-by" type="text" value="" placeholder="Name of Department Head" style="width:100%; margin-top:6px; padding:8px 10px; border-radius:6px; border:1px solid var(--color-border); background:rgba(255,255,255,0.92); color:var(--color-text); font-family:inherit; font-size:0.9rem; text-align:center;">
+                    <span style="display:block; margin-top:6px; font-size:0.8rem; color:var(--color-text-muted);">Department Head</span>
+                  </div>
+                </div>
+                <div>
+                  <div style="border-top:1px solid var(--color-text); padding-top:8px; margin-top:40px;">
+                    <strong>NOTED BY:</strong><br>
+                    <input id="lv-noted-by" type="text" value="" placeholder="Name of School Principal" style="width:100%; margin-top:6px; padding:8px 10px; border-radius:6px; border:1px solid var(--color-border); background:rgba(255,255,255,0.92); color:var(--color-text); font-family:inherit; font-size:0.9rem; text-align:center;">
+                    <span style="display:block; margin-top:6px; font-size:0.8rem; color:var(--color-text-muted);">School Principal</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top:12px; text-align:right;">
+            <button class="btn btn-secondary" data-nav="#reflection-new">After this lesson, submit Reflection Log →</button>
+          </div>
+        </section>
+
+        <!-- Learner Difficulty Library -->
+        <section id="learner-lib" class="view">
+          <div class="breadcrumbs">Tools · Learner Difficulty Library</div>
+          <div class="view-header">
+            <h2 class="section-title">Learner Difficulty Reference Library</h2>
+            <span class="muted">Browse categories to understand common observable characteristics and support strategies.</span>
+          </div>
+
+          <div class="card">
+            <div class="lib-grid" id="lib-grid">
+              <!-- cards filled by JS -->
+            </div>
+
+            <div id="lib-detail" class="lib-detail" style="display:none;">
+              <hr style="border:none; border-top:1px solid var(--color-border); margin:12px 0;">
+              <h3 class="section-title" id="lib-detail-title">Category details</h3>
+              <p class="muted" id="lib-detail-definition"></p>
+
+              <h4 style="margin-top:10px; font-size:0.95rem;">Observable Characteristics</h4>
+              <ul id="lib-detail-observable" style="font-size:0.9rem;"></ul>
+
+              <h4 style="margin-top:10px; font-size:0.95rem;">Classroom Reminders & Accommodation Tips</h4>
+              <ul id="lib-detail-tips" style="font-size:0.9rem;"></ul>
+
+              <p style="font-size:0.85rem; margin-top:8px;" id="lib-detail-referral"></p>
+
+              <button class="btn btn-primary" id="lib-use-in-lesson">Use in Lesson Plan</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Reflection New -->
+        <section id="reflection-new" class="view">
+          <div class="breadcrumbs">Reflection Logs · New</div>
+          <div class="view-header">
+            <h2 class="section-title">New Reflection Log</h2>
+            <span class="muted">Capture what happened during and after your inclusive lesson.</span>
+          </div>
+
+          <div class="card">
+            <form id="reflection-form">
+              <div class="inline-fields">
+                <div class="form-group">
+                  <label for="refl-date">Date of Lesson</label>
+                  <input type="date" id="refl-date">
+                </div>
+                <div class="form-group">
+                  <label for="refl-subject-grade">Subject and Grade</label>
+                  <input type="text" id="refl-subject-grade" placeholder="Mathematics, Grade 8">
+                </div>
+                <div class="form-group">
+                  <label for="refl-linked-plan">Linked Lesson Plan</label>
+                  <select id="refl-linked-plan">
+                    <option>Fractions Activity Plan</option>
+                    <option>Short Story Analysis</option>
+                    <option>Science Lab Safety</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>What strategies did you use?</label>
+                <textarea></textarea>
+              </div>
+              <div class="form-group">
+                <label>How did learners respond?</label>
+                <textarea></textarea>
+              </div>
+              <div class="form-group">
+                <label>What worked well?</label>
+                <textarea></textarea>
+              </div>
+              <div class="form-group">
+                <label>What needs improvement?</label>
+                <textarea></textarea>
+              </div>
+
+              <div class="inline-fields">
+                <div class="form-group">
+                  <label>Overall rating of lesson effectiveness</label>
+                  <div class="star-row" data-star-group="effectiveness">
+                    <span class="star-input">★</span>
+                    <span class="star-input">★</span>
+                    <span class="star-input">★</span>
+                    <span class="star-input">★</span>
+                    <span class="star-input">★</span>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label>Overall confidence using INSPIRE</label>
+                  <div class="star-row" data-star-group="confidence">
+                    <span class="star-input">★</span>
+                    <span class="star-input">★</span>
+                    <span class="star-input">★</span>
+                    <span class="star-input">★</span>
+                    <span class="star-input">★</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>Challenges encountered</label>
+                <textarea></textarea>
+              </div>
+              <div class="form-group">
+                <label>Plans for next lesson</label>
+                <textarea></textarea>
+              </div>
+
+              <div style="text-align:right; margin-top:10px;">
+                <button type="submit" class="btn btn-primary">Submit Reflection</button>
+              </div>
+            </form>
+          </div>
+        </section>
+
+        <!-- Reflections List -->
+        <section id="reflections" class="view">
+          <div class="breadcrumbs">Reflection Logs · List</div>
+          <div class="view-header">
+            <h2 class="section-title">My Reflection Logs</h2>
+            <button class="btn btn-primary" data-nav="#reflection-new">+ New Reflection</button>
+          </div>
+
+          <div class="card">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Subject</th>
+                  <th>Grade</th>
+                  <th>Lesson Plan Linked</th>
+                  <th>Effectiveness Rating</th>
+                  <th>Submitted</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Apr 5, 2026</td>
+                  <td>Math</td>
+                  <td>Grade 8</td>
+                  <td>Fractions Activity Plan</td>
+                  <td>★★★★☆</td>
+                  <td>Yes</td>
+                  <td><button class="btn btn-small btn-secondary">View</button> <button class="btn btn-small btn-secondary">Edit</button></td>
+                </tr>
+                <tr>
+                  <td>Apr 3, 2026</td>
+                  <td>English</td>
+                  <td>Grade 9</td>
+                  <td>Short Story Analysis</td>
+                  <td>★★★☆☆</td>
+                  <td>Yes</td>
+                  <td><button class="btn btn-small btn-secondary">View</button> <button class="btn btn-small btn-secondary">Edit</button></td>
+                </tr>
+                <tr>
+                  <td>Mar 30, 2026</td>
+                  <td>Science</td>
+                  <td>Grade 7</td>
+                  <td>Science Lab Safety</td>
+                  <td>★★★★☆</td>
+                  <td>Yes</td>
+                  <td><button class="btn btn-small btn-secondary">View</button> <button class="btn btn-small btn-secondary">Edit</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Observations -->
+        <section id="observations" class="view">
+          <div class="breadcrumbs">Monitoring · Classroom Observations</div>
+          <div class="view-header">
+            <h2 class="section-title">Classroom Observations</h2>
+          </div>
+
+          <div class="tabs" id="observations-tabs">
+            <button class="tab active" data-target="obs-view">View Observations</button>
+            <button class="tab" data-target="obs-new">New Observation</button>
+          </div>
+
+          <div class="tab-content active" id="obs-view">
+            <div class="card">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Teacher</th>
+                    <th>Subject</th>
+                    <th>Focus</th>
+                    <th>Phase</th>
+                    <th>Rating</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Apr 4, 2026</td>
+                    <td>Janice D. Quiñones</td>
+                    <td>Math 8</td>
+                    <td>Differentiation</td>
+                    <td>During Intervention</td>
+                    <td>4</td>
+                  </tr>
+                  <tr>
+                    <td>Mar 28, 2026</td>
+                    <td>Janice D. Quiñones</td>
+                    <td>English 9</td>
+                    <td>Learner Participation</td>
+                    <td>Pre-Intervention</td>
+                    <td>3</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="tab-content" id="obs-new">
+            <div class="card">
+              <form id="observation-form">
+                <div class="inline-fields">
+                  <div class="form-group">
+                    <label>Date of Observation</label>
+                    <input type="date">
+                  </div>
+                  <div class="form-group">
+                    <label>Teacher Observed</label>
+                    <input type="text" value="Janice D. Quiñones">
+                  </div>
+                  <div class="form-group">
+                    <label>Subject and Grade</label>
+                    <input type="text" placeholder="Math 8">
+                  </div>
+                </div>
+
+                <div class="inline-fields">
+                  <div class="form-group">
+                    <label>Observation Focus</label>
+                    <select>
+                      <option>Accommodation Use</option>
+                      <option>Modification Use</option>
+                      <option>Differentiation</option>
+                      <option>Learner Participation</option>
+                      <option>Strategy Application</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label>Phase</label>
+                    <div>
+                      <label><input type="radio" name="obs-phase" checked> Pre-Intervention</label><br>
+                      <label><input type="radio" name="obs-phase"> During Intervention</label><br>
+                      <label><input type="radio" name="obs-phase"> Post-Intervention</label>
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label>Rating (1–5)</label>
+                    <input type="number" min="1" max="5" value="4">
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label>Observation Notes</label>
+                  <textarea></textarea>
+                </div>
+
+                <div style="text-align:right; margin-top:10px;">
+                  <button type="submit" class="btn btn-primary">Submit Observation</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </section>
+
+        <!-- Resource Library -->
+        <section id="resources" class="view">
+          <div class="breadcrumbs">Tools · Resource Library</div>
+          <div class="view-header">
+            <h2 class="section-title">Inclusive Teaching Resource Library</h2>
+          </div>
+
+          <div class="resource-filters">
+            <div style="flex:1; min-width:220px;">
+              <input type="text" id="resource-search" placeholder="Search resources (e.g., Dyslexia, ADHD, templates)">
+            </div>
+            <div class="resource-tabs" id="resource-tabs">
+              <button class="resource-tab active" data-category="All">All</button>
+              <button class="resource-tab" data-category="Strategies">Strategies</button>
+              <button class="resource-tab" data-category="Tips">Tips</button>
+              <button class="resource-tab" data-category="Templates">Templates</button>
+              <button class="resource-tab" data-category="Videos">Videos</button>
+              <button class="resource-tab" data-category="References">References</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="resource-grid" id="resource-grid">
+              <!-- Resource cards via JS -->
+            </div>
+          </div>
+        </section>
+
+        <!-- Surveys -->
+        <section id="surveys" class="view">
+          <div class="breadcrumbs">Surveys · Pre/Post</div>
+          <div class="view-header">
+            <h2 class="section-title">Pre / Post Competency Survey</h2>
+            <span class="muted">Likert scale (1 = Strongly Disagree · 5 = Strongly Agree)</span>
+          </div>
+
+          <div class="tabs" id="survey-tabs">
+            <button class="tab active" data-target="survey-pre">Pre-Intervention Survey</button>
+            <button class="tab" data-target="survey-post">Post-Intervention Survey</button>
+          </div>
+
+          <div id="survey-pre" class="tab-content active">
+            <div class="card">
+              <p class="survey-note">Please rate each statement honestly based on your current practice.</p>
+              <form id="pre-survey-form">
+                <h4 class="section-title" style="font-size:1rem;">Section A — Challenges in Inclusive Education</h4>
+                <div id="survey-pre-a"></div>
+
+                <h4 class="section-title" style="font-size:1rem; margin-top:12px;">Section B — Competence in Inclusive Teaching</h4>
+                <div id="survey-pre-b"></div>
+
+                <div style="text-align:right; margin-top:12px;">
+                  <button class="btn btn-primary" type="submit">Submit Pre-Intervention Survey</button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <div id="survey-post" class="tab-content">
+            <div class="card">
+              <p class="survey-note" id="post-survey-status">Post-intervention survey will unlock after you submit the pre-intervention survey.</p>
+              <form id="post-survey-form" style="opacity:0.4; pointer-events:none;">
+                <h4 class="section-title" style="font-size:1rem;">Section A — Challenges in Inclusive Education</h4>
+                <div id="survey-post-a"></div>
+
+                <h4 class="section-title" style="font-size:1rem; margin-top:12px;">Section B — Competence in Inclusive Teaching</h4>
+                <div id="survey-post-b"></div>
+
+                <div style="text-align:right; margin-top:12px;">
+                  <button class="btn btn-primary" type="submit">Submit Post-Intervention Survey</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </section>
+
+        <!-- Admin Analytics -->
+        <section id="admin" class="view">
+          <div class="breadcrumbs">Admin · Analytics Dashboard</div>
+          <div class="view-header">
+            <h2 class="section-title">Project INSPIRE Analytics</h2>
+            <span class="muted">Read-only dashboard for action research monitoring.</span>
+          </div>
+
+          <div class="kpi-row">
+            <div class="card kpi-card">
+              <div class="kpi-label">Total Teachers</div>
+              <div class="kpi-value">54</div>
+            </div>
+            <div class="card kpi-card">
+              <div class="kpi-label">Active Users This Month</div>
+              <div class="kpi-value">38</div>
+            </div>
+            <div class="card kpi-card">
+              <div class="kpi-label">Lesson Plans Generated</div>
+              <div class="kpi-value">127</div>
+            </div>
+            <div class="card kpi-card">
+              <div class="kpi-label">Reflections Submitted</div>
+              <div class="kpi-value">89</div>
+            </div>
+            <div class="card kpi-card">
+              <div class="kpi-label">Avg Effectiveness Rating</div>
+              <div class="kpi-value">4.2 / 5</div>
+            </div>
+            <div class="card kpi-card">
+              <div class="kpi-label">Survey Completion</div>
+              <div class="kpi-value">54 Pre · 0 Post</div>
+            </div>
+          </div>
+
+          <div class="charts-row">
+            <div class="card chart">
+              <div class="card-title">Lesson Plans by Top Difficulty Categories</div>
+              <div class="chart-body">
+                <div class="chart-bar">
+                  <div class="chart-bar-inner" style="height:80%;"></div>
+                  <span>Dyslexia</span>
+                </div>
+                <div class="chart-bar">
+                  <div class="chart-bar-inner alt" style="height:70%;"></div>
+                  <span>ADHD</span>
+                </div>
+                <div class="chart-bar">
+                  <div class="chart-bar-inner" style="height:55%;"></div>
+                  <span>Mobility</span>
+                </div>
+                <div class="chart-bar">
+                  <div class="chart-bar-inner alt" style="height:45%;"></div>
+                  <span>Communication</span>
+                </div>
+                <div class="chart-bar">
+                  <div class="chart-bar-inner" style="height:35%;"></div>
+                  <span>Hearing</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="card chart">
+              <div class="card-title">Most Used Support Types</div>
+              <div class="chart-body">
+                <div class="chart-bar">
+                  <div class="chart-bar-inner alt" style="height:85%;"></div>
+                  <span>Accommodations</span>
+                </div>
+                <div class="chart-bar">
+                  <div class="chart-bar-inner" style="height:70%;"></div>
+                  <span>Differentiation</span>
+                </div>
+                <div class="chart-bar">
+                  <div class="chart-bar-inner alt" style="height:55%;"></div>
+                  <span>Modifications</span>
+                </div>
+                <div class="chart-bar">
+                  <div class="chart-bar-inner" style="height:40%;"></div>
+                  <span>Adaptive Assess.</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="card chart">
+              <div class="card-title">Weekly Login Frequency (4 Weeks)</div>
+              <div class="chart-body">
+                <div class="chart-bar">
+                  <div class="chart-bar-inner" style="height:30%;"></div>
+                  <span>Week 1 (12)</span>
+                </div>
+                <div class="chart-bar">
+                  <div class="chart-bar-inner alt" style="height:60%;"></div>
+                  <span>Week 2 (28)</span>
+                </div>
+                <div class="chart-bar">
+                  <div class="chart-bar-inner" style="height:80%;"></div>
+                  <span>Week 3 (35)</span>
+                </div>
+                <div class="chart-bar">
+                  <div class="chart-bar-inner alt" style="height:90%;"></div>
+                  <span>Week 4 (38)</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top:14px;">
+            <div class="card-header">
+              <div class="card-title">Teacher Activity Snapshot</div>
+              <div style="display:flex; gap:6px;">
+                <button class="btn btn-secondary btn-small" id="btn-export-csv">Export CSV</button>
+                <button class="btn btn-secondary btn-small" id="btn-export-pdf">Export Report PDF</button>
+              </div>
+            </div>
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Lesson Plans</th>
+                  <th>Reflections</th>
+                  <th>Observations</th>
+                  <th>Last Active</th>
+                  <th>Survey Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Maria Santos</td>
+                  <td>12</td>
+                  <td>8</td>
+                  <td>3</td>
+                  <td>Apr 7, 2026</td>
+                  <td>✅ Pre-done</td>
+                </tr>
+                <tr>
+                  <td>Jose Reyes</td>
+                  <td>9</td>
+                  <td>5</td>
+                  <td>2</td>
+                  <td>Apr 6, 2026</td>
+                  <td>✅ Pre-done</td>
+                </tr>
+                <tr>
+                  <td>Ana Cruz</td>
+                  <td>7</td>
+                  <td>4</td>
+                  <td>1</td>
+                  <td>Apr 4, 2026</td>
+                  <td>✅ Pre-done</td>
+                </tr>
+                <tr>
+                  <td>Pedro Lim</td>
+                  <td>5</td>
+                  <td>2</td>
+                  <td>0</td>
+                  <td>Apr 2, 2026</td>
+                  <td>✅ Pre-done</td>
+                </tr>
+                <tr>
+                  <td>Rosa Dela Cruz</td>
+                  <td>4</td>
+                  <td>1</td>
+                  <td>0</td>
+                  <td>Mar 30, 2026</td>
+                  <td>✅ Pre-done</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Profile -->
+        <section id="profile" class="view">
+          <div class="breadcrumbs">Account · Profile</div>
+          <div class="view-header">
+            <h2 class="section-title">My Profile & Consent</h2>
+          </div>
+
+          <div class="card">
+            <form id="profile-form">
+              <div class="inline-fields">
+                <div class="form-group">
+                  <label>Full Name</label>
+                  <input type="text" value="Janice D. Quiñones">
+                </div>
+                <div class="form-group">
+                  <label>Employee ID</label>
+                  <input type="text" placeholder="e.g., SFNHS-1234">
+                </div>
+              </div>
+
+              <div class="inline-fields">
+                <div class="form-group">
+                  <label>Position / Designation</label>
+                  <input type="text" value="Master Teacher I">
+                </div>
+                <div class="form-group">
+                  <label>Subject Area</label>
+                  <input type="text" value="Mathematics">
+                </div>
+                <div class="form-group">
+                  <label>Grade Level Handled</label>
+                  <input type="text" value="Grades 7–8">
+                </div>
+              </div>
+
+              <div class="inline-fields">
+                <div class="form-group">
+                  <label>Years of Teaching Experience</label>
+                  <input type="number" min="0" value="10">
+                </div>
+                <div class="form-group">
+                  <label>Training in Special Needs Education</label>
+                  <select>
+                    <option>Yes</option>
+                    <option>No</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group" style="margin-top:8px;">
+                <label>
+                  <input type="checkbox" id="consent-checkbox">
+                  I agree to participate in the Project INSPIRE action research study and understand my data will be kept confidential and used solely for research purposes.
+                </label>
+              </div>
+
+              <div style="text-align:right; margin-top:10px;">
+                <button class="btn btn-primary" type="submit">Save Profile</button>
+              </div>
+            </form>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <!-- Resource Modal -->
+  <div class="modal-backdrop" id="resource-modal-backdrop">
+    <div class="modal">
+      <div class="card-header" style="margin-bottom:6px;">
+        <div class="card-title" id="resource-modal-title">Resource Title</div>
+        <button class="btn btn-ghost btn-small" id="resource-modal-close">✕</button>
+      </div>
+      <div class="muted" id="resource-modal-category"></div>
+      <p style="font-size:0.9rem; margin-top:10px;" id="resource-modal-body"></p>
+    </div>
+  </div>
+
+  <!-- AI Generation Overlay -->
+  <div class="generation-overlay" id="generation-overlay">
+    <div class="generation-dialog">
+      <div style="display:flex; flex-direction:column; align-items:center; gap:8px;">
+        <div class="spinner"></div>
+        <h3>INSPIRE is generating your inclusive lesson plan…</h3>
+        <p>Please wait. This is a demo preview of AI-supported planning.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast container -->
+  <div id="toast-container"></div>
+
+  <script>
+    // Basic state
+    let currentRole = "teacher"; // "teacher" or "admin"
+    let isAuthenticated = false;
+    let currentWizardStep = 1;
+    let maxWizardStep = 5;
+    let selectedDifficultyCategories = [];
+    let selectedSubcategoryCode = "";
+    let preSurveySubmitted = false;
+
+    const views = [
+      "login",
+      "dashboard",
+      "new-lesson",
+      "my-lessons",
+      "lesson-view",
+      "learner-lib",
+      "reflection-new",
+      "reflections",
+      "observations",
+      "resources",
+      "surveys",
+      "admin",
+      "profile"
+    ];
+
+    const difficultyCategories = [
+      { id: 1, code: "1", name: "Difficulty in Displaying Interpersonal Behaviors" },
+      { id: 2, code: "2", name: "Difficulty in Basic Learning and Applying Knowledge", hasSub: true },
+      { id: 3, code: "3", name: "Difficulty in Communication", hasSub: true },
+      { id: 4, code: "4", name: "Difficulty in Mobility" },
+      { id: 5, code: "5", name: "Difficulty in Hearing" },
+      { id: 6, code: "6", name: "Difficulty in Seeing" },
+      { id: 7, code: "7", name: "Difficulty in Remembering / Concentrating", hasSub: true },
+      { id: 8, code: "8", name: "Difficulty in Performing Adaptive Skills" },
+      { id: 9, code: "9", name: "Difficulty in Seeing and Hearing (Deaf-Blindness)" },
+      { id: 10, code: "10", name: "Difficulty in Hearing with Other Disabilities" },
+      { id: 11, code: "11", name: "Difficulty in Communicating — ADHD", hasSub: true },
+      { id: 12, code: "12", name: "Difficulty in Communicating — Autism" },
+      { id: 13, code: "13", name: "Difficulty in Communicating — Tourette Syndrome" }
+    ];
+
+    const subcategoriesMap = {
+      "2": [
+        { code: "2.1", label: "2.1 Difficulty in Reading (Dyslexia)" },
+        { code: "2.2", label: "2.2 Difficulty in Writing (Dysgraphia)" },
+        { code: "2.3", label: "2.3 Difficulty in Counting and Calculating (Dyscalculia)" },
+        { code: "2.4", label: "2.4 Difficulty in Spelling" }
+      ],
+      "3": [
+        { code: "3.A", label: "3.A Speech Sound Errors (Distortions / Substitutions / Omissions / Additions)" },
+        { code: "3.B", label: "3.B Articulation Disorders" },
+        { code: "3.C", label: "3.C Phonological Disorder" },
+        { code: "3.D", label: "3.D Fluency Disorder — Stuttering" },
+        { code: "3.E", label: "3.E Fluency Disorder — Cluttering" }
+      ],
+      "7": [
+        { code: "7.A", label: "7.A Physical and Motor Domain" },
+        { code: "7.B", label: "7.B Personal and Social Domain" },
+        { code: "7.C", label: "7.C Learning / Cognitive Domain" },
+        { code: "7.D", label: "7.D Spoken Language Domain" }
+      ],
+      "11": [
+        { code: "11.A", label: "11.A Inattention" },
+        { code: "11.B", label: "11.B Hyperactivity" },
+        { code: "11.C", label: "11.C Impulsivity" }
+      ]
+    };
+
+    const indicatorLibrary = {
+      "2.1": [
+        "Difficulty learning connections between letters and sounds",
+        "Confuses small words (e.g., 'at' and 'to')",
+        "Letter reversals (e.g., d for b)",
+        "Word reversals (e.g., 'tip' for 'pit')",
+        "Avoids reading aloud",
+        "Trouble following oral instructions",
+        "Poor spelling despite effort",
+        "Appears restless or easily distracted during reading"
+      ],
+      "11.A": [
+        "Easily distracted by sounds, lights, or movement",
+        "Does not seem to listen when spoken to",
+        "Difficulty following multi-step directions",
+        "Frequently loses materials",
+        "Fails to finish schoolwork",
+        "Appears confused or overwhelmed",
+        "Poor study skills / weak executive function"
+      ]
+    };
+
+    const libraryDetails = {
+      "1": {
+        description: "Challenges in forming and maintaining positive relationships with peers and adults.",
+        observable: [
+          "Avoids group work or isolates self during activities",
+          "Frequent conflicts or misunderstandings with classmates",
+          "Difficulty taking turns or sharing materials",
+          "Limited eye contact or flat affect when interacting",
+          "Overly dependent on teacher prompts to interact",
+          "May misinterpret social cues and jokes"
+        ],
+        tips: [
+          "Use structured cooperative learning roles (leader, recorder, reporter).",
+          "Model and role-play expected social behaviors.",
+          "Provide clear, visual rules for group work.",
+          "Offer positive reinforcement for successful peer interactions."
+        ],
+        referral: "Consult the school guidance counselor if interpersonal difficulties are persistent and cause significant distress."
+      },
+      "2": {
+        description: "Difficulties in acquiring and applying academic concepts such as reading, writing, or mathematics.",
+        observable: indicatorLibrary["2.1"].slice(0,6),
+        tips: [
+          "Provide multi-sensory instruction combining visual, auditory, and kinesthetic cues.",
+          "Break tasks into smaller, manageable steps.",
+          "Allow alternative ways to demonstrate learning (oral, project-based).",
+          "Use frequent, low-stakes formative assessment."
+        ],
+        referral: "Consider referral for psychoeducational assessment when persistent academic difficulties are observed across subjects."
+      },
+      "3": {
+        description: "Challenges in understanding or producing spoken language.",
+        observable: [
+          "Delayed response when questions are asked",
+          "Limited vocabulary compared to peers",
+          "Difficulty organizing thoughts into sentences",
+          "Speech that is hard to understand",
+          "Frustration when asked to explain ideas",
+          "Reliance on gestures instead of words"
+        ],
+        tips: [
+          "Allow extra time to respond to questions.",
+          "Use visual supports, pictures, and gestures.",
+          "Model expanded sentences based on learner responses.",
+          "Avoid interrupting; acknowledge all communication attempts."
+        ],
+        referral: "Coordinate with a speech-language pathologist for ongoing communication concerns."
+      },
+      "11": {
+        description: "Difficulties with attention, impulse control, and/or hyperactivity associated with ADHD.",
+        observable: indicatorLibrary["11.A"],
+        tips: [
+          "Seat the learner away from high-traffic and noisy areas.",
+          "Provide clear, concise instructions one step at a time.",
+          "Use timers and visual schedules to structure tasks.",
+          "Offer movement breaks and hands-on learning opportunities."
+        ],
+        referral: "Collaborate with parents, school health personnel, and specialists for comprehensive ADHD assessment."
+      }
+      // Other categories can be added similarly as needed
+    };
+
+    const resourcesData = [
+      {
+        title: "Differentiated Instruction Quick Guide",
+        category: "Strategies",
+        description: "One-page reference on planning tiered tasks and flexible grouping.",
+        body: "This quick guide outlines key principles of differentiated instruction: knowing your learners, adjusting content, process, and product, and using ongoing assessment to inform grouping and scaffolds."
+      },
+      {
+        title: "Accommodation vs Modification: What's the Difference?",
+        category: "Tips",
+        description: "Clarifies how accommodations differ from modifications with classroom examples.",
+        body: "Accommodations change how learners access content (e.g., extra time, visual aids) while modifications change what is expected (e.g., reduced number of items). This resource provides side-by-side examples for common subjects."
+      },
+      {
+        title: "Lesson Plan Template for Inclusive Classrooms",
+        category: "Templates",
+        description: "Editable structure aligned with Project INSPIRE fields.",
+        body: "Use this template to align objectives, learner profiles, accommodations, modifications, differentiated activities, and assessment strategies into one coherent lesson plan."
+      },
+      {
+        title: "Understanding Dyslexia in the Classroom",
+        category: "References",
+        description: "Overview of dyslexia characteristics and support recommendations.",
+        body: "This reference summarizes key signs of dyslexia, myths vs facts, and evidence-based strategies such as multi-sensory phonics and structured literacy approaches."
+      },
+      {
+        title: "Visual Supports for Learners with Autism",
+        category: "Strategies",
+        description: "Examples of schedules, choice boards, and visual rules.",
+        body: "Visual supports help learners predict routines and make choices. The resource shows sample daily schedules, now-next charts, and behavior expectation posters."
+      },
+      {
+        title: "Zone of Proximal Development in Inclusive Teaching",
+        category: "References",
+        description: "Applying Vygotsky’s ZPD to scaffold mixed-ability classes.",
+        body: "Learn how to identify a learner’s ZPD, provide just-right challenges, and adjust scaffolds as competence grows through guided practice and peer support."
+      },
+      {
+        title: "ADHD Behavior Management Strategies",
+        category: "Strategies",
+        description: "Classroom-friendly approaches to support focus and self-regulation.",
+        body: "Includes sample visual schedules, token systems, and low-key cues to redirect attention while preserving learner dignity."
+      },
+      {
+        title: "DepEd Inclusive Education Act Summary (RA 11650)",
+        category: "References",
+        description: "Key provisions relevant to classroom teachers.",
+        body: "This summary highlights teachers’ roles, reasonable accommodation, and support systems mandated by RA 11650 for learners with disabilities and other learners with special needs."
+      }
+    ];
+
+    const surveyQuestionsA = [
+      "I find it difficult to accommodate learners with special needs in my class.",
+      "I struggle to modify lesson content for learners with different ability levels.",
+      "I lack confidence in selecting appropriate strategies for diverse learners.",
+      "I have limited training in Special Needs Education.",
+      "I find it challenging to create differentiated learning activities.",
+      "I am unsure how to adapt my assessment methods for learners with SEN.",
+      "I have difficulty managing behavior of learners with special needs.",
+      "I lack access to resources and materials for inclusive teaching.",
+      "I feel overwhelmed when planning for multiple types of learners.",
+      "I am unsure how to contextualize instruction for learners with SEN."
+    ];
+
+    const surveyQuestionsB = [
+      "I can contextualize lessons to meet the needs of my diverse learners.",
+      "I can apply differentiated instruction effectively in my classroom.",
+      "I am confident in identifying learners who need special education support.",
+      "I can modify lesson objectives appropriately for learners with SEN.",
+      "I am able to accommodate learners with physical or sensory difficulties.",
+      "I can design activities that promote participation for all learners.",
+      "I use evidence-based strategies when teaching learners with SEN.",
+      "I regularly reflect on my inclusive teaching practices.",
+      "I collaborate with school staff to support learners with special needs.",
+      "I feel equipped to use technology tools to support inclusive instruction."
+    ];
+
+    function showToast(message) {
+      const container = document.getElementById("toast-container");
+      const toast = document.createElement("div");
+      toast.className = "toast";
+      toast.textContent = message;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = "0";
+        toast.style.transform = "translateY(4px)";
+      }, 2200);
+      setTimeout(() => {
+        container.removeChild(toast);
+      }, 2600);
+    }
+
+    function updateSidebarRoleVisibility() {
+      const adminNav = document.getElementById("nav-admin");
+      const userRoleLabel = document.getElementById("user-role-label");
+      if (currentRole === "admin") {
+        adminNav.classList.remove("disabled");
+        userRoleLabel.textContent = "Admin / Researcher";
+      } else {
+        adminNav.classList.add("disabled");
+        userRoleLabel.textContent = "Teacher";
+      }
+    }
+
+    function setActiveNav(viewId) {
+      document.querySelectorAll(".nav-item").forEach(item => {
+        const view = item.getAttribute("data-view");
+        if (view === viewId) {
+          item.classList.add("active");
+        } else {
+          item.classList.remove("active");
+        }
+      });
+    }
+
+    function showView(viewId) {
+      views.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.style.display = (id === viewId) ? (id === "login" ? "flex" : "block") : "none";
+        }
+      });
+
+      if (viewId === "login") {
+        document.getElementById("app-shell").style.display = "none";
+      } else {
+        document.getElementById("app-shell").style.display = "flex";
+      }
+
+      if (viewId !== "login") {
+        setActiveNav(viewId);
+      }
+    }
+
+    function handleRouting() {
+      let hash = window.location.hash.replace("#", "");
+      if (!hash) {
+        hash = isAuthenticated ? "dashboard" : "login";
+      }
+      if (!isAuthenticated && hash !== "login") {
+        hash = "login";
+      }
+      if (currentRole === "teacher" && hash === "admin") {
+        hash = "dashboard";
+        showToast("Admin analytics are available only to Admin/Researcher accounts (demo).");
+      }
+      showView(hash);
+    }
+
+    function initWizardCards() {
+      const grid = document.getElementById("difficulty-grid");
+      difficultyCategories.forEach(cat => {
+        const card = document.createElement("div");
+        card.className = "difficulty-card";
+        card.dataset.code = cat.code;
+        if (cat.hasSub) {
+          card.dataset.hasSub = "true";
+        }
+        card.innerHTML = `
+          <div class="difficulty-number">${cat.id.toString().padStart(2, "0")}</div>
+          <div class="difficulty-name">${cat.name}</div>
+          <div class="difficulty-badge badge-hidden"></div>
+        `;
+        card.addEventListener("click", () => toggleDifficultySelection(card));
+        grid.appendChild(card);
+      });
+    }
+
+    function toggleDifficultySelection(card) {
+      const code = card.dataset.code;
+      const multi = document.getElementById("multi-difficulty").checked;
+
+      if (!multi) {
+        selectedDifficultyCategories = [code];
+        document.querySelectorAll(".difficulty-card").forEach(c => {
+          c.classList.remove("selected");
+          c.querySelector(".difficulty-badge").classList.add("badge-hidden");
+        });
+        card.classList.add("selected");
+        card.querySelector(".difficulty-badge").classList.remove("badge-hidden");
+      } else {
+        const idx = selectedDifficultyCategories.indexOf(code);
+        if (idx > -1) {
+          selectedDifficultyCategories.splice(idx, 1);
+          card.classList.remove("selected");
+          card.querySelector(".difficulty-badge").classList.add("badge-hidden");
+        } else {
+          if (selectedDifficultyCategories.length >= 3) {
+            showToast("You can select up to 3 difficulty categories.");
+            return;
+          }
+          selectedDifficultyCategories.push(code);
+          card.classList.add("selected");
+          card.querySelector(".difficulty-badge").classList.remove("badge-hidden");
+        }
+      }
+
+      // handle subcategories
+      const hasSub = card.dataset.hasSub === "true";
+      const subContainer = document.getElementById("subcategory-container");
+      const subOptions = document.getElementById("subcategory-options");
+      selectedSubcategoryCode = "";
+      if (!multi && hasSub && subcategoriesMap[code]) {
+        subContainer.style.display = "block";
+        subOptions.innerHTML = "";
+        subcategoriesMap[code].forEach(sc => {
+          const id = "sub-" + sc.code;
+          const label = document.createElement("label");
+          label.innerHTML = `<input type="radio" name="subcategory" id="${id}" value="${sc.code}"> ${sc.label}`;
+          label.style.display = "block";
+          label.style.fontSize = "0.85rem";
+          label.style.marginBottom = "4px";
+          subOptions.appendChild(label);
+        });
+      } else {
+        subContainer.style.display = "none";
+        subOptions.innerHTML = "";
+      }
+    }
+
+    function updateWizardProgress() {
+      for (let i = 1; i <= maxWizardStep; i++) {
+        const fill = document.getElementById("wizard-fill-" + i);
+        if (i < currentWizardStep) {
+          fill.style.width = "100%";
+        } else if (i === currentWizardStep) {
+          fill.style.width = "70%";
+        } else {
+          fill.style.width = "0%";
+        }
+      }
+    }
+
+    function showWizardStep(step) {
+      currentWizardStep = step;
+      document.querySelectorAll(".step-panel").forEach(panel => {
+        const s = parseInt(panel.dataset.step, 10);
+        panel.classList.toggle("active", s === step);
+      });
+      const prevBtn = document.getElementById("wizard-prev");
+      const nextBtn = document.getElementById("wizard-next");
+      prevBtn.disabled = step === 1;
+      nextBtn.style.display = step === maxWizardStep ? "none" : "inline-flex";
+      updateWizardProgress();
+      if (step === 3) {
+        populateIndicators();
+      }
+      if (step === 5) {
+        populateSummary();
+      }
+    }
+
+    function getSelectedDifficultyLabel() {
+      if (!selectedDifficultyCategories.length) return "Not specified";
+      const primaryCode = selectedDifficultyCategories[0];
+      const primaryCat = difficultyCategories.find(c => c.code === primaryCode);
+      let label = primaryCat ? primaryCat.name : primaryCode;
+      const subRadios = document.querySelectorAll("input[name='subcategory']:checked");
+      if (subRadios.length) {
+        const sub = subRadios[0];
+        selectedSubcategoryCode = sub.value;
+        label = sub.nextSibling.textContent.trim();
+      } else if (primaryCat && primaryCat.hasSub && subcategoriesMap[primaryCode]) {
+        // default to first if none chosen (demo convenience)
+        const firstSub = subcategoriesMap[primaryCode][0];
+        selectedSubcategoryCode = firstSub.code;
+        label = firstSub.label;
+      }
+      return label;
+    }
+
+    function populateIndicators() {
+      const indicatorList = document.getElementById("indicator-list");
+      indicatorList.innerHTML = "";
+      const label = getSelectedDifficultyLabel();
+      const intro = document.getElementById("indicator-intro");
+      intro.textContent = "Tick the indicators you observe for: " + label;
+      let key = selectedSubcategoryCode || selectedDifficultyCategories[0] || "";
+      let indicators = indicatorLibrary[key];
+      if (!indicators) {
+        indicators = [
+          "Struggles to complete tasks within the allotted time",
+          "Requires repeated instructions before starting tasks",
+          "Needs prompts to stay focused on classroom activities",
+          "Shows inconsistent performance across similar tasks",
+          "Appears anxious or withdrawn during certain activities",
+          "Frequently requests help even for familiar tasks"
+        ];
+      }
+      indicators.forEach((text, idx) => {
+        const li = document.createElement("li");
+        li.className = "indicator-item";
+        const id = "indicator-" + idx;
+        li.innerHTML = `<label><input type="checkbox" id="${id}" data-indicator="${text}"> ${text}</label>`;
+        indicatorList.appendChild(li);
+      });
+    }
+
+    function appendCustomIndicator(text) {
+      const indicatorList = document.getElementById("indicator-list");
+      const id = "indicator-custom-" + Date.now();
+      const li = document.createElement("li");
+      li.className = "indicator-item";
+      li.innerHTML = `<label><input type="checkbox" id="${id}" data-indicator="${text}" data-custom="true"> ${text}</label>`;
+      indicatorList.appendChild(li);
+    }
+
+    function populateSummary() {
+      const subject = document.getElementById("lesson-subject").value;
+      const grade = document.getElementById("lesson-grade").value;
+      const quarter = document.getElementById("lesson-quarter").value;
+      const title = document.getElementById("lesson-title").value || "Fractions and Decimals";
+      const difficultyLabel = getSelectedDifficultyLabel();
+      document.getElementById("summary-subject").textContent = subject;
+      document.getElementById("summary-grade").textContent = grade;
+      document.getElementById("summary-quarter").textContent = quarter;
+      document.getElementById("summary-title").textContent = title;
+      document.getElementById("summary-difficulty").textContent = difficultyLabel;
+
+      const checkedIndicators = document.querySelectorAll("#indicator-list input[type='checkbox']:checked");
+      document.getElementById("summary-indicators-count").textContent = checkedIndicators.length;
+
+      const supports = Array.from(document.querySelectorAll(".support-type:checked")).map(c => c.value);
+      const customSupportText = document.getElementById("custom-support-text").value.trim();
+      if (customSupportText) {
+        supports.push("Custom support: " + customSupportText);
+      }
+      document.getElementById("summary-support-types").textContent = supports.join(", ") || "None selected";
+    }
+
+    function getSelectedModel() {
+      const select = document.getElementById("model-select");
+      return select ? select.value : "openai/gpt-oss-20b:free";
+    }
+
+    function getSelectedReferences() {
+      const select = document.getElementById("reference-select");
+      if (!select) return [];
+      return Array.from(select.selectedOptions).map(option => option.value);
+    }
+
+    function collectLessonData() {
+      const subject = document.getElementById("lesson-subject").value.trim();
+      const grade = document.getElementById("lesson-grade").value.trim();
+      const quarter = document.getElementById("lesson-quarter").value.trim();
+      const title = document.getElementById("lesson-title").value.trim();
+      const objectives = document.getElementById("lesson-objectives").value.trim();
+      const deliveryMode = document.getElementById("delivery-mode").value;
+      const supportTypes = Array.from(document.querySelectorAll(".support-type:checked")).map(input => input.value);
+      const customSupportText = document.getElementById("custom-support-text").value.trim();
+      const indicators = Array.from(document.querySelectorAll("#indicator-list input[type='checkbox']:checked")).map(cb => cb.dataset.indicator || cb.value);
+      return {
+        subject,
+        grade,
+        quarter,
+        title,
+        objectives,
+        difficulty: getSelectedDifficultyLabel(),
+        indicators: indicators.join("; "),
+        support_types: supportTypes.join("; "),
+        custom_support: customSupportText,
+        delivery_mode: deliveryMode,
+      };
+    }
+
+    function tryParseJSON(value) {
+      if (!value || typeof value !== "string") return null;
+      const start = value.indexOf("{");
+      const end = value.lastIndexOf("}");
+      if (start === -1 || end === -1) return null;
+      try {
+        return JSON.parse(value.slice(start, end + 1));
+      } catch (err) {
+        return null;
+      }
+    }
+
+    function applyGeneratedLesson(plan) {
+      document.getElementById("lv-subject").textContent = plan.subject || document.getElementById("lesson-subject").value || "N/A";
+      document.getElementById("lv-grade").textContent = plan.grade || document.getElementById("lesson-grade").value || "N/A";
+      document.getElementById("lv-quarter").textContent = plan.quarter || document.getElementById("lesson-quarter").value || "N/A";
+      document.getElementById("lv-topic").textContent = plan.title || document.getElementById("lesson-title").value || "N/A";
+      document.getElementById("lv-difficulty-pill").textContent = plan.difficulty || getSelectedDifficultyLabel() || "N/A";
+      document.getElementById("lv-status-badge").textContent = "Draft";
+      document.getElementById("lv-status-badge").className = "badge badge-status-draft";
+      document.getElementById("lv-content-standards").textContent = plan.content_standards || "Not provided.";
+      document.getElementById("lv-performance-standards").textContent = plan.performance_standards || "Not provided.";
+      document.getElementById("lv-competencies").textContent = plan.competencies || "Not provided.";
+      document.getElementById("lv-content").textContent = plan.content || "Not provided.";
+      document.getElementById("lv-integration").textContent = plan.integration || "Not provided.";
+      document.getElementById("lv-resources").textContent = plan.resources || "Not provided.";
+      document.getElementById("lv-prior-knowledge").textContent = plan.prior_knowledge || "Not provided.";
+      document.getElementById("lv-lesson-purpose").textContent = plan.lesson_purpose || "Not provided.";
+      document.getElementById("lv-developing").textContent = plan.developing || "Not provided.";
+      document.getElementById("lv-generalization").textContent = plan.generalization || "Not provided.";
+      document.getElementById("lv-evaluation").textContent = plan.evaluation || "Not provided.";
+      document.getElementById("lv-remarks").textContent = plan.remarks || "Not provided.";
+      document.getElementById("lv-reflection").textContent = plan.reflection || "Not provided.";
+      document.getElementById("lv-custom-support").textContent = plan.custom_support || plan.support_notes || "No additional support notes specified.";
+      const indicatorList = plan.indicators ? plan.indicators.split(/;\s*/) : [];
+      if (indicatorList.length) {
+        document.getElementById("lv-custom-indicators").innerHTML = `<ul style="margin:0; padding-left:20px;">${indicatorList.map(i => `<li>${i}</li>`).join("")}</ul>`;
+      } else {
+        document.getElementById("lv-custom-indicators").innerHTML = "<em>No additional manifestations specified.</em>";
+      }
+    }
+
+    async function generateLessonPlan() {
+      const overlay = document.getElementById("generation-overlay");
+      overlay.style.display = "flex";
+      const body = {
+        model: getSelectedModel(),
+        references: getSelectedReferences(),
+        lesson_data: collectLessonData(),
+      };
+
+      try {
+        const response = await fetch('/api/generate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(body)
+        });
+        const data = await response.json();
+        if (!response.ok || !data.success) {
+          throw new Error(data.error || 'Generation request failed');
+        }
+
+        const parsed = tryParseJSON(data.output);
+        if (parsed) {
+          applyGeneratedLesson(parsed);
+        } else {
+          document.getElementById("lv-content").textContent = data.output || 'No output from model.';
+          document.getElementById("lv-content-standards").textContent = '';
+          document.getElementById("lv-performance-standards").textContent = '';
+          document.getElementById("lv-competencies").textContent = '';
+          document.getElementById("lv-integration").textContent = '';
+          document.getElementById("lv-resources").textContent = '';
+          document.getElementById("lv-prior-knowledge").textContent = '';
+          document.getElementById("lv-lesson-purpose").textContent = '';
+          document.getElementById("lv-developing").textContent = '';
+          document.getElementById("lv-generalization").textContent = '';
+          document.getElementById("lv-evaluation").textContent = '';
+          document.getElementById("lv-remarks").textContent = '';
+          document.getElementById("lv-reflection").textContent = '';
+          document.getElementById("lv-custom-indicators").innerHTML = '';
+          document.getElementById("lv-custom-support").textContent = 'Generated output could not be parsed as JSON. See lesson content field.';
+        }
+
+        window.location.hash = "#lesson-view";
+        showToast("Lesson plan generated from AI.");
+      } catch (err) {
+        showToast(`Failed to generate lesson plan: ${err.message}`);
+      } finally {
+        overlay.style.display = "none";
+      }
+    }
+
+    function initLibraryCards() {
+      const grid = document.getElementById("lib-grid");
+      difficultyCategories.forEach(cat => {
+        const card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = `
+          <div class="lib-card-title">${cat.id}. ${cat.name}</div>
+          <div class="muted" style="margin-bottom:6px;">Click "View Details" to see indicators and tips.</div>
+          <button class="btn btn-secondary btn-small">View Details</button>
+        `;
+        card.querySelector("button").addEventListener("click", () => showLibraryDetail(cat.code));
+        grid.appendChild(card);
+      });
+    }
+
+    function showLibraryDetail(code) {
+      const detail = libraryDetails[code];
+      const titleEl = document.getElementById("lib-detail-title");
+      const defEl = document.getElementById("lib-detail-definition");
+      const obsEl = document.getElementById("lib-detail-observable");
+      const tipsEl = document.getElementById("lib-detail-tips");
+      const refEl = document.getElementById("lib-detail-referral");
+      const cat = difficultyCategories.find(c => c.code === code);
+      titleEl.textContent = (cat ? `${cat.id}. ${cat.name}` : "Category") + " — Details";
+      defEl.textContent = detail ? detail.description : "Reference entry not yet configured for this category (demo).";
+      obsEl.innerHTML = "";
+      tipsEl.innerHTML = "";
+      if (detail && detail.observable) {
+        detail.observable.forEach(o => {
+          const li = document.createElement("li");
+          li.textContent = o;
+          obsEl.appendChild(li);
+        });
+      }
+      if (detail && detail.tips) {
+        detail.tips.forEach(o => {
+          const li = document.createElement("li");
+          li.textContent = o;
+          tipsEl.appendChild(li);
+        });
+      }
+      refEl.textContent = detail && detail.referral ? detail.referral : "";
+      document.getElementById("lib-detail").style.display = "block";
+      document.getElementById("lib-use-in-lesson").onclick = () => {
+        // Pre-select category in wizard and go there
+        selectedDifficultyCategories = [code];
+        document.querySelectorAll(".difficulty-card").forEach(card => {
+          const cardCode = card.dataset.code;
+          card.classList.toggle("selected", cardCode === code);
+          const badge = card.querySelector(".difficulty-badge");
+          if (badge) badge.classList.toggle("badge-hidden", cardCode !== code);
+        });
+        window.location.hash = "#new-lesson";
+        showView("new-lesson");
+        showWizardStep(2);
+        showToast("Difficulty category loaded into new lesson plan.");
+      };
+    }
+
+    function initResources() {
+      const grid = document.getElementById("resource-grid");
+      resourcesData.forEach((res, index) => {
+        const card = document.createElement("div");
+        card.className = "card";
+        card.dataset.category = res.category;
+        card.dataset.index = index;
+        card.innerHTML = `
+          <div class="resource-card-title">${res.title}</div>
+          <div class="chip">${res.category}</div>
+          <p class="muted" style="margin:6px 0 8px;">${res.description}</p>
+          <button class="btn btn-secondary btn-small">View Resource</button>
+        `;
+        card.querySelector("button").addEventListener("click", () => openResourceModal(index));
+        grid.appendChild(card);
+      });
+    }
+
+    function filterResources() {
+      const query = document.getElementById("resource-search").value.toLowerCase();
+      const activeTab = document.querySelector(".resource-tab.active").dataset.category;
+      document.querySelectorAll("#resource-grid .card").forEach(card => {
+        const idx = parseInt(card.dataset.index, 10);
+        const res = resourcesData[idx];
+        const matchText = (res.title + " " + res.description + " " + res.body).toLowerCase();
+        const matchesSearch = !query || matchText.includes(query);
+        const matchesCategory = activeTab === "All" || res.category === activeTab;
+        card.style.display = (matchesSearch && matchesCategory) ? "block" : "none";
+      });
+    }
+
+    function openResourceModal(index) {
+      const res = resourcesData[index];
+      document.getElementById("resource-modal-title").textContent = res.title;
+      document.getElementById("resource-modal-category").textContent = "Category: " + res.category;
+      document.getElementById("resource-modal-body").textContent = res.body;
+      document.getElementById("resource-modal-backdrop").style.display = "flex";
+    }
+
+    function closeResourceModal() {
+      document.getElementById("resource-modal-backdrop").style.display = "none";
+    }
+
+    function buildSurveySection(containerId, questions, prefix) {
+      const container = document.getElementById(containerId);
+      questions.forEach((q, i) => {
+        const div = document.createElement("div");
+        div.className = "survey-question";
+        const itemNo = i + 1;
+        div.innerHTML = `<div>${itemNo}. ${q}</div>`;
+        const scale = document.createElement("div");
+        scale.className = "likert-scale";
+        for (let v = 1; v <= 5; v++) {
+          const label = document.createElement("label");
+          label.innerHTML = `<input type="radio" name="${prefix}${itemNo}" value="${v}"><span>${v}</span>`;
+          scale.appendChild(label);
+        }
+        div.appendChild(scale);
+        container.appendChild(div);
+      });
+    }
+
+    function enablePostSurvey() {
+      preSurveySubmitted = true;
+      const status = document.getElementById("post-survey-status");
+      const form = document.getElementById("post-survey-form");
+      status.textContent = "You may now accomplish the post-intervention survey.";
+      form.style.opacity = "1";
+      form.style.pointerEvents = "auto";
+    }
+
+    function initStars() {
+      document.querySelectorAll(".star-row").forEach(row => {
+        const stars = row.querySelectorAll(".star-input");
+        stars.forEach((star, index) => {
+          star.addEventListener("click", () => {
+            stars.forEach((s, i) => {
+              if (i <= index) s.classList.add("active");
+              else s.classList.remove("active");
+            });
+          });
+        });
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      // Initialize: hide all views first except login
+      views.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.style.display = (id === "login") ? "flex" : "none";
+        }
+      });
+
+      // Theme toggle
+      document.getElementById("theme-toggle").addEventListener("click", () => {
+        const current = document.body.getAttribute("data-theme");
+        const next = current === "light" ? "dark" : "light";
+        document.body.setAttribute("data-theme", next);
+      });
+
+      // Notifications
+      const notifBtn = document.getElementById("notif-btn");
+      const notifDropdown = document.getElementById("notif-dropdown");
+      notifBtn.addEventListener("click", () => {
+        notifDropdown.style.display = notifDropdown.style.display === "block" ? "none" : "block";
+      });
+      document.addEventListener("click", (e) => {
+        if (!notifBtn.contains(e.target) && !notifDropdown.contains(e.target)) {
+          notifDropdown.style.display = "none";
+        }
+      });
+
+      // Sidebar toggle
+      document.getElementById("sidebar-toggle").addEventListener("click", () => {
+        document.getElementById("sidebar").classList.toggle("open");
+      });
+
+      // Login buttons
+      document.getElementById("btn-login-teacher").addEventListener("click", () => {
+        currentRole = "teacher";
+        isAuthenticated = true;
+        updateSidebarRoleVisibility();
+        window.location.hash = "#dashboard";
+      });
+
+      document.getElementById("btn-login-admin").addEventListener("click", () => {
+        currentRole = "admin";
+        isAuthenticated = true;
+        updateSidebarRoleVisibility();
+        window.location.hash = "#admin";
+      });
+
+      document.getElementById("nav-logout").addEventListener("click", (e) => {
+        e.preventDefault();
+        isAuthenticated = false;
+        currentRole = "teacher";
+        updateSidebarRoleVisibility();
+        window.location.hash = "#login";
+      });
+
+      // Nav shortcuts
+      document.querySelectorAll("[data-nav]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const target = btn.getAttribute("data-nav");
+          window.location.hash = target;
+        });
+      });
+
+      // Sidebar nav links
+      document.querySelectorAll(".nav-item[data-view]").forEach(item => {
+        item.addEventListener("click", (e) => {
+          const view = item.getAttribute("data-view");
+          if (view === "admin" && currentRole !== "admin") {
+            e.preventDefault();
+            showToast("Admin analytics are available only to Admin/Researcher accounts (demo).");
+          }
+        });
+      });
+
+      // Wizard
+      initWizardCards();
+      document.getElementById("wizard-prev").addEventListener("click", () => {
+        if (currentWizardStep > 1) showWizardStep(currentWizardStep - 1);
+      });
+      document.getElementById("wizard-next").addEventListener("click", () => {
+        if (currentWizardStep < maxWizardStep) showWizardStep(currentWizardStep + 1);
+      });
+      updateWizardProgress();
+
+      document.getElementById("btn-generate-lesson").addEventListener("click", generateLessonPlan);
+      document.getElementById("btn-add-custom-indicator").addEventListener("click", () => {
+        const input = document.getElementById("custom-indicator-input");
+        const value = input.value.trim();
+        if (!value) {
+          showToast("Enter a custom observable indicator first.");
+          return;
+        }
+        appendCustomIndicator(value);
+        input.value = "";
+      });
+      document.getElementById("custom-indicator-input").addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          document.getElementById("btn-add-custom-indicator").click();
+        }
+      });
+
+      // Library cards
+      initLibraryCards();
+
+      // Reflection form
+      document.getElementById("reflection-form").addEventListener("submit", (e) => {
+        e.preventDefault();
+        showToast("Reflection log submitted (demo).");
+      });
+
+      // Observation tabs
+      document.querySelectorAll("#observations-tabs .tab").forEach(tab => {
+        tab.addEventListener("click", () => {
+          document.querySelectorAll("#observations-tabs .tab").forEach(t => t.classList.remove("active"));
+          tab.classList.add("active");
+          const target = tab.dataset.target;
+          document.querySelectorAll("#observations .tab-content").forEach(tc => {
+            tc.classList.toggle("active", tc.id === target);
+          });
+        });
+      });
+      document.getElementById("observation-form").addEventListener("submit", (e) => {
+        e.preventDefault();
+        showToast("Observation submitted (demo).");
+      });
+
+      // Resources
+      initResources();
+      document.getElementById("resource-search").addEventListener("input", filterResources);
+      document.querySelectorAll(".resource-tab").forEach(tab => {
+        tab.addEventListener("click", () => {
+          document.querySelectorAll(".resource-tab").forEach(t => t.classList.remove("active"));
+          tab.classList.add("active");
+          filterResources();
+        });
+      });
+      filterResources();
+      document.getElementById("resource-modal-close").addEventListener("click", closeResourceModal);
+      document.getElementById("resource-modal-backdrop").addEventListener("click", (e) => {
+        if (e.target.id === "resource-modal-backdrop") closeResourceModal();
+      });
+
+      // Surveys
+      buildSurveySection("survey-pre-a", surveyQuestionsA, "preA");
+      buildSurveySection("survey-pre-b", surveyQuestionsB, "preB");
+      buildSurveySection("survey-post-a", surveyQuestionsA, "postA");
+      buildSurveySection("survey-post-b", surveyQuestionsB, "postB");
+
+      document.querySelectorAll("#survey-tabs .tab").forEach(tab => {
+        tab.addEventListener("click", () => {
+          document.querySelectorAll("#survey-tabs .tab").forEach(t => t.classList.remove("active"));
+          tab.classList.add("active");
+          const target = tab.dataset.target;
+          document.querySelectorAll("#surveys .tab-content").forEach(tc => tc.classList.toggle("active", tc.id === target));
+        });
+      });
+
+      document.getElementById("pre-survey-form").addEventListener("submit", (e) => {
+        e.preventDefault();
+        if (!preSurveySubmitted) {
+          showToast("Pre-intervention survey submitted (demo).");
+          enablePostSurvey();
+        } else {
+          showToast("Pre-intervention survey already marked as submitted (demo).");
+        }
+      });
+
+      document.getElementById("post-survey-form").addEventListener("submit", (e) => {
+        e.preventDefault();
+        if (!preSurveySubmitted) {
+          showToast("Please complete the pre-intervention survey first.");
+        } else {
+          showToast("Post-intervention survey submitted (demo).");
+        }
+      });
+
+      // Admin export buttons
+      document.getElementById("btn-export-csv").addEventListener("click", () => {
+        showToast("CSV export triggered (demo).");
+      });
+      document.getElementById("btn-export-pdf").addEventListener("click", () => {
+        showToast("Report PDF export triggered (demo).");
+      });
+
+      // Profile form
+      document.getElementById("profile-form").addEventListener("submit", (e) => {
+        e.preventDefault();
+        const consent = document.getElementById("consent-checkbox").checked;
+        if (!consent) {
+          showToast("Please tick the consent statement before saving (demo).");
+        } else {
+          showToast("Profile saved with consent (demo).");
+        }
+      });
+
+      // Lesson view Mark as Final
+      const btnMarkFinal = document.getElementById("btn-mark-final");
+      if (btnMarkFinal) {
+        btnMarkFinal.addEventListener("click", () => {
+          const badge = document.getElementById("lv-status-badge");
+          if (badge) {
+            badge.textContent = "Final";
+            badge.className = "badge badge-status-final";
+          }
+          showToast("Lesson plan marked as final (demo).");
+        });
+      }
+
+      // Stars
+      initStars();
+
+      // Role visibility
+      updateSidebarRoleVisibility();
+
+      // Routing - ensure this always runs
+      try {
+        window.addEventListener("hashchange", handleRouting);
+        handleRouting();
+      } catch (e) {
+        console.error("Routing error:", e);
+        // Fallback: hide all views and show login
+        views.forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.style.display = "none";
+        });
+        document.getElementById("login").style.display = "flex";
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,226 @@
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { inject, Injectable } from '@angular/core';
+import { map, Observable } from 'rxjs';
+
+import {
+  AdminStats,
+  ApiListResponse,
+  BackendLessonDraft,
+  LessonRecord,
+  LoginResponse,
+  LessonDraft,
+  LessonGenerationRequest,
+  LessonGenerationResponse,
+  ObservationRecord,
+  ReflectionRecord,
+  ResourceLibraryItem,
+  SurveyQuestionsResponse,
+  SurveyRecord,
+  UserAccount,
+} from '../models/inspire-api.models';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class InspireApiService {
+  private readonly http = inject(HttpClient);
+
+  getModels(): Observable<string[]> {
+    return this.http.get<ApiListResponse>('/api/models').pipe(
+      map((response) => response.models ?? [])
+    );
+  }
+
+  getReferences(): Observable<string[]> {
+    return this.http.get<ApiListResponse>('/api/references').pipe(
+      map((response) => response.references ?? [])
+    );
+  }
+
+  getResourceLibrary(): Observable<ResourceLibraryItem[]> {
+    return this.http.get<{ items?: ResourceLibraryItem[] }>('/api/resource-library').pipe(
+      map((response) => response.items ?? [])
+    );
+  }
+
+  updateResourceLibraryItem(fileName: string, payload: { title: string; description: string; category?: string }): Observable<{ success: boolean; item: ResourceLibraryItem }> {
+    return this.http.put<{ success: boolean; item: ResourceLibraryItem }>(`/api/resource-library/${encodeURIComponent(fileName)}`, payload);
+  }
+
+  uploadReference(payload: { fileName: string; contentBase64: string; title?: string; description?: string; category?: string; overwrite?: boolean }): Observable<{ success: boolean; item: ResourceLibraryItem }> {
+    return this.http.post<{ success: boolean; item: ResourceLibraryItem }>('/api/resource-library/upload', payload);
+  }
+
+  getLessons(): Observable<LessonRecord[]> {
+    return this.http.get<{ lessons?: LessonRecord[] }>('/api/lessons').pipe(
+      map((response) => response.lessons ?? [])
+    );
+  }
+
+  getLesson(id: number): Observable<LessonRecord> {
+    return this.http.get<{ lesson: LessonRecord }>(`/api/lessons/${id}`).pipe(
+      map((response) => response.lesson)
+    );
+  }
+
+  saveLesson(lesson: Partial<LessonRecord> & { lesson_data?: LessonDraft; model?: string; references?: string[] }): Observable<{ success: boolean; lesson: LessonRecord }> {
+    return this.http.post<{ success: boolean; lesson: LessonRecord }>('/api/lessons', lesson);
+  }
+
+  generateLessonPlan(request: LessonGenerationRequest): Observable<LessonGenerationResponse> {
+    return this.http.post<LessonGenerationResponse>('/api/generate', {
+      ...request,
+      lesson_data: this.toBackendLessonDraft(request.lesson_data)
+    });
+  }
+
+  toBackendLessonDraft(lessonDraft: LessonDraft): BackendLessonDraft {
+    return {
+      subject: lessonDraft.subject,
+      grade: lessonDraft.grade,
+      quarter: lessonDraft.quarter,
+      title: lessonDraft.title,
+      objectives: lessonDraft.objectives,
+      difficulty: lessonDraft.difficulty,
+      indicators: lessonDraft.indicators,
+      support_types: lessonDraft.supportTypes,
+      custom_support: lessonDraft.customSupport,
+      delivery_mode: lessonDraft.deliveryMode
+    };
+  }
+
+  describeError(error: unknown): string {
+    if (error instanceof HttpErrorResponse) {
+      const rawBody = typeof error.error === 'string' ? error.error : '';
+      const htmlLikeBody = rawBody.trim().toLowerCase().startsWith('<!doctype') || rawBody.trim().startsWith('<html');
+
+      if (error.error instanceof SyntaxError || htmlLikeBody) {
+        return `API response was HTML instead of JSON at ${error.url || 'unknown endpoint'}. Verify backend is running at http://localhost:3000 and proxy is active.`;
+      }
+
+      const backendError = (error.error && typeof error.error === 'object' && 'error' in error.error)
+        ? String((error.error as { error?: unknown }).error || '')
+        : '';
+
+      return backendError || `HTTP ${error.status || 0} ${error.statusText || 'Request failed'} at ${error.url || 'unknown endpoint'}`;
+    }
+
+    if (error instanceof Error) {
+      return error.message;
+    }
+
+    if (typeof error === 'object' && error !== null) {
+      const anyError = error as { error?: { error?: string }; message?: string; statusText?: string };
+      return anyError.error?.error ?? anyError.message ?? anyError.statusText ?? 'Unknown API error';
+    }
+
+    return 'Unknown API error';
+  }
+
+  formatOutput(output: string | undefined): string {
+    if (!output) {
+      return '';
+    }
+
+    try {
+      return JSON.stringify(JSON.parse(output), null, 2);
+    } catch {
+      return output;
+    }
+  }
+
+  createLessonDraft(): LessonDraft {
+    return {
+      subject: 'Mathematics',
+      grade: 'Grade 5',
+      quarter: 'Quarter 1',
+      title: 'Fractions Activity',
+      objectives: 'Use concrete and visual models to compare simple fractions.',
+      difficulty: 'Reading comprehension',
+      indicators: 'Needs chunked directions, needs visual supports',
+      supportTypes: 'Visual aids, guided practice, peer support',
+      customSupport: 'Allow oral responses and provide worked examples.',
+      deliveryMode: 'Whole class with small-group support'
+    };
+  }
+
+  getReflections(): Observable<ReflectionRecord[]> {
+    return this.http.get<{ reflections?: ReflectionRecord[] }>('/api/reflections').pipe(
+      map((response) => response.reflections ?? [])
+    );
+  }
+
+  saveReflection(payload: Omit<ReflectionRecord, 'id' | 'created_at' | 'updated_at'>): Observable<{ success: boolean; reflection: ReflectionRecord }> {
+    return this.http.post<{ success: boolean; reflection: ReflectionRecord }>('/api/reflections', payload);
+  }
+
+  getObservations(): Observable<ObservationRecord[]> {
+    return this.http.get<{ observations?: ObservationRecord[] }>('/api/observations').pipe(
+      map((response) => response.observations ?? [])
+    );
+  }
+
+  saveObservation(payload: Omit<ObservationRecord, 'id' | 'created_at'>): Observable<{ success: boolean; observation: ObservationRecord }> {
+    return this.http.post<{ success: boolean; observation: ObservationRecord }>('/api/observations', payload);
+  }
+
+  getSurveyQuestions(): Observable<SurveyQuestionsResponse> {
+    return this.http.get<SurveyQuestionsResponse>('/api/surveys/questions');
+  }
+
+  getSurveys(): Observable<SurveyRecord[]> {
+    return this.http.get<{ surveys?: SurveyRecord[] }>('/api/surveys').pipe(
+      map((response) => response.surveys ?? [])
+    );
+  }
+
+  saveSurvey(payload: { survey_type: 'pre' | 'post'; question_responses: Record<string, number>; completed_at?: string }): Observable<{ success: boolean; survey: SurveyRecord }> {
+    return this.http.post<{ success: boolean; survey: SurveyRecord }>('/api/surveys', payload);
+  }
+
+  getAdminStats(): Observable<AdminStats> {
+    return this.http.get<AdminStats>('/api/admin/stats');
+  }
+
+  login(username: string, password: string): Observable<LoginResponse> {
+    return this.http.post<LoginResponse>('/api/auth/login', { username, password });
+  }
+
+  listAccounts(): Observable<UserAccount[]> {
+    return this.http.get<{ users?: UserAccount[] }>('/api/admin/accounts').pipe(
+      map((response) => response.users ?? [])
+    );
+  }
+
+  saveAccount(payload: Partial<UserAccount> & { username: string; role: string; display_name: string; password?: string; active?: boolean; id?: number }): Observable<{ success: boolean; user: UserAccount }> {
+    if (payload.id) {
+      return this.http.put<{ success: boolean; user: UserAccount }>(`/api/admin/accounts/${payload.id}`, payload);
+    }
+
+    return this.http.post<{ success: boolean; user: UserAccount }>('/api/admin/accounts', payload);
+  }
+
+  deleteAccount(id: number): Observable<{ success: boolean }> {
+    return this.http.delete<{ success: boolean }>(`/api/admin/accounts/${id}`);
+  }
+
+  roleLabel(role: string): string {
+    switch (role) {
+      case 'admin':
+        return 'Admin';
+      case 'researcher':
+        return 'Researcher';
+      case 'teacher':
+      default:
+        return 'Teacher';
+    }
+  }
+
+  canAccessAdmin(role: string): boolean {
+    return role === 'admin' || role === 'researcher';
+  }
+
+  canManageAccounts(role: string): boolean {
+    return role === 'admin';
+  }
+}

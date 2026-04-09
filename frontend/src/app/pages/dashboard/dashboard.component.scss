@@ -1,0 +1,81 @@
+.view {
+  display: grid;
+  gap: 14px;
+}
+
+.breadcrumbs {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.view-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.kpi-card {
+  min-height: 76px;
+}
+
+.kpi-label {
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.kpi-value {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.1;
+  margin-top: 6px;
+}
+
+.dashboard-panels {
+  margin-bottom: 0;
+}
+
+.quick-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.reminders-list {
+  padding-left: 18px;
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.recent-lessons-card {
+  overflow-x: auto;
+}
+
+.dashboard-loading {
+  padding: 24px;
+}
+
+.error {
+  color: #dc2626;
+}
+
+@media (max-width: 1080px) {
+  .kpi-row,
+  .layout-row {
+    grid-template-columns: 1fr;
+  }
+
+  .view-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

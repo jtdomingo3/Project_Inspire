@@ -1,0 +1,95 @@
+<section class="view">
+  <div class="breadcrumbs">Home · Dashboard</div>
+  <div class="view-header">
+    <h2 class="section-title">Teacher Dashboard</h2>
+    <span class="muted">San Felipe National High School · Basud, Camarines Norte</span>
+  </div>
+
+  @if (warning()) {
+    <section class="card dashboard-loading error">{{ warning() }}</section>
+  }
+
+  @if (loading()) {
+    <section class="card dashboard-loading">Loading dashboard data...</section>
+  } @else if (error()) {
+    <section class="card dashboard-loading error">{{ error() }}</section>
+  } @else if (stats(); as dashboardStats) {
+    <div class="kpi-row">
+      <div class="card kpi-card">
+        <div class="kpi-label">Lesson Plans Created</div>
+        <div class="kpi-value">{{ dashboardStats.lesson_plans_generated }}</div>
+      </div>
+      <div class="card kpi-card">
+        <div class="kpi-label">Reflections Submitted</div>
+        <div class="kpi-value">{{ dashboardStats.reflections_submitted }}</div>
+      </div>
+      <div class="card kpi-card">
+        <div class="kpi-label">Learners Profiled</div>
+        <div class="kpi-value">{{ learnerProfileCount() }}</div>
+      </div>
+      <div class="card kpi-card">
+        <div class="kpi-label">Strategies Generated</div>
+        <div class="kpi-value">{{ strategiesGeneratedCount() }}</div>
+      </div>
+    </div>
+
+    <div class="layout-row dashboard-panels">
+      <div class="layout-col-3">
+        <div class="card">
+          <div class="card-title">Quick Actions</div>
+          <div class="quick-actions">
+            @for (action of quickActions; track action.label) {
+              <a [routerLink]="action.route" class="btn" [class.btn-primary]="action.primary" [class.btn-secondary]="!action.primary">{{ action.label }}</a>
+            }
+          </div>
+        </div>
+      </div>
+      <div class="layout-col-3">
+        <div class="card">
+          <div class="card-title">Upcoming Reminders</div>
+          <ul class="reminders-list">
+            @for (reminder of reminders; track reminder) {
+              <li>{{ reminder }}</li>
+            }
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="card recent-lessons-card">
+      <div class="card-header">
+        <div class="card-title">Recent Lesson Plans</div>
+      </div>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Subject</th>
+            <th>Grade</th>
+            <th>Difficulty Category</th>
+            <th>Date</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (lesson of lessons(); track lesson.id) {
+            <tr>
+              <td>{{ lesson.title }}</td>
+              <td>{{ lesson.subject }}</td>
+              <td>{{ lesson.grade }}</td>
+              <td>{{ lesson.difficulty }}</td>
+              <td>{{ lesson.updated_at | date:'MMM d, y' }}</td>
+              <td><span [class]="lessonStatusBadge(lesson.status)">{{ lesson.status === 'final' ? '✅ Final' : '📝 Draft' }}</span></td>
+              <td><button class="btn btn-small btn-secondary" type="button">Open</button></td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="7" class="muted">No lesson plans created yet.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>

@@ -1,0 +1,104 @@
+<section class="page-shell">
+  <div class="page-header card">
+    <div>
+      <p class="eyebrow">Admin analytics</p>
+      <h2>Review the local lesson, reflection, observation, and survey data.</h2>
+      <p>The backend aggregates the saved data so the dashboard can stay synchronized with the workspace state.</p>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <section class="card status-panel">Loading admin analytics...</section>
+  } @else if (error()) {
+    <section class="card status-panel error-panel">{{ error() }}</section>
+  } @else if (stats(); as dashboard) {
+    <div class="kpis">
+      <article class="kpi card"><span>Total teachers</span><strong>{{ dashboard.total_teachers }}</strong></article>
+      <article class="kpi card"><span>Active users</span><strong>{{ dashboard.active_users_this_month }}</strong></article>
+      <article class="kpi card"><span>Lesson plans generated</span><strong>{{ dashboard.lesson_plans_generated }}</strong></article>
+      <article class="kpi card"><span>Reflections submitted</span><strong>{{ dashboard.reflections_submitted }}</strong></article>
+      <article class="kpi card"><span>Observations submitted</span><strong>{{ dashboard.observations_submitted }}</strong></article>
+      <article class="kpi card"><span>Survey completion</span><strong>{{ dashboard.survey_completion }}</strong></article>
+    </div>
+
+    <div class="layout">
+      <section class="card chart-panel">
+        <p class="eyebrow">Top difficulty categories</p>
+        <div class="bars">
+          @for (item of dashboard.top_difficulties; track item.name) {
+            <div class="bar-row">
+              <span>{{ item.name }}</span>
+              <div class="bar-track"><div class="bar-fill" [style.width.%]="item.value * 20"></div></div>
+              <strong>{{ item.value }}</strong>
+            </div>
+          } @empty {
+            <p>No lesson data yet.</p>
+          }
+        </div>
+      </section>
+
+      <section class="card chart-panel">
+        <p class="eyebrow">Most used support types</p>
+        <div class="bars">
+          @for (item of dashboard.top_supports; track item.name) {
+            <div class="bar-row">
+              <span>{{ item.name }}</span>
+              <div class="bar-track"><div class="bar-fill alt" [style.width.%]="item.value * 20"></div></div>
+              <strong>{{ item.value }}</strong>
+            </div>
+          } @empty {
+            <p>No support data yet.</p>
+          }
+        </div>
+      </section>
+    </div>
+
+    <div class="layout two-column">
+      <section class="card table-panel">
+        <p class="eyebrow">Recent lessons</p>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Subject</th>
+              <th>Grade</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (lesson of dashboard.recent_lessons; track lesson.id) {
+              <tr>
+                <td>{{ lesson.title }}</td>
+                <td>{{ lesson.subject }}</td>
+                <td>{{ lesson.grade }}</td>
+                <td>{{ lesson.status }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </section>
+
+      <section class="card table-panel">
+        <p class="eyebrow">Recent reflections</p>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Subject</th>
+              <th>Rating</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (reflection of dashboard.recent_reflections; track reflection.id) {
+              <tr>
+                <td>{{ reflection.date }}</td>
+                <td>{{ reflection.subject }}</td>
+                <td>{{ reflection.effectiveness_rating }}/5</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </section>
+    </div>
+  }
+</section>

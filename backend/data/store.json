@@ -1,0 +1,252 @@
+{
+  "meta": {
+    "nextLessonId": 1,
+    "nextReflectionId": 4,
+    "nextObservationId": 3,
+    "nextSurveyId": 3,
+    "nextUserId": 4
+  },
+  "lessons": [],
+  "reflections": [
+    {
+      "date": "2026-04-09",
+      "subject": "Mathematics",
+      "grade": "Grade 5",
+      "lesson_plan_linked": "Fractions Activity",
+      "strategies_used": "Visual models and guided practice",
+      "learner_response": "Learners were able to compare fractions using strips.",
+      "effectiveness_rating": 5,
+      "inspire_confidence_rating": 4,
+      "challenges": "A few learners needed extra time",
+      "next_steps": "Add a quick warm-up before the lesson",
+      "id": 4,
+      "updated_at": "2026-04-09T04:51:46.163Z",
+      "created_at": "2026-04-09T04:51:46.163Z"
+    },
+    {
+      "id": 1,
+      "date": "2026-04-05",
+      "subject": "Math",
+      "grade": "Grade 8",
+      "lesson_plan_linked": "Fractions Activity",
+      "strategies_used": "Fraction strips, think-alouds, oral response options",
+      "learner_response": "Learners stayed engaged when visuals were introduced.",
+      "effectiveness_rating": 4,
+      "inspire_confidence_rating": 4,
+      "challenges": "A few learners needed extra time to interpret the fraction cards.",
+      "next_steps": "Pre-teach the vocabulary and add a short review warm-up.",
+      "created_at": "2026-04-05T09:00:00.000Z",
+      "updated_at": "2026-04-05T09:00:00.000Z"
+    },
+    {
+      "id": 2,
+      "date": "2026-04-03",
+      "subject": "English",
+      "grade": "Grade 9",
+      "lesson_plan_linked": "Short Story Analysis",
+      "strategies_used": "Graphic organizers and partner reading",
+      "learner_response": "Most learners participated during the guided discussion.",
+      "effectiveness_rating": 3,
+      "inspire_confidence_rating": 4,
+      "challenges": "Instructions needed to be repeated more than once.",
+      "next_steps": "Chunk the task directions into smaller steps.",
+      "created_at": "2026-04-03T09:00:00.000Z",
+      "updated_at": "2026-04-03T09:00:00.000Z"
+    },
+    {
+      "id": 3,
+      "date": "2026-03-30",
+      "subject": "Science",
+      "grade": "Grade 7",
+      "lesson_plan_linked": "Science Lab Safety",
+      "strategies_used": "Safety posters and demonstration",
+      "learner_response": "Learners copied the routine quickly after modeling.",
+      "effectiveness_rating": 4,
+      "inspire_confidence_rating": 5,
+      "challenges": "One group needed reminder prompts during cleanup.",
+      "next_steps": "Add a cleanup checklist for each group table.",
+      "created_at": "2026-03-30T09:00:00.000Z",
+      "updated_at": "2026-03-30T09:00:00.000Z"
+    }
+  ],
+  "observations": [
+    {
+      "observation_date": "2026-04-09",
+      "teacher_observed": "Janice D. Qui�ones",
+      "subject": "Math 5",
+      "focus": "Differentiation",
+      "phase": "During Intervention",
+      "rating": 4,
+      "notes": "Support strategies were visible throughout the activity.",
+      "id": 3,
+      "updated_at": "2026-04-09T04:51:46.173Z",
+      "created_at": "2026-04-09T04:51:46.173Z"
+    },
+    {
+      "id": 1,
+      "observation_date": "2026-04-04",
+      "teacher_observed": "Janice D. Quiñones",
+      "subject": "Math 8",
+      "focus": "Differentiation",
+      "phase": "During Intervention",
+      "rating": 4,
+      "notes": "The lesson used visuals and partner support effectively.",
+      "created_at": "2026-04-04T10:00:00.000Z"
+    },
+    {
+      "id": 2,
+      "observation_date": "2026-03-28",
+      "teacher_observed": "Janice D. Quiñones",
+      "subject": "English 9",
+      "focus": "Learner Participation",
+      "phase": "Pre-Intervention",
+      "rating": 3,
+      "notes": "Several learners needed more structured turn-taking prompts.",
+      "created_at": "2026-03-28T10:00:00.000Z"
+    }
+  ],
+  "surveys": [
+    {
+      "survey_type": "pre",
+      "question_responses": {
+        "q4": 3,
+        "q1": 3,
+        "q3": 4,
+        "q2": 4,
+        "q5": 4
+      },
+      "completed_at": "2026-04-09T04:51:46.176Z",
+      "id": 3
+    },
+    {
+      "id": 1,
+      "survey_type": "pre",
+      "question_responses": {
+        "q1": 2,
+        "q2": 2,
+        "q3": 3,
+        "q4": 2,
+        "q5": 2
+      },
+      "completed_at": "2026-04-01T08:00:00.000Z"
+    },
+    {
+      "id": 2,
+      "survey_type": "post",
+      "question_responses": {
+        "q1": 4,
+        "q2": 4,
+        "q3": 4,
+        "q4": 4,
+        "q5": 4
+      },
+      "completed_at": "2026-04-08T08:00:00.000Z"
+    }
+  ],
+  "users": [
+    {
+      "id": 1,
+      "username": "admin",
+      "password": "password123",
+      "display_name": "Janice D. Quinones",
+      "role": "admin",
+      "active": true,
+      "created_at": "2026-04-01T08:00:00.000Z",
+      "updated_at": "2026-04-01T08:00:00.000Z"
+    },
+    {
+      "id": 2,
+      "username": "teacher",
+      "password": "password123",
+      "display_name": "Janice D. Quinones",
+      "role": "teacher",
+      "active": true,
+      "created_at": "2026-04-01T08:00:00.000Z",
+      "updated_at": "2026-04-01T08:00:00.000Z"
+    },
+    {
+      "id": 3,
+      "username": "researcher",
+      "password": "password123",
+      "display_name": "Research Coordinator",
+      "role": "researcher",
+      "active": true,
+      "created_at": "2026-04-01T08:00:00.000Z",
+      "updated_at": "2026-04-01T08:00:00.000Z"
+    }
+  ],
+  "reference_metadata": {
+    "assessment-checklist.docx": {
+      "title": "Learner Difficulty Assessment Checklist",
+      "description": "Comprehensive checklist of learner difficulty categories, indicators, and classroom support strategies.",
+      "category": "Tips",
+      "created_at": "2026-04-09T06:15:12.075Z",
+      "updated_at": "2026-04-09T06:25:01.324Z"
+    },
+    "DO_s2020_021-transition.pdf": {
+      "title": "DO s.2020 No.021 - Transition Program Guidance",
+      "description": "Guidance for transition planning and learner progression across educational stages.",
+      "category": "Strategies",
+      "created_at": "2026-04-09T06:23:30.530Z",
+      "updated_at": "2026-04-09T06:23:30.530Z"
+    },
+    "DO_s2021_044.pdf": {
+      "title": "DO s.2021 No.044 - Inclusive Education Policy Framework",
+      "description": "Official policy guidance for implementing inclusive education principles and learner support.",
+      "category": "References",
+      "created_at": "2026-04-09T06:23:30.530Z",
+      "updated_at": "2026-04-09T06:23:30.530Z"
+    },
+    "DSM-5.pdf": {
+      "title": "DSM-5 Reference for Learning and Behavior Needs",
+      "description": "Diagnostic reference to support interpretation of learner characteristics and intervention planning.",
+      "category": "References",
+      "created_at": "2026-04-09T06:23:30.530Z",
+      "updated_at": "2026-04-09T06:23:30.530Z"
+    },
+    "LEGAL BASIS.docx": {
+      "title": "Legal Basis for Inclusive Education",
+      "description": "Policy and legal foundations supporting inclusive education implementation in schools.",
+      "category": "References",
+      "created_at": "2026-04-09T06:23:30.530Z",
+      "updated_at": "2026-04-09T06:23:30.530Z"
+    },
+    "QUINONES_JANICE_ACTION RESEARCH_PROPOSAL.pdf": {
+      "title": "Action Research Proposal for Inclusive Teaching",
+      "description": "School-based action research document focused on inclusive teaching practices and outcomes.",
+      "category": "References",
+      "created_at": "2026-04-09T06:23:30.530Z",
+      "updated_at": "2026-04-09T06:23:30.530Z"
+    },
+    "REVISED K TO 12 DLP.docx": {
+      "title": "Revised K to 12 Daily Lesson Plan Guide",
+      "description": "Template and guide for writing standards-aligned daily lesson plans in the K to 12 curriculum.",
+      "category": "Templates",
+      "created_at": "2026-04-09T06:23:30.530Z",
+      "updated_at": "2026-04-09T06:23:30.530Z"
+    }
+  },
+  "models": [
+    "openai/gpt-oss-20b:free",
+    "qwen/qwen3.6-plus",
+    "stepfun/step-3.5-flash",
+    "qwen/qwen3.6-plus-preview",
+    "nvidia/nemotron-3-super-120b-a12b:free"
+  ],
+  "surveyQuestions": {
+    "pre": [
+      "I can plan lessons that accommodate learners with diverse needs.",
+      "I can modify lesson objectives appropriately for learners with SEN.",
+      "I feel confident selecting inclusive support strategies.",
+      "I can contextualize lessons to meet the needs of my diverse learners.",
+      "I know how to document reflections after teaching an inclusive lesson."
+    ],
+    "post": [
+      "I can plan lessons that accommodate learners with diverse needs.",
+      "I can modify lesson objectives appropriately for learners with SEN.",
+      "I feel confident selecting inclusive support strategies.",
+      "I can contextualize lessons to meet the needs of my diverse learners.",
+      "I know how to document reflections after teaching an inclusive lesson."
+    ]
+  }
+}

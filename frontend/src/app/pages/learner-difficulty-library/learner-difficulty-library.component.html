@@ -1,0 +1,82 @@
+<section class="library-shell card">
+  <div class="library-header">
+    <div>
+      <div class="breadcrumbs">Tools · Learner Difficulty Library</div>
+      <h2>Learner Difficulty Reference Library</h2>
+    </div>
+    <div class="header-actions">
+      <p>Browse categories to understand common observable characteristics and support strategies.</p>
+      <button type="button" class="add-btn" (click)="openAddModal()">+ Add Difficulty</button>
+    </div>
+  </div>
+
+  <div class="category-grid">
+    @for (category of categories(); track category.id) {
+      <article
+        class="category-card"
+        [class.active]="selected().id === category.id"
+        tabindex="0"
+        (click)="selectCategory(category)"
+        (keydown.enter)="selectCategory(category)"
+      >
+        <h3>{{ category.id }}. {{ category.title }}</h3>
+        <p>{{ category.summary }}</p>
+        <button type="button" class="detail-btn" (click)="selectCategory(category); $event.stopPropagation()">View Details</button>
+      </article>
+    }
+  </div>
+
+  <section class="details-panel">
+    @if (selected(); as category) {
+      <h3>{{ category.id }}. {{ category.title }} — Details</h3>
+      <p>{{ category.summary }}</p>
+
+      <h4>Observable Characteristics</h4>
+      <ul>
+        @for (indicator of category.indicators; track indicator) {
+          <li>{{ indicator }}</li>
+        }
+      </ul>
+
+      <h4>Classroom Reminders and Accommodation Tips</h4>
+      <ul>
+        @for (tip of category.tips; track tip) {
+          <li>{{ tip }}</li>
+        }
+      </ul>
+    }
+  </section>
+
+  @if (addModalOpen()) {
+    <div class="modal-backdrop" (click)="closeAddModal()">
+      <section class="modal-panel" (click)="$event.stopPropagation()">
+        <h3>Add New Difficulty</h3>
+
+        <label>
+          <span>Title</span>
+          <input type="text" [(ngModel)]="draftTitle" [ngModelOptions]="{ standalone: true }" placeholder="Difficulty in ...">
+        </label>
+
+        <label>
+          <span>Summary</span>
+          <textarea rows="2" [(ngModel)]="draftSummary" [ngModelOptions]="{ standalone: true }" placeholder="Short description"></textarea>
+        </label>
+
+        <label>
+          <span>Indicators (one per line or comma-separated)</span>
+          <textarea rows="4" [(ngModel)]="draftIndicators" [ngModelOptions]="{ standalone: true }" placeholder="Indicator 1"></textarea>
+        </label>
+
+        <label>
+          <span>Tips (one per line or comma-separated)</span>
+          <textarea rows="4" [(ngModel)]="draftTips" [ngModelOptions]="{ standalone: true }" placeholder="Tip 1"></textarea>
+        </label>
+
+        <div class="modal-actions">
+          <button type="button" class="add-btn" (click)="addDifficulty()">Save Difficulty</button>
+          <button type="button" class="detail-btn" (click)="closeAddModal()">Cancel</button>
+        </div>
+      </section>
+    </div>
+  }
+</section>

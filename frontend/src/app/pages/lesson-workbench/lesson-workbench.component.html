@@ -1,0 +1,150 @@
+<section class="workspace-shell">
+  <div class="page-header card">
+    <div>
+      <p class="eyebrow">Lesson workbench</p>
+      <h2>Draft the lesson, select references, and generate the plan.</h2>
+      <p>
+        Fill out the lesson details to generate and save real lesson plans for your account.
+      </p>
+    </div>
+
+    <div class="page-chip">
+      <span class="dot"></span>
+      <span>Proxying through /api</span>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <section class="card status-panel">Loading models and references...</section>
+  } @else if (error()) {
+    <section class="card status-panel error-panel">{{ error() }}</section>
+  } @else {
+    <div class="layout">
+      <form class="card form-panel" [formGroup]="form" (ngSubmit)="generate()">
+        <div class="form-grid">
+          <label>
+            <span>Subject</span>
+            <input type="text" formControlName="subject">
+          </label>
+
+          <label>
+            <span>Grade</span>
+            <input type="text" formControlName="grade">
+          </label>
+
+          <label>
+            <span>Quarter</span>
+            <input type="text" formControlName="quarter">
+          </label>
+
+          <label>
+            <span>Lesson title</span>
+            <input type="text" formControlName="title">
+          </label>
+
+          <label class="full-span">
+            <span>Learning objectives</span>
+            <textarea rows="4" formControlName="objectives"></textarea>
+          </label>
+
+          <label>
+            <span>Learner difficulty</span>
+            <input type="text" formControlName="difficulty">
+          </label>
+
+          <label>
+            <span>Observed indicators</span>
+            <input type="text" formControlName="indicators">
+          </label>
+
+          <label>
+            <span>Support types</span>
+            <input type="text" formControlName="supportTypes">
+          </label>
+
+          <label>
+            <span>Delivery mode</span>
+            <input type="text" formControlName="deliveryMode">
+          </label>
+
+          <label class="full-span">
+            <span>Custom support notes</span>
+            <textarea rows="3" formControlName="customSupport"></textarea>
+          </label>
+
+          <label class="full-span">
+            <span>Model</span>
+            <select formControlName="model">
+              @for (model of models(); track model) {
+                <option [value]="model">{{ model }}</option>
+              }
+            </select>
+          </label>
+        </div>
+
+        <div class="support-card">
+          <p class="eyebrow">Support checklist</p>
+          <div class="support-list">
+            @for (support of supportChecklist; track support) {
+              <span class="support-pill">{{ support }}</span>
+            }
+          </div>
+        </div>
+
+        <div class="reference-card">
+          <p class="eyebrow">Reference documents</p>
+          <div class="reference-list">
+            @for (reference of references(); track reference) {
+              <label class="reference-pill">
+                <input
+                  type="checkbox"
+                  [checked]="selectedReferences().includes(reference)"
+                  (change)="toggleReference(reference, $any($event.target).checked)"
+                >
+                <span>{{ reference }}</span>
+              </label>
+            } @empty {
+              <p>No reference documents are loaded.</p>
+            }
+          </div>
+        </div>
+
+        <button type="submit" class="primary-button" [disabled]="generating()">
+          {{ generating() ? 'Generating plan...' : 'Generate daily lesson plan' }}
+        </button>
+      </form>
+
+      <aside class="card result-panel">
+        <div class="result-header">
+          <div>
+            <p class="eyebrow">Output</p>
+            <h3>Generated plan</h3>
+          </div>
+          <span class="result-status">{{ selectedReferences().length }} references selected</span>
+        </div>
+
+        @if (generatedOutput()) {
+          <pre>{{ generatedOutput() }}</pre>
+        } @else {
+          <p class="placeholder">
+            Submit the form to render the JSON payload returned by the backend and store the lesson locally.
+          </p>
+        }
+
+        <div class="saved-lessons">
+          <p class="eyebrow">Saved lessons</p>
+          <div class="saved-list">
+            @for (lesson of savedLessons(); track lesson.id) {
+              <button type="button" class="saved-item" (click)="loadLesson(lesson)">
+                <strong>{{ lesson.title }}</strong>
+                <span>{{ lesson.subject }} · {{ lesson.grade }}</span>
+              </button>
+            } @empty {
+              <p>No saved lessons yet.</p>
+            }
+          </div>
+        </div>
+      </aside>
+    </div>
+  }
+</section>

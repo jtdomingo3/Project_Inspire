@@ -1,0 +1,82 @@
+<section class="page-shell">
+  <div class="card page-header">
+    <p class="eyebrow">Admin only</p>
+    <h2>Account Management</h2>
+    <p>Create, update, and deactivate local demo accounts for teacher, researcher, and admin roles.</p>
+  </div>
+
+  @if (error()) {
+    <section class="card status-panel error-panel">{{ error() }}</section>
+  }
+
+  <section class="card form-panel">
+    <div class="form-grid">
+      <label>
+        Username
+        <input type="text" [(ngModel)]="form.username" placeholder="teacher2">
+      </label>
+
+      <label>
+        Display name
+        <input type="text" [(ngModel)]="form.display_name" placeholder="Teacher Name">
+      </label>
+
+      <label>
+        Role
+        <select [(ngModel)]="form.role">
+          <option value="teacher">Teacher</option>
+          <option value="researcher">Researcher</option>
+          <option value="admin">Admin</option>
+        </select>
+      </label>
+
+      <label>
+        Password
+        <input type="text" [(ngModel)]="form.password" placeholder="password123">
+      </label>
+
+      <label class="inline-toggle">
+        <input type="checkbox" [(ngModel)]="form.active">
+        Active account
+      </label>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-primary" type="button" (click)="save()" [disabled]="saving()">{{ saving() ? 'Saving...' : (form.id ? 'Update Account' : 'Create Account') }}</button>
+      <button class="btn btn-secondary" type="button" (click)="resetForm()">Clear</button>
+    </div>
+  </section>
+
+  <section class="card table-panel">
+    <h3>Existing accounts</h3>
+    @if (loading()) {
+      <p>Loading accounts...</p>
+    } @else {
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Username</th>
+            <th>Name</th>
+            <th>Role</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (account of accounts(); track account.id) {
+            <tr>
+              <td>{{ account.username }}</td>
+              <td>{{ account.display_name }}</td>
+              <td>{{ account.role }}</td>
+              <td>{{ account.active ? 'Active' : 'Inactive' }}</td>
+              <td class="row-actions">
+                <button class="btn btn-small btn-secondary" type="button" (click)="edit(account)">Edit</button>
+                <button class="btn btn-small" type="button" (click)="remove(account)">Delete</button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </section>
+</section>

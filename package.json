@@ -1,0 +1,12 @@
+{
+  "name": "project-inspire",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "concurrently -k -n backend,frontend \"npm --prefix backend run start\" \"npm --prefix frontend run start\"",
+    "dev": "npm run start"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}

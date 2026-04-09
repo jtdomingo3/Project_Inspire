@@ -1,0 +1,99 @@
+<section class="page-shell">
+  <div class="page-header card">
+    <div>
+      <p class="eyebrow">Reflection logs</p>
+      <h2>Record what happened after teaching each inclusive lesson.</h2>
+      <p>Reflections are stored locally in the backend and linked to the selected lesson plan.</p>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <section class="card status-panel">Loading reflections...</section>
+  } @else {
+    <div class="layout">
+      <form class="card form-panel" [formGroup]="form" (ngSubmit)="submit()">
+        <div class="grid">
+          <label>
+            <span>Date of lesson</span>
+            <input type="date" formControlName="date">
+          </label>
+          <label>
+            <span>Subject</span>
+            <input type="text" formControlName="subject">
+          </label>
+          <label>
+            <span>Grade</span>
+            <input type="text" formControlName="grade">
+          </label>
+          <label>
+            <span>Linked lesson</span>
+            <select formControlName="lesson_plan_linked">
+              @for (lesson of lessons(); track lesson.id) {
+                <option [value]="lesson.title">{{ lesson.title }}</option>
+              }
+            </select>
+          </label>
+          <label class="full-span">
+            <span>Strategies used</span>
+            <textarea rows="3" formControlName="strategies_used"></textarea>
+          </label>
+          <label class="full-span">
+            <span>Learner response</span>
+            <textarea rows="3" formControlName="learner_response"></textarea>
+          </label>
+          <label>
+            <span>Effectiveness rating</span>
+            <select formControlName="effectiveness_rating">
+              @for (rating of [1, 2, 3, 4, 5]; track rating) {
+                <option [value]="rating">{{ rating }}</option>
+              }
+            </select>
+          </label>
+          <label>
+            <span>INSPIRE confidence</span>
+            <select formControlName="inspire_confidence_rating">
+              @for (rating of [1, 2, 3, 4, 5]; track rating) {
+                <option [value]="rating">{{ rating }}</option>
+              }
+            </select>
+          </label>
+          <label class="full-span">
+            <span>Challenges encountered</span>
+            <textarea rows="3" formControlName="challenges"></textarea>
+          </label>
+          <label class="full-span">
+            <span>Plans for next lesson</span>
+            <textarea rows="3" formControlName="next_steps"></textarea>
+          </label>
+        </div>
+
+        <button type="submit" class="primary-button" [disabled]="saving()">
+          {{ saving() ? 'Saving reflection...' : 'Submit reflection log' }}
+        </button>
+      </form>
+
+      <aside class="card list-panel">
+        <p class="eyebrow">Saved reflections</p>
+        @if (error()) {
+          <p class="error">{{ error() }}</p>
+        }
+
+        <div class="stack">
+          @for (reflection of reflections(); track reflection.id) {
+            <article class="item-card">
+              <div class="item-meta">
+                <strong>{{ reflection.date }}</strong>
+                <span>{{ reflection.subject }} · {{ reflection.grade }}</span>
+              </div>
+              <p><strong>Linked:</strong> {{ reflection.lesson_plan_linked }}</p>
+              <p><strong>Rating:</strong> {{ reflection.effectiveness_rating }}/5</p>
+              <p>{{ reflection.next_steps }}</p>
+            </article>
+          } @empty {
+            <p>No reflection logs saved yet.</p>
+          }
+        </div>
+      </aside>
+    </div>
+  }
+</section>

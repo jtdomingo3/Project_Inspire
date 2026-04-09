@@ -1,0 +1,70 @@
+<section class="page-shell">
+  <div class="page-header card">
+    <div>
+      <p class="eyebrow">Surveys</p>
+      <h2>Track the pre and post competency survey inside the app.</h2>
+      <p>Responses are stored locally and surfaced for the admin dashboard.</p>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <section class="card status-panel">Loading survey data...</section>
+  } @else {
+    <div class="tabs card">
+      <button type="button" class="tab" [class.active]="activeTab() === 'pre'" (click)="setTab('pre')">Pre-Intervention</button>
+      <button type="button" class="tab" [class.active]="activeTab() === 'post'" (click)="setTab('post')">Post-Intervention</button>
+    </div>
+
+    <div class="layout">
+      <section class="card form-panel">
+        <p class="eyebrow">{{ activeTab() === 'pre' ? 'Pre-intervention survey' : 'Post-intervention survey' }}</p>
+        <p class="muted">Likert scale: 1 = Strongly Disagree, 5 = Strongly Agree</p>
+
+        <div class="questions">
+          @for (question of currentQuestions(); track $index) {
+            <article class="question-card">
+              <div class="question-title">{{ $index + 1 }}. {{ question }}</div>
+              <div class="likert">
+                @for (rating of [1, 2, 3, 4, 5]; track rating) {
+                  <button
+                    type="button"
+                    class="rating"
+                    [class.active]="isSelected($index, rating)"
+                    (click)="setResponse($index, rating)"
+                  >
+                    {{ rating }}
+                  </button>
+                }
+              </div>
+            </article>
+          }
+        </div>
+
+        <button type="button" class="primary-button" (click)="submit()" [disabled]="saving()">
+          {{ saving() ? 'Saving survey...' : 'Submit survey' }}
+        </button>
+      </section>
+
+      <aside class="card list-panel">
+        <p class="eyebrow">Survey submissions</p>
+        @if (error()) {
+          <p class="error">{{ error() }}</p>
+        }
+
+        <div class="stack">
+          @for (survey of surveys(); track survey.id) {
+            <article class="submission-card">
+              <div class="submission-header">
+                <strong>{{ survey.survey_type | uppercase }}</strong>
+                <span>{{ survey.completed_at | date:'mediumDate' }}</span>
+              </div>
+              <p>{{ survey.question_responses | json }}</p>
+            </article>
+          } @empty {
+            <p>No surveys have been submitted yet.</p>
+          }
+        </div>
+      </aside>
+    </div>
+  }
+</section>

@@ -1,0 +1,47 @@
+<section class="page-shell">
+  <div class="page-header card">
+    <div>
+      <p class="eyebrow">Lesson plans</p>
+      <h2>My Lessons</h2>
+      <p>All lesson plans you created are listed here.</p>
+    </div>
+    <a class="btn btn-primary" [routerLink]="'/lessons'">Create New Lesson Plan</a>
+  </div>
+
+  @if (loading()) {
+    <section class="card status-panel">Loading lessons...</section>
+  } @else if (error()) {
+    <section class="card status-panel error-panel">{{ error() }}</section>
+  } @else {
+    <section class="card table-panel">
+      @if (lessons().length === 0) {
+        <p class="empty">No lesson plans created yet.</p>
+      } @else {
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Subject</th>
+              <th>Grade</th>
+              <th>Difficulty</th>
+              <th>Status</th>
+              <th>Updated</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (lesson of lessons(); track lesson.id) {
+              <tr>
+                <td>{{ lesson.title }}</td>
+                <td>{{ lesson.subject }}</td>
+                <td>{{ lesson.grade }}</td>
+                <td>{{ lesson.difficulty }}</td>
+                <td>{{ lesson.status || 'draft' }}</td>
+                <td>{{ lesson.updated_at | date:'MMM d, y, h:mm a' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </section>
+  }
+</section>

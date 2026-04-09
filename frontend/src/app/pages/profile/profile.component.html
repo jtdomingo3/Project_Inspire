@@ -1,0 +1,27 @@
+<section class="page-shell">
+  <div class="card profile-card">
+    <p class="eyebrow">Profile</p>
+    <h2>My Profile</h2>
+
+    @if (auth(); as user) {
+      <dl class="profile-grid">
+        <div>
+          <dt>Name</dt>
+          <dd>{{ user.name }}</dd>
+        </div>
+        <div>
+          <dt>Username</dt>
+          <dd>{{ user.username }}</dd>
+        </div>
+        <div>
+          <dt>Role</dt>
+          <dd>{{ user.roleLabel }}</dd>
+        </div>
+        <div>
+          <dt>Access scope</dt>
+          <dd>{{ user.role === 'admin' ? 'Full admin access' : user.role === 'researcher' ? 'Research and analytics access' : 'Teacher workspace access' }}</dd>
+        </div>
+      </dl>
+    }
+  </div>
+</section>
