@@ -7,36 +7,13 @@ const defaultStore = () => ({
   meta: {
     nextLessonId: 1,
     nextReflectionId: 1,
-    nextObservationId: 3,
+    nextObservationId: 1,
     nextSurveyId: 3,
     nextUserId: 4
   },
   lessons: [],
   reflections: [],
-  observations: [
-    {
-      id: 1,
-      observation_date: '2026-04-04',
-      teacher_observed: 'Janice D. Quiñones',
-      subject: 'Math 8',
-      focus: 'Differentiation',
-      phase: 'During Intervention',
-      rating: 4,
-      notes: 'The lesson used visuals and partner support effectively.',
-      created_at: '2026-04-04T10:00:00.000Z'
-    },
-    {
-      id: 2,
-      observation_date: '2026-03-28',
-      teacher_observed: 'Janice D. Quiñones',
-      subject: 'English 9',
-      focus: 'Learner Participation',
-      phase: 'Pre-Intervention',
-      rating: 3,
-      notes: 'Several learners needed more structured turn-taking prompts.',
-      created_at: '2026-03-28T10:00:00.000Z'
-    }
-  ],
+  observations: [],
   surveys: [
     {
       id: 1,

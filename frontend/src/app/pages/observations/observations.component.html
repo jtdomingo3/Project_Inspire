@@ -1,64 +1,16 @@
 <section class="page-shell">
-  <div class="page-header card">
-    <div>
-      <p class="eyebrow">Classroom observations</p>
-      <h2>Capture observations tied to inclusive teaching practices.</h2>
-      <p>Observation entries are persisted locally and can be used in the admin dashboard.</p>
-    </div>
+  <div class="breadcrumbs">Monitoring · Classroom Observations</div>
+  <h2>Classroom Observations</h2>
+
+  <div class="tab-row">
+    <button type="button" class="tab-btn" [class.active]="activeTab() === 'list'" (click)="setTab('list')">View Observations</button>
+    <button type="button" class="tab-btn" [class.active]="activeTab() === 'new'" (click)="setTab('new')">New Observation</button>
   </div>
 
-  <div class="layout">
-    <form class="card form-panel" [formGroup]="form" (ngSubmit)="submit()">
-      <div class="grid">
-        <label>
-          <span>Date of observation</span>
-          <input type="date" formControlName="observation_date">
-        </label>
-        <label>
-          <span>Teacher observed</span>
-          <input type="text" formControlName="teacher_observed">
-        </label>
-        <label>
-          <span>Subject / grade</span>
-          <input type="text" formControlName="subject">
-        </label>
-        <label>
-          <span>Observation focus</span>
-          <select formControlName="focus">
-            @for (focus of ['Accommodation Use', 'Modification Use', 'Differentiation', 'Learner Participation', 'Strategy Application']; track focus) {
-              <option [value]="focus">{{ focus }}</option>
-            }
-          </select>
-        </label>
-        <label>
-          <span>Phase</span>
-          <select formControlName="phase">
-            @for (phase of ['Pre-Intervention', 'During Intervention', 'Post-Intervention']; track phase) {
-              <option [value]="phase">{{ phase }}</option>
-            }
-          </select>
-        </label>
-        <label>
-          <span>Rating</span>
-          <select formControlName="rating">
-            @for (rating of [1, 2, 3, 4, 5]; track rating) {
-              <option [value]="rating">{{ rating }}</option>
-            }
-          </select>
-        </label>
-        <label class="full-span">
-          <span>Observation notes</span>
-          <textarea rows="4" formControlName="notes"></textarea>
-        </label>
-      </div>
-
-      <button type="submit" class="primary-button" [disabled]="saving()">
-        {{ saving() ? 'Saving observation...' : 'Submit observation' }}
-      </button>
-    </form>
-
-    <aside class="card list-panel">
-      <p class="eyebrow">Saved observations</p>
+  @if (loading()) {
+    <section class="card status-panel">Loading observations...</section>
+  } @else if (activeTab() === 'list') {
+    <section class="card table-panel">
       @if (error()) {
         <p class="error">{{ error() }}</p>
       }
@@ -77,7 +29,7 @@
         <tbody>
           @for (observation of observations(); track observation.id) {
             <tr>
-              <td>{{ observation.observation_date }}</td>
+              <td>{{ observation.observation_date | date:'MMM d, y' }}</td>
               <td>{{ observation.teacher_observed }}</td>
               <td>{{ observation.subject }}</td>
               <td>{{ observation.focus }}</td>
@@ -86,11 +38,66 @@
             </tr>
           } @empty {
             <tr>
-              <td colspan="6">No observations saved yet.</td>
+              <td colspan="6" class="empty-state">No observations yet. Click New Observation to add one.</td>
             </tr>
           }
         </tbody>
       </table>
-    </aside>
-  </div>
+    </section>
+  } @else {
+    <form class="card form-panel" [formGroup]="form" (ngSubmit)="submit()">
+      <div class="grid">
+        <label>
+          <span>Date of Observation</span>
+          <input type="date" formControlName="observation_date" placeholder="dd/mm/yyyy">
+        </label>
+
+        <label>
+          <span>Teacher Observed</span>
+          <input type="text" formControlName="teacher_observed" placeholder="e.g., Janice D. Quinones">
+        </label>
+
+        <label>
+          <span>Subject and Grade</span>
+          <input type="text" formControlName="subject" placeholder="e.g., Mathematics, Grade 8">
+        </label>
+
+        <label>
+          <span>Observation Focus</span>
+          <select formControlName="focus">
+            <option value="" disabled>Select observation focus</option>
+            @for (focus of focuses; track focus) {
+              <option [value]="focus">{{ focus }}</option>
+            }
+          </select>
+        </label>
+
+        <div class="radio-group">
+          <span>Phase</span>
+          @for (phase of phases; track phase) {
+            <label class="radio-option">
+              <input type="radio" formControlName="phase" [value]="phase">
+              <span>{{ phase }}</span>
+            </label>
+          }
+        </div>
+
+        <label>
+          <span>Rating (1-5)</span>
+          <input type="number" min="1" max="5" formControlName="rating" placeholder="1-5">
+        </label>
+
+        <label class="full-span">
+          <span>Observation Notes</span>
+          <textarea rows="4" formControlName="notes"></textarea>
+        </label>
+      </div>
+
+      <div class="actions-row">
+        <button type="submit" class="submit-btn" [disabled]="saving()">
+          {{ saving() ? 'Saving observation...' : 'Submit Observation' }}
+        </button>
+      </div>
+    </form>
+  }
 </section>
