@@ -39,6 +39,8 @@ Create a root `.env` file (not committed):
 
 - `OPENROUTER_API_KEY=your_key_here`
 - `PORT=3000` (optional)
+- `OPENROUTER_MAX_TOKENS=2400` (optional, controls maximum response length for lesson generation)
+- `OPENROUTER_REFERENCE_CHUNKS=3` (optional, controls how many reference chunks are injected per generation request)
 
 ## Git Notes
 

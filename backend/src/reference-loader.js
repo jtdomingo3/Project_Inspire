@@ -123,12 +123,12 @@ export function buildReferenceContext(chunks) {
     .join('\n\n');
 }
 
-export function findRelevantChunks(query, chunks) {
+export function findRelevantChunks(query, chunks, topN = 3) {
   if (!query || !chunks.length) {
     return [];
   }
 
-  return selectRelevantChunks(query, chunks, 4);
+  return selectRelevantChunks(query, chunks, topN);
 }
 
 export async function loadReferenceTextByFileName(fileName) {

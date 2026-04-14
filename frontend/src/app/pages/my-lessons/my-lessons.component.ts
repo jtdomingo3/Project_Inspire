@@ -18,6 +18,8 @@ type ViewPlan = {
   developing: string;
   generalization: string;
   evaluation: string;
+  accommodations: string;
+  modifications: string;
   remarks: string;
   reflection: string;
   custom_support: string;
@@ -45,6 +47,8 @@ const emptyViewPlan = (): ViewPlan => ({
   developing: '',
   generalization: '',
   evaluation: '',
+  accommodations: '',
+  modifications: '',
   remarks: '',
   reflection: '',
   custom_support: '',
@@ -272,6 +276,11 @@ export class MyLessonsComponent implements OnInit {
   }
 
   accommodationItems(): string[] {
+    const direct = this.toItems(this.viewingPlan().accommodations || '', /\r?\n|;|\|/g);
+    if (direct.length > 0) {
+      return direct.filter((item) => !/^accommodations?:?$/i.test(item));
+    }
+
     const notes = this.viewingPlan().custom_support || '';
     const items = this.toItems(notes, /\r?\n|;|\|/g);
     const keyword = /(modify|reduced|simplified|fewer|shorten|alternative|focus)/i;
@@ -279,6 +288,11 @@ export class MyLessonsComponent implements OnInit {
   }
 
   modificationItems(): string[] {
+    const direct = this.toItems(this.viewingPlan().modifications || '', /\r?\n|;|\|/g);
+    if (direct.length > 0) {
+      return direct.filter((item) => !/^modifications?:?$/i.test(item));
+    }
+
     const notes = this.viewingPlan().custom_support || '';
     const items = this.toItems(notes, /\r?\n|;|\|/g);
     const keyword = /(modify|reduced|simplified|fewer|shorten|alternative|focus)/i;
@@ -316,9 +330,11 @@ export class MyLessonsComponent implements OnInit {
       developing: this.readPlanField(parsed, 'developing', parsedText.developing || ''),
       generalization: this.readPlanField(parsed, 'generalization', parsedText.generalization || ''),
       evaluation: this.readPlanField(parsed, 'evaluation', parsedText.evaluation || ''),
+      accommodations: this.readPlanFieldAny(parsed, ['accommodations', 'accommodation', 'accommodation_plan', 'accommodation_strategies'], parsedText.accommodations || ''),
+      modifications: this.readPlanFieldAny(parsed, ['modifications', 'modification', 'modification_plan', 'modification_strategies'], parsedText.modifications || ''),
       remarks: this.readPlanField(parsed, 'remarks', parsedText.remarks || ''),
       reflection: this.readPlanField(parsed, 'reflection', parsedText.reflection || ''),
-      custom_support: this.readPlanField(parsed, 'custom_support', parsedText.custom_support || lesson.custom_support || ''),
+      custom_support: this.readPlanFieldAny(parsed, ['custom_support', 'customSupport', 'support_plan', 'support_notes', 'observed_manifestations'], parsedText.custom_support || lesson.custom_support || ''),
       observations: this.readPlanField(parsed, 'observations', parsedText.observations || ''),
       subject: this.readPlanField(parsed, 'subject', parsedText.subject || lesson.subject),
       grade: this.readPlanField(parsed, 'grade', parsedText.grade || lesson.grade),
@@ -383,8 +399,46 @@ export class MyLessonsComponent implements OnInit {
     const topicMatch = contentBlock.match(/Topic:\s*(.+)/i);
     const lessonTitleMatch = contentBlock.match(/Lesson:\s*(.+)/i);
 
-    const integrationBlock = pullSection('E. Integration', ['F. Observed Manifestations & Accommodations', '═══════════════════════════════════════════════════════════════']);
+    const integrationBlock = pullSection('E. Integration', [
+      'F. Support Plan (Accommodations and Modifications)',
+      'F. Observed Manifestations & Accommodations',
+      '═══════════════════════════════════════════════════════════════'
+    ]);
     const focusMatch = integrationBlock.match(/Inclusive Education Focus:\s*(.+)/i);
+
+    const supportPlanBlock = pullSection('F. Support Plan (Accommodations and Modifications)', ['═══════════════════════════════════════════════════════════════']);
+    const legacySupportBlock = pullSection('F. Observed Manifestations & Accommodations', ['═══════════════════════════════════════════════════════════════']);
+
+    const pullSupportDetail = (block: string, startLabel: string, endLabels: string[]): string => {
+      if (!block) {
+        return '';
+      }
+
+      const blockLines = block.split('\n');
+      const startIndex = blockLines.findIndex((item) => item.trim().startsWith(startLabel));
+      if (startIndex < 0) {
+        return '';
+      }
+
+      let endIndex = blockLines.length;
+      for (let index = startIndex + 1; index < blockLines.length; index += 1) {
+        const current = blockLines[index].trim();
+        if (endLabels.some((label) => current.startsWith(label))) {
+          endIndex = index;
+          break;
+        }
+      }
+
+      return blockLines
+        .slice(startIndex + 1, endIndex)
+        .join('\n')
+        .replace(/^[\s\n]+|[\s\n]+$/g, '');
+    };
+
+    const parsedAccommodations = pullSupportDetail(supportPlanBlock, 'Accommodations:', ['Modifications:', 'Observed Manifestations & Additional Notes:']);
+    const parsedModifications = pullSupportDetail(supportPlanBlock, 'Modifications:', ['Observed Manifestations & Additional Notes:']);
+    const parsedSupportNotes = pullSupportDetail(supportPlanBlock, 'Observed Manifestations & Additional Notes:', []);
+    const fallbackSupportBlock = legacySupportBlock || supportPlanBlock;
 
     return {
       subject: getLineValue('Learning Area:'),
@@ -397,7 +451,9 @@ export class MyLessonsComponent implements OnInit {
       title: (lessonTitleMatch?.[1] || '').trim(),
       integration: integrationBlock.replace(/^Inclusive Education Focus:\s*.*$/gim, '').trim(),
       difficulty: (focusMatch?.[1] || '').trim(),
-      custom_support: pullSection('F. Observed Manifestations & Accommodations', ['═══════════════════════════════════════════════════════════════']),
+      accommodations: parsedAccommodations || fallbackSupportBlock,
+      modifications: parsedModifications,
+      custom_support: parsedSupportNotes || fallbackSupportBlock,
       resources: pullSection('II. LEARNING RESOURCES', ['═══════════════════════════════════════════════════════════════', 'III. TEACHING AND LEARNING PROCEDURE']),
       prior_knowledge: cleanProcedureSection(pullSection('A. Activating Prior Knowledge', ['B. Establishing Lesson Purpose'])),
       lesson_purpose: cleanProcedureSection(pullSection('B. Establishing Lesson Purpose', ['C. Developing and Deepening Understanding'])),
@@ -432,6 +488,17 @@ export class MyLessonsComponent implements OnInit {
   private readPlanField(source: Record<string, unknown> | null, key: string, fallback: string): string {
     const value = source?.[key];
     return typeof value === 'string' ? value : fallback;
+  }
+
+  private readPlanFieldAny(source: Record<string, unknown> | null, keys: string[], fallback: string): string {
+    for (const key of keys) {
+      const value = source?.[key];
+      if (typeof value === 'string' && value.trim()) {
+        return value;
+      }
+    }
+
+    return fallback;
   }
 
   private toItems(text: string, splitter: RegExp): string[] {
@@ -470,6 +537,8 @@ export class MyLessonsComponent implements OnInit {
       `C. Developing and Deepening Understanding: ${plan.developing || 'N/A'}`,
       `D. Making Generalization: ${plan.generalization || 'N/A'}`,
       `E. Evaluating Learning: ${plan.evaluation || 'N/A'}`,
+      `Accommodations: ${plan.accommodations || 'N/A'}`,
+      `Modifications: ${plan.modifications || 'N/A'}`,
       `F. Teacher's Remarks: ${plan.remarks || 'N/A'}`,
       `G. Reflection: ${plan.reflection || 'N/A'}`
     ].join('\n');
