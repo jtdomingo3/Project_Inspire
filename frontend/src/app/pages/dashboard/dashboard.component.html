@@ -81,7 +81,7 @@
               <td>{{ lesson.difficulty }}</td>
               <td>{{ lesson.updated_at | date:'MMM d, y' }}</td>
               <td><span [class]="lessonStatusBadge(lesson.status)">{{ lesson.status === 'final' ? '✅ Final' : '📝 Draft' }}</span></td>
-              <td><button class="btn btn-small btn-secondary" type="button">Open</button></td>
+              <td><button class="btn btn-small btn-secondary" type="button" (click)="openLesson(lesson.id)">Open</button></td>
             </tr>
           } @empty {
             <tr>

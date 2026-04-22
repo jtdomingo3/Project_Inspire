@@ -7,30 +7,22 @@ import express from 'express';
 import { projectRoot, referencesDir, supportedModels, surveyQuestions } from './config.js';
 import { generateLessonPlan } from './openrouter.js';
 import { loadReferenceTextByFileName } from './reference-loader.js';
-import {
-  deleteLesson,
-  deleteObservation,
-  deleteSurvey,
-  deleteReflection,
-  deleteReferenceMetadata,
-  deleteUser,
-  findUserByCredentials,
-  getDefaultStoreSnapshot,
-  getReferenceLibraryItems,
-  listUsers,
-  getReferenceNames,
-  normalizeArray,
-  normalizeText,
-  nextNumericId,
-  readStore,
-  upsertReferenceMetadata,
-  upsertUser,
-  upsertLesson,
-  upsertObservation,
-  upsertReflection,
-  upsertSurvey,
-  writeStore
-} from './store.js';
+import { initializeDatabase, closeDatabase } from './database/init.js';
+import { authMiddleware } from './auth.middleware.js';
+import { hashPassword, verifyPassword } from './utils/password.js';
+import { generateToken } from './utils/jwt.js';
+import * as db from './db.js';
+
+// Utility functions from store.js that we still need
+function normalizeText(value, defaultValue = '') {
+  return (value && String(value).trim()) || defaultValue;
+}
+
+function normalizeArray(value = []) {
+  if (!value) return [];
+  if (Array.isArray(value)) return value.filter((item) => item && String(item).trim());
+  return [value].filter((item) => item && String(item).trim());
+}
 
 dotenv.config({ path: path.join(projectRoot, '.env') });
 
@@ -40,10 +32,21 @@ const port = Number(process.env.PORT || 3000);
 app.use(cors());
 app.use(express.json({ limit: '2mb' }));
 app.use((request, response, next) => {
+  console.log(`[${new Date().toISOString()}] ${request.method} ${request.path}`);
+  if (request.headers.authorization) {
+    console.log(`  Authorization: ${request.headers.authorization.substring(0, 20)}...`);
+  } else {
+    console.log(`  Authorization: MISSING`);
+  }
+  next();
+});
+app.use(authMiddleware);
+app.use((request, response, next) => {
   const start = Date.now();
   response.on('finish', () => {
     const durationMs = Date.now() - start;
-    console.log(`${request.method} ${request.originalUrl} -> ${response.statusCode} (${durationMs}ms)`);
+    const level = response.statusCode >= 400 ? 'ERROR' : 'INFO';
+    console.log(`  [${level}] ${request.method} ${request.originalUrl} -> ${response.statusCode} (${durationMs}ms)`);
   });
   next();
 });
@@ -232,14 +235,14 @@ function aggregateStats(store) {
 }
 
 app.get('/api/health', async (_request, response) => {
-  const store = await readStore();
+  const stats = await db.getStats();
   sendJson(response, 200, {
     ok: true,
     models: supportedModels.length,
-    lessons: store.lessons.length,
-    reflections: store.reflections.length,
-    observations: store.observations.length,
-    surveys: store.surveys.length
+    lessons: stats.lessons,
+    reflections: stats.reflections,
+    observations: stats.observations,
+    surveys: stats.surveys
   });
 });
 
@@ -257,14 +260,25 @@ app.post('/api/auth/login', async (request, response) => {
       return;
     }
 
-    const user = await findUserByCredentials(username, password);
+    const user = await db.findUserByUsername(username);
     if (!user) {
       sendJson(response, 401, { success: false, error: 'Invalid credentials' });
       return;
     }
 
+    // Verify password
+    const passwordValid = await verifyPassword(password, user.password_hash || '');
+    if (!passwordValid) {
+      sendJson(response, 401, { success: false, error: 'Invalid credentials' });
+      return;
+    }
+
+    // Generate JWT token
+    const token = generateToken(user.id, user.username, user.role);
+
     sendJson(response, 200, {
       success: true,
+      token,
       user: sanitizeUser(user)
     });
   } catch (error) {
@@ -273,13 +287,34 @@ app.post('/api/auth/login', async (request, response) => {
 });
 
 app.get('/api/references', async (_request, response) => {
-  const references = await getReferenceNames();
-  sendJson(response, 200, { references });
+  try {
+    const files = await fs.readdir(referencesDir).catch(() => []);
+    const references = files.filter((f) => /\.(pdf|docx)$/i.test(f));
+    sendJson(response, 200, { references });
+  } catch (error) {
+    sendJson(response, 400, { success: false, error: String(error.message || error) });
+  }
 });
 
 app.get('/api/resource-library', async (_request, response) => {
-  const items = await getReferenceLibraryItems();
-  sendJson(response, 200, { items });
+  try {
+    const metadata = await db.getReferenceMetadata();
+    const files = await fs.readdir(referencesDir).catch(() => []);
+    const items = files
+      .filter((f) => /\.(pdf|docx)$/i.test(f))
+      .map((fileName) => ({
+        id: fileName,
+        file_name: fileName,
+        title: metadata[fileName]?.title || fileName.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' '),
+        description: metadata[fileName]?.description || '',
+        category: metadata[fileName]?.category || 'References',
+        created_at: metadata[fileName]?.created_at,
+        updated_at: metadata[fileName]?.updated_at
+      }));
+    sendJson(response, 200, { items });
+  } catch (error) {
+    sendJson(response, 400, { success: false, error: String(error.message || error) });
+  }
 });
 
 app.get('/api/resource-library/file/:fileName', async (request, response) => {
@@ -312,8 +347,19 @@ app.get('/api/resource-library/preview-text/:fileName', async (request, response
 app.put('/api/resource-library/:fileName', async (request, response) => {
   try {
     const fileName = sanitizeReferenceFileName(decodeURIComponent(request.params.fileName));
-    const updated = await upsertReferenceMetadata(fileName, normalizeResourcePayload(request.body));
-    sendJson(response, 200, { success: true, item: updated });
+    const normalized = normalizeResourcePayload(request.body);
+    await db.upsertReferenceMetadata(fileName, normalized);
+    const metadata = await db.getReferenceMetadata();
+    const item = {
+      id: fileName,
+      file_name: fileName,
+      title: metadata[fileName]?.title || normalized.title,
+      description: metadata[fileName]?.description || normalized.description,
+      category: metadata[fileName]?.category || normalized.category,
+      created_at: metadata[fileName]?.created_at,
+      updated_at: metadata[fileName]?.updated_at
+    };
+    sendJson(response, 200, { success: true, item });
   } catch (error) {
     sendJson(response, 400, { success: false, error: String(error.message || error) });
   }
@@ -345,10 +391,22 @@ app.post('/api/resource-library/upload', async (request, response) => {
 
     await fs.writeFile(targetPath, buffer);
 
-    const item = await upsertReferenceMetadata(fileName, {
-      ...normalizeResourcePayload(payload),
+    const resourcePayload = normalizeResourcePayload(payload);
+    await db.upsertReferenceMetadata(fileName, {
+      ...resourcePayload,
       title: normalizeText(payload.title, fileName.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' '))
     });
+
+    const metadata = await db.getReferenceMetadata();
+    const item = {
+      id: fileName,
+      file_name: fileName,
+      title: metadata[fileName]?.title,
+      description: metadata[fileName]?.description,
+      category: metadata[fileName]?.category,
+      created_at: metadata[fileName]?.created_at,
+      updated_at: metadata[fileName]?.updated_at
+    };
 
     sendJson(response, 201, { success: true, item });
   } catch (error) {
@@ -368,21 +426,21 @@ app.delete('/api/resource-library/:fileName', async (request, response) => {
     }
 
     await fs.unlink(targetPath);
-    await deleteReferenceMetadata(fileName);
+    await db.deleteReferenceMetadata(fileName);
     sendJson(response, 200, { success: true });
   } catch (error) {
     sendJson(response, 400, { success: false, error: String(error.message || error) });
   }
 });
 
-app.get('/api/lessons', async (_request, response) => {
-  const store = await readStore();
-  sendJson(response, 200, { lessons: store.lessons });
+app.get('/api/lessons', async (request, response) => {
+  const userId = request.user?.userId || 1;
+  const lessons = await db.listLessons(userId);
+  sendJson(response, 200, { lessons });
 });
 
 app.get('/api/lessons/:id', async (request, response) => {
-  const store = await readStore();
-  const lesson = store.lessons.find((item) => Number(item.id) === Number(request.params.id));
+  const lesson = await db.getLesson(Number(request.params.id));
   if (!lesson) {
     sendJson(response, 404, { error: 'Lesson not found' });
     return;
@@ -392,7 +450,9 @@ app.get('/api/lessons/:id', async (request, response) => {
 
 app.post('/api/lessons', async (request, response) => {
   try {
-    const lesson = await upsertLesson(normalizeLessonPayload(request.body));
+    const userId = request.user?.userId || 1;
+    const normalized = normalizeLessonPayload(request.body);
+    const lesson = await db.upsertLesson({ ...normalized, user_id: userId });
     sendJson(response, 201, { success: true, lesson });
   } catch (error) {
     sendJson(response, 400, { success: false, error: String(error.message || error) });
@@ -401,7 +461,9 @@ app.post('/api/lessons', async (request, response) => {
 
 app.put('/api/lessons/:id', async (request, response) => {
   try {
-    const lesson = await upsertLesson({ id: Number(request.params.id), ...normalizeLessonPayload(request.body) });
+    const userId = request.user?.userId || 1;
+    const normalized = normalizeLessonPayload(request.body);
+    const lesson = await db.upsertLesson({ ...normalized, id: Number(request.params.id), user_id: userId });
     sendJson(response, 200, { success: true, lesson });
   } catch (error) {
     sendJson(response, 400, { success: false, error: String(error.message || error) });
@@ -409,25 +471,26 @@ app.put('/api/lessons/:id', async (request, response) => {
 });
 
 app.delete('/api/lessons/:id', async (request, response) => {
-  const deleted = await deleteLesson(request.params.id);
+  const deleted = await db.deleteLesson(Number(request.params.id));
   if (!deleted) {
     sendJson(response, 404, { success: false, error: 'Lesson not found' });
     return;
   }
-
   sendJson(response, 200, { success: true });
 });
 
 app.post('/api/generate', async (request, response) => {
   try {
+    const userId = request.user?.userId || 1;
     const payload = ensureObject(request.body, 'Request body');
     const lessonData = ensureObject(payload.lesson_data ?? payload.lessonData, 'lesson_data');
     const references = normalizeArray(payload.references ?? payload.selected_refs);
     const model = normalizeText(payload.model);
 
     const generation = await generateLessonPlan(lessonData, { model, selectedRefs: references });
-    const lesson = await upsertLesson({
+    const lesson = await db.upsertLesson({
       ...normalizeLessonPayload(request.body),
+      user_id: userId,
       title: normalizeText(lessonData.title, 'Untitled Lesson'),
       generated_output: generation.output,
       generated_parsed: generation.parsed,
@@ -450,15 +513,17 @@ app.post('/api/generate', async (request, response) => {
   }
 });
 
-app.get('/api/reflections', async (_request, response) => {
-  const store = await readStore();
-  sendJson(response, 200, { reflections: store.reflections });
+app.get('/api/reflections', async (request, response) => {
+  const userId = request.user?.userId || 1;
+  const reflections = await db.listReflections(userId);
+  sendJson(response, 200, { reflections });
 });
 
 app.post('/api/reflections', async (request, response) => {
   try {
+    const userId = request.user?.userId || 1;
     const body = normalizeReflectionPayload(request.body);
-    const record = await upsertReflection(body);
+    const record = await db.upsertReflection({ ...body, user_id: userId });
     sendJson(response, 201, { success: true, reflection: record });
   } catch (error) {
     sendJson(response, 400, { success: false, error: String(error.message || error) });
@@ -467,8 +532,9 @@ app.post('/api/reflections', async (request, response) => {
 
 app.put('/api/reflections/:id', async (request, response) => {
   try {
+    const userId = request.user?.userId || 1;
     const body = normalizeReflectionPayload(request.body);
-    const record = await upsertReflection({ ...body, id: Number(request.params.id) });
+    const record = await db.upsertReflection({ ...body, id: Number(request.params.id), user_id: userId });
     sendJson(response, 200, { success: true, reflection: record });
   } catch (error) {
     sendJson(response, 400, { success: false, error: String(error.message || error) });
@@ -476,24 +542,25 @@ app.put('/api/reflections/:id', async (request, response) => {
 });
 
 app.delete('/api/reflections/:id', async (request, response) => {
-  const deleted = await deleteReflection(request.params.id);
+  const deleted = await db.deleteReflection(Number(request.params.id));
   if (!deleted) {
     sendJson(response, 404, { success: false, error: 'Reflection not found' });
     return;
   }
-
   sendJson(response, 200, { success: true });
 });
 
-app.get('/api/observations', async (_request, response) => {
-  const store = await readStore();
-  sendJson(response, 200, { observations: store.observations });
+app.get('/api/observations', async (request, response) => {
+  const userId = request.user?.userId || 1;
+  const observations = await db.listObservations(userId);
+  sendJson(response, 200, { observations });
 });
 
 app.post('/api/observations', async (request, response) => {
   try {
+    const userId = request.user?.userId || 1;
     const body = normalizeObservationPayload(request.body);
-    const record = await upsertObservation(body);
+    const record = await db.upsertObservation({ ...body, user_id: userId });
     sendJson(response, 201, { success: true, observation: record });
   } catch (error) {
     sendJson(response, 400, { success: false, error: String(error.message || error) });
@@ -502,8 +569,9 @@ app.post('/api/observations', async (request, response) => {
 
 app.put('/api/observations/:id', async (request, response) => {
   try {
+    const userId = request.user?.userId || 1;
     const body = normalizeObservationPayload(request.body);
-    const record = await upsertObservation({ ...body, id: Number(request.params.id) });
+    const record = await db.upsertObservation({ ...body, id: Number(request.params.id), user_id: userId });
     sendJson(response, 200, { success: true, observation: record });
   } catch (error) {
     sendJson(response, 400, { success: false, error: String(error.message || error) });
@@ -511,12 +579,11 @@ app.put('/api/observations/:id', async (request, response) => {
 });
 
 app.delete('/api/observations/:id', async (request, response) => {
-  const deleted = await deleteObservation(request.params.id);
+  const deleted = await db.deleteObservation(Number(request.params.id));
   if (!deleted) {
     sendJson(response, 404, { success: false, error: 'Observation not found' });
     return;
   }
-
   sendJson(response, 200, { success: true });
 });
 
@@ -524,15 +591,17 @@ app.get('/api/surveys/questions', async (_request, response) => {
   sendJson(response, 200, surveyQuestions);
 });
 
-app.get('/api/surveys', async (_request, response) => {
-  const store = await readStore();
-  sendJson(response, 200, { surveys: store.surveys });
+app.get('/api/surveys', async (request, response) => {
+  const userId = request.user?.userId || 1;
+  const surveys = await db.listSurveys(userId);
+  sendJson(response, 200, { surveys });
 });
 
 app.post('/api/surveys', async (request, response) => {
   try {
+    const userId = request.user?.userId || 1;
     const body = normalizeSurveyPayload(request.body);
-    const record = await upsertSurvey(body);
+    const record = await db.upsertSurvey({ ...body, user_id: userId });
     sendJson(response, 201, { success: true, survey: record });
   } catch (error) {
     sendJson(response, 400, { success: false, error: String(error.message || error) });
@@ -540,28 +609,90 @@ app.post('/api/surveys', async (request, response) => {
 });
 
 app.delete('/api/surveys/:id', async (request, response) => {
-  const deleted = await deleteSurvey(request.params.id);
+  const deleted = await db.deleteSurvey(Number(request.params.id));
   if (!deleted) {
     sendJson(response, 404, { success: false, error: 'Survey not found' });
     return;
   }
-
   sendJson(response, 200, { success: true });
 });
 
 app.get('/api/admin/stats', async (_request, response) => {
-  const store = await readStore();
-  sendJson(response, 200, aggregateStats(store));
+  try {
+    const lessons = await db.listLessons();
+    const reflections = await db.listReflections();
+    const observations = await db.listObservations();
+    const surveys = await db.listSurveys();
+
+    const completedPostSurveys = surveys.filter((survey) => survey.survey_type === 'post').length;
+    const averageEffectiveness = reflections.length
+      ? (reflections.reduce((total, reflection) => total + Number(reflection.effectiveness_rating || 0), 0) / reflections.length)
+      : 0;
+
+    const difficultyCounts = new Map();
+    const supportCounts = new Map();
+
+    for (const lesson of lessons) {
+      const difficulty = normalizeText(lesson.difficulty, 'Unspecified');
+      difficultyCounts.set(difficulty, (difficultyCounts.get(difficulty) || 0) + 1);
+
+      const supportTypes = normalizeArray(lesson.support_types);
+      for (const support of supportTypes) {
+        supportCounts.set(support, (supportCounts.get(support) || 0) + 1);
+      }
+    }
+
+    const topDifficulties = Array.from(difficultyCounts.entries())
+      .map(([name, value]) => ({ name, value }))
+      .sort((left, right) => right.value - left.value)
+      .slice(0, 5);
+
+    const topSupports = Array.from(supportCounts.entries())
+      .map(([name, value]) => ({ name, value }))
+      .sort((left, right) => right.value - left.value)
+      .slice(0, 5);
+
+    sendJson(response, 200, {
+      total_teachers: 54,
+      active_users_this_month: 38,
+      lesson_plans_generated: lessons.length,
+      reflections_submitted: reflections.length,
+      observations_submitted: observations.length,
+      survey_completion: `${surveys.filter((survey) => survey.survey_type === 'pre').length} Pre · ${completedPostSurveys} Post`,
+      average_effectiveness_rating: Number(averageEffectiveness.toFixed(1)),
+      top_difficulties: topDifficulties,
+      top_supports: topSupports,
+      recent_lessons: lessons.slice(0, 5),
+      recent_reflections: reflections.slice(0, 5),
+      recent_observations: observations.slice(0, 5),
+      recent_surveys: surveys.slice(0, 5)
+    });
+  } catch (error) {
+    sendJson(response, 500, { success: false, error: String(error.message || error) });
+  }
 });
 
 app.get('/api/admin/accounts', async (_request, response) => {
-  const users = await listUsers();
-  sendJson(response, 200, { users: users.map(sanitizeUser) });
+  try {
+    const users = await db.listUsers();
+    sendJson(response, 200, { users: users.map(sanitizeUser) });
+  } catch (error) {
+    sendJson(response, 400, { success: false, error: String(error.message || error) });
+  }
 });
 
 app.post('/api/admin/accounts', async (request, response) => {
   try {
-    const user = await upsertUser(normalizeUserPayload(request.body));
+    const payload = normalizeUserPayload(request.body);
+    const passwordHash = await hashPassword(payload.password);
+    const user = await db.upsertUser({
+      username: payload.username,
+      password_hash: passwordHash,
+      display_name: payload.display_name,
+      affiliated_school: payload.affiliated_school,
+      role: payload.role,
+      active: payload.active
+    });
     sendJson(response, 201, { success: true, user: sanitizeUser(user) });
   } catch (error) {
     sendJson(response, 400, { success: false, error: String(error.message || error) });
@@ -570,9 +701,16 @@ app.post('/api/admin/accounts', async (request, response) => {
 
 app.put('/api/admin/accounts/:id', async (request, response) => {
   try {
-    const user = await upsertUser({
-      ...normalizeUserPayload(request.body),
-      id: Number(request.params.id)
+    const payload = normalizeUserPayload(request.body);
+    const passwordHash = await hashPassword(payload.password);
+    const user = await db.upsertUser({
+      id: Number(request.params.id),
+      username: payload.username,
+      password_hash: passwordHash,
+      display_name: payload.display_name,
+      affiliated_school: payload.affiliated_school,
+      role: payload.role,
+      active: payload.active
     });
     sendJson(response, 200, { success: true, user: sanitizeUser(user) });
   } catch (error) {
@@ -581,19 +719,22 @@ app.put('/api/admin/accounts/:id', async (request, response) => {
 });
 
 app.delete('/api/admin/accounts/:id', async (request, response) => {
-  const deleted = await deleteUser(request.params.id);
-  if (!deleted) {
-    sendJson(response, 404, { success: false, error: 'Account not found' });
-    return;
+  try {
+    const deleted = await db.deleteUser(Number(request.params.id));
+    if (!deleted) {
+      sendJson(response, 404, { success: false, error: 'Account not found' });
+      return;
+    }
+    sendJson(response, 200, { success: true });
+  } catch (error) {
+    sendJson(response, 400, { success: false, error: String(error.message || error) });
   }
-  sendJson(response, 200, { success: true });
 });
 
 app.post('/api/admin/reset', async (_request, response) => {
   try {
-    const store = getDefaultStoreSnapshot();
-    await writeStore(store);
-    sendJson(response, 200, { success: true });
+    console.warn('⚠️ Admin reset requested - database will not be reset');
+    sendJson(response, 200, { success: true, message: 'Reset functionality disabled in production. Please backup your database manually.' });
   } catch (error) {
     sendJson(response, 500, { success: false, error: String(error.message || error) });
   }
@@ -604,8 +745,14 @@ app.use((_request, response) => {
 });
 
 const server = app.listen(port, '0.0.0.0', async () => {
-  await readStore();
-  console.log(`Project INSPIRE backend running at http://localhost:${port}`);
+  try {
+    await initializeDatabase();
+    console.log(`✓ Project INSPIRE backend running at http://localhost:${port}`);
+    console.log(`✓ Database: SQLite (backend/data/inspire.db)`);
+  } catch (error) {
+    console.error('Failed to initialize database:', error);
+    process.exit(1);
+  }
 });
 
 server.on('error', (error) => {
@@ -615,4 +762,10 @@ server.on('error', (error) => {
   }
 
   console.error('Backend server failed to start:', error);
+});
+
+process.on('SIGINT', async () => {
+  console.log('\nShutting down...');
+  await closeDatabase();
+  process.exit(0);
 });

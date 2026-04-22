@@ -127,6 +127,7 @@ export interface UserAccount {
 export interface LoginResponse {
   success: boolean;
   user?: UserAccount;
+  token?: string;
   error?: string;
 }
 

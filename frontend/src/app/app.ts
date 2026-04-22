@@ -199,7 +199,8 @@ export class App {
           response.user.display_name,
           this.api.roleLabel(role),
           response.user.username,
-          response.user.affiliated_school || 'San Felipe National High School · Basud, Camarines Norte'
+          response.user.affiliated_school || 'San Felipe National High School · Basud, Camarines Norte',
+          response.token || ''
         );
         this.notificationsOpen.set(false);
         this.router.navigateByUrl('/dashboard');
@@ -221,6 +222,7 @@ export class App {
     this.loginError.set('');
     this.notificationsOpen.set(false);
     window.localStorage.removeItem('inspire-demo-auth');
+    window.localStorage.removeItem('inspire-token');
     this.router.navigateByUrl('/dashboard');
   }
 
@@ -241,12 +243,15 @@ export class App {
     return this.api.canManageAccounts(this.currentRole());
   }
 
-  private setAuthenticatedState(role: 'teacher' | 'researcher' | 'admin', name: string, roleLabel: string, username: string, school: string): void {
+  private setAuthenticatedState(role: 'teacher' | 'researcher' | 'admin', name: string, roleLabel: string, username: string, school: string, token?: string): void {
     this.isAuthenticated.set(true);
     this.currentRole.set(role);
     this.currentUserName.set(name);
     this.currentUserRoleLabel.set(roleLabel);
     this.loginError.set('');
     window.localStorage.setItem('inspire-demo-auth', JSON.stringify({ role, name, roleLabel, username, school }));
+    if (token) {
+      window.localStorage.setItem('inspire-token', token);
+    }
   }
 }

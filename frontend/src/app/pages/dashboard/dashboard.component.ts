@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { catchError, forkJoin, of } from 'rxjs';
 
 import { AdminStats, LessonRecord } from '../../core/models/inspire-api.models';
@@ -15,6 +15,7 @@ import { InspireApiService } from '../../core/services/inspire-api.service';
 })
 export class DashboardComponent implements OnInit {
   private readonly api = inject(InspireApiService);
+  private readonly router = inject(Router);
 
   readonly lessons = signal<LessonRecord[]>([]);
   readonly stats = signal<AdminStats | null>(null);
@@ -78,6 +79,10 @@ export class DashboardComponent implements OnInit {
   strategiesGeneratedCount(): number {
     const stats = this.stats();
     return stats ? stats.top_supports.reduce((total, item) => total + item.value, 0) + stats.lesson_plans_generated : 0;
+  }
+
+  openLesson(lessonId: number): void {
+    this.router.navigate(['/my-lessons'], { queryParams: { view: lessonId } });
   }
 
   private createFallbackStats(): AdminStats {
