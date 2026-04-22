@@ -5,8 +5,16 @@ export const __filename = fileURLToPath(import.meta.url);
 export const __dirname = path.dirname(__filename);
 export const backendRoot = path.resolve(__dirname, '..');
 export const projectRoot = path.resolve(backendRoot, '..');
-export const dataFilePath = path.join(backendRoot, 'data', 'store.json');
-export const referencesDir = path.join(projectRoot, 'reference');
+export const runtimeRoot = process.env.INSPIRE_RUNTIME_ROOT
+  ? path.resolve(process.env.INSPIRE_RUNTIME_ROOT)
+  : projectRoot;
+export const dataRootDir = process.env.INSPIRE_DATA_DIR
+  ? path.resolve(process.env.INSPIRE_DATA_DIR)
+  : path.join(backendRoot, 'data');
+export const dataFilePath = path.join(dataRootDir, 'store.json');
+export const referencesDir = process.env.INSPIRE_REFERENCE_DIR
+  ? path.resolve(process.env.INSPIRE_REFERENCE_DIR)
+  : path.join(runtimeRoot, 'reference');
 
 export const supportedModels = [
   'openai/gpt-oss-20b:free',

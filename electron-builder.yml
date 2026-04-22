@@ -1,0 +1,23 @@
+appId: com.projectinspire.desktop
+productName: Project INSPIRE
+directories:
+  output: dist/packages
+files:
+  - package.json
+  - electron/**/*
+  - backend/src/**/*
+  - backend/package.json
+  - backend/node_modules/**/*
+  - frontend/dist/frontend/**/*
+  - reference/**/*
+asarUnpack:
+  - backend/node_modules/sqlite3/**/*
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+  artifactName: ${productName}-Setup-${version}.${ext}
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true

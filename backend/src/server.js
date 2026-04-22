@@ -1,6 +1,7 @@
 import dotenv from 'dotenv';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 import cors from 'cors';
 import express from 'express';
 
@@ -37,7 +38,10 @@ function normalizeArray(value = []) {
 dotenv.config({ path: path.join(projectRoot, '.env') });
 
 const app = express();
-const port = Number(process.env.PORT || 3000);
+const defaultPort = Number(process.env.PORT || 3000);
+const defaultSchool = 'San Felipe National High School · Basud, Camarines Norte';
+let serverInstance = null;
+let shutdownHandlersRegistered = false;
 
 app.use(cors());
 app.use(express.json({ limit: '2mb' }));
@@ -262,6 +266,78 @@ function aggregateStats(store) {
   };
 }
 
+function buildDefaultReferenceMetadata(fileName) {
+  const title = fileName.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').trim();
+  return {
+    title,
+    description: `Default resource imported from ${fileName}.`,
+    category: 'References'
+  };
+}
+
+async function ensureReferenceMetadataDefaults() {
+  const files = await fs.readdir(referencesDir).catch(() => []);
+  const referenceFiles = files.filter((fileName) => /\.(pdf|docx)$/i.test(fileName));
+  if (!referenceFiles.length) {
+    return;
+  }
+
+  const metadata = await db.getReferenceMetadata();
+  await Promise.all(referenceFiles.map(async (fileName) => {
+    const current = metadata[fileName];
+    const hasUsefulMetadata = current
+      && normalizeText(current.title)
+      && normalizeText(current.description)
+      && normalizeText(current.category);
+
+    if (hasUsefulMetadata) {
+      return;
+    }
+
+    await db.upsertReferenceMetadata(fileName, buildDefaultReferenceMetadata(fileName));
+  }));
+}
+
+function normalizeSetupAccount(account, fallbackDisplayName, role) {
+  const payload = ensureObject(account, `${role} account`);
+  return {
+    username: normalizeText(payload.username).toLowerCase(),
+    password: normalizeText(payload.password),
+    display_name: normalizeText(payload.display_name ?? payload.displayName, fallbackDisplayName),
+    affiliated_school: normalizeText(payload.affiliated_school ?? payload.affiliatedSchool, defaultSchool),
+    role
+  };
+}
+
+function validateSetupPayload(body) {
+  const payload = ensureObject(body, 'Request body');
+  const mode = normalizeText(payload.mode).toLowerCase();
+  if (!['single-admin', 'admin-plus-user'].includes(mode)) {
+    throw new Error('mode must be one of: single-admin, admin-plus-user');
+  }
+
+  const admin = normalizeSetupAccount(payload.admin, 'System Administrator', 'admin');
+  if (!admin.username) {
+    throw new Error('admin.username is required');
+  }
+  if (!admin.password || admin.password.length < 8) {
+    throw new Error('admin.password must be at least 8 characters');
+  }
+
+  let teacher = null;
+  if (mode === 'admin-plus-user') {
+    teacher = normalizeSetupAccount(payload.user, 'Teacher User', 'teacher');
+    if (!teacher.username) {
+      throw new Error('user.username is required when mode is admin-plus-user');
+    }
+    if (!teacher.password || teacher.password.length < 8) {
+      throw new Error('user.password must be at least 8 characters');
+    }
+  }
+
+  return { mode, admin, teacher };
+}
+
 app.get('/api/health', async (_request, response) => {
   const stats = await db.getStats();
   sendJson(response, 200, {
@@ -332,6 +408,64 @@ app.post('/api/auth/refresh', async (request, response) => {
     });
   } catch (error) {
     handleRouteError(response, error, 500);
+  }
+});
+
+app.get('/api/setup/status', async (_request, response) => {
+  try {
+    const users = await db.listUsers();
+    const requiresSetup = users.length === 0;
+    sendJson(response, 200, {
+      requires_setup: requiresSetup,
+      supported_modes: ['single-admin', 'admin-plus-user']
+    });
+  } catch (error) {
+    handleRouteError(response, error, 500);
+  }
+});
+
+app.post('/api/setup/bootstrap', async (request, response) => {
+  try {
+    const users = await db.listUsers();
+    if (users.length > 0) {
+      sendJson(response, 409, { success: false, error: 'Setup has already been completed.' });
+      return;
+    }
+
+    const payload = validateSetupPayload(request.body);
+    const adminHash = await hashPassword(payload.admin.password);
+    const adminUser = await db.upsertUser({
+      username: payload.admin.username,
+      password_hash: adminHash,
+      display_name: payload.admin.display_name,
+      affiliated_school: payload.admin.affiliated_school,
+      role: 'admin',
+      active: true
+    });
+
+    const createdUsers = [sanitizeUser(adminUser)];
+    if (payload.mode === 'admin-plus-user' && payload.teacher) {
+      const teacherHash = await hashPassword(payload.teacher.password);
+      const teacherUser = await db.upsertUser({
+        username: payload.teacher.username,
+        password_hash: teacherHash,
+        display_name: payload.teacher.display_name,
+        affiliated_school: payload.teacher.affiliated_school,
+        role: 'teacher',
+        active: true
+      });
+      createdUsers.push(sanitizeUser(teacherUser));
+    }
+
+    await ensureReferenceMetadataDefaults();
+
+    sendJson(response, 201, {
+      success: true,
+      mode: payload.mode,
+      users: createdUsers
+    });
+  } catch (error) {
+    handleRouteError(response, error, 400);
   }
 });
 
@@ -885,28 +1019,86 @@ app.use((error, _request, response, _next) => {
   handleRouteError(response, error, 500);
 });
 
-const server = app.listen(port, '0.0.0.0', async () => {
-  try {
-    await initializeDatabase();
-    console.log(`✓ Project INSPIRE backend running at http://localhost:${port}`);
-    console.log(`✓ Database: SQLite (backend/data/inspire.db)`);
-  } catch (error) {
-    console.error('Failed to initialize database:', error);
-    process.exit(1);
-  }
-});
-
-server.on('error', (error) => {
-  if (error && typeof error === 'object' && 'code' in error && error.code === 'EADDRINUSE') {
-    console.error(`Port ${port} is already in use. Stop the existing backend process and run npm start again.`);
+function registerShutdownHandlers() {
+  if (shutdownHandlersRegistered) {
     return;
   }
 
-  console.error('Backend server failed to start:', error);
-});
+  shutdownHandlersRegistered = true;
+  process.on('SIGINT', async () => {
+    console.log('\nShutting down...');
+    await stopBackendServer();
+    process.exit(0);
+  });
 
-process.on('SIGINT', async () => {
-  console.log('\nShutting down...');
+  process.on('SIGTERM', async () => {
+    await stopBackendServer();
+    process.exit(0);
+  });
+}
+
+export async function startBackendServer(options = {}) {
+  if (serverInstance) {
+    return serverInstance;
+  }
+
+  await initializeDatabase();
+  await fs.mkdir(referencesDir, { recursive: true });
+  await ensureReferenceMetadataDefaults();
+
+  const port = Number(options.port ?? process.env.PORT ?? defaultPort);
+  const host = options.host ?? '0.0.0.0';
+
+  const server = await new Promise((resolve, reject) => {
+    const candidate = app.listen(port, host, () => {
+      resolve(candidate);
+    });
+
+    candidate.on('error', (error) => {
+      reject(error);
+    });
+  });
+
+  serverInstance = server;
+  const address = server.address();
+  const resolvedPort = typeof address === 'object' && address ? address.port : port;
+  console.log(`✓ Project INSPIRE backend running at http://localhost:${resolvedPort}`);
+  console.log('✓ Database: SQLite');
+  return serverInstance;
+}
+
+export async function stopBackendServer() {
+  const activeServer = serverInstance;
+  serverInstance = null;
+
+  if (activeServer) {
+    await new Promise((resolve, reject) => {
+      activeServer.close((error) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+        resolve();
+      });
+    });
+  }
+
   await closeDatabase();
-  process.exit(0);
-});
+}
+
+const isDirectRun = Boolean(process.argv[1]) && import.meta.url === pathToFileURL(process.argv[1]).href;
+
+if (isDirectRun) {
+  registerShutdownHandlers();
+  startBackendServer().catch((error) => {
+    if (error && typeof error === 'object' && 'code' in error && error.code === 'EADDRINUSE') {
+      const port = Number(process.env.PORT || defaultPort);
+      console.error(`Port ${port} is already in use. Stop the existing backend process and run npm start again.`);
+      process.exit(1);
+      return;
+    }
+
+    console.error('Backend server failed to start:', error);
+    process.exit(1);
+  });
+}

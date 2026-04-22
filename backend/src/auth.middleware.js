@@ -1,7 +1,12 @@
 import { decodeToken, extractToken, verifyToken } from './utils/jwt.js';
 
 export function authMiddleware(req, res, next) {
-  const publicPaths = ['/api/auth/login', '/api/health'];
+  const publicPaths = [
+    '/api/auth/login',
+    '/api/health',
+    '/api/setup/status',
+    '/api/setup/bootstrap'
+  ];
   if (publicPaths.includes(req.path)) {
     return next();
   }
