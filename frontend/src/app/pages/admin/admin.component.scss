@@ -1,6 +1,18 @@
 .page-shell {
   display: grid;
-  gap: 20px;
+  gap: 12px;
+}
+
+.breadcrumbs {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 12px;
 }
 
 .card {
@@ -10,7 +22,6 @@
   box-shadow: var(--shadow-soft);
 }
 
-.page-header,
 .status-panel,
 .chart-panel,
 .table-panel {
@@ -19,12 +30,15 @@
 
 .page-header h2 {
   margin: 0;
+  font-size: 2rem;
   font-family: 'Fraunces', serif;
-  font-size: clamp(1.8rem, 3vw, 2.8rem);
+}
+
+.page-header p {
+  margin: 6px 0 0;
 }
 
 .eyebrow,
-.page-header p,
 .error-panel {
   color: var(--muted);
 }

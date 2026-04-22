@@ -1,10 +1,12 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
 
 import { AdminStats } from '../../core/models/inspire-api.models';
 import { InspireApiService } from '../../core/services/inspire-api.service';
 
 @Component({
   standalone: true,
+  imports: [CommonModule],
   selector: 'app-admin',
   templateUrl: './admin.component.html',
   styleUrl: './admin.component.scss'

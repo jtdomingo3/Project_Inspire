@@ -78,7 +78,7 @@ export class DashboardComponent implements OnInit {
 
   strategiesGeneratedCount(): number {
     const stats = this.stats();
-    return stats ? stats.top_supports.reduce((total, item) => total + item.value, 0) + stats.lesson_plans_generated : 0;
+    return stats ? stats.top_supports.reduce((total, item) => total + item.value, 0) + stats.lessons_created : 0;
   }
 
   openLesson(lessonId: number): void {
@@ -87,15 +87,17 @@ export class DashboardComponent implements OnInit {
 
   private createFallbackStats(): AdminStats {
     return {
-      total_teachers: 0,
-      active_users_this_month: 0,
-      lesson_plans_generated: this.lessons().length,
+      user_id: 0,
+      username: '',
+      display_name: '',
+      lessons_created: this.lessons().length,
       reflections_submitted: 0,
       observations_submitted: 0,
       survey_completion: '0 Pre · 0 Post',
       average_effectiveness_rating: 0,
       top_difficulties: [],
       top_supports: [],
+      daily_survey_scores: [],
       recent_lessons: [],
       recent_reflections: [],
       recent_observations: [],

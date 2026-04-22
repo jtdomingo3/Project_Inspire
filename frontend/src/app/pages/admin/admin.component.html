@@ -1,24 +1,23 @@
 <section class="page-shell">
-  <div class="page-header card">
+  <div class="breadcrumbs">Admin · Analytics</div>
+  <div class="page-header">
     <div>
-      <p class="eyebrow">Admin analytics</p>
-      <h2>Review the local lesson, reflection, observation, and survey data.</h2>
-      <p>The backend aggregates the saved data so the dashboard can stay synchronized with the workspace state.</p>
+      <h2>My Analytics</h2>
+      <p>Review your lesson, reflection, observation, and survey data.</p>
     </div>
   </div>
 
   @if (loading()) {
-    <section class="card status-panel">Loading admin analytics...</section>
+    <section class="card status-panel">Loading your analytics...</section>
   } @else if (error()) {
     <section class="card status-panel error-panel">{{ error() }}</section>
   } @else if (stats(); as dashboard) {
     <div class="kpis">
-      <article class="kpi card"><span>Total teachers</span><strong>{{ dashboard.total_teachers }}</strong></article>
-      <article class="kpi card"><span>Active users</span><strong>{{ dashboard.active_users_this_month }}</strong></article>
-      <article class="kpi card"><span>Lesson plans generated</span><strong>{{ dashboard.lesson_plans_generated }}</strong></article>
+      <article class="kpi card"><span>Lessons created</span><strong>{{ dashboard.lessons_created }}</strong></article>
       <article class="kpi card"><span>Reflections submitted</span><strong>{{ dashboard.reflections_submitted }}</strong></article>
       <article class="kpi card"><span>Observations submitted</span><strong>{{ dashboard.observations_submitted }}</strong></article>
       <article class="kpi card"><span>Survey completion</span><strong>{{ dashboard.survey_completion }}</strong></article>
+      <article class="kpi card"><span>Avg effectiveness rating</span><strong>{{ dashboard.average_effectiveness_rating }}/5</strong></article>
     </div>
 
     <div class="layout">
@@ -55,6 +54,54 @@
 
     <div class="layout two-column">
       <section class="card table-panel">
+        <p class="eyebrow">Daily survey scores</p>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Survey Type</th>
+              <th>Aggregate Score</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (score of dashboard.daily_survey_scores; track score.date + '-' + score.survey_type) {
+              <tr>
+                <td>{{ score.date | date: 'MMM dd, yyyy' }}</td>
+                <td>{{ score.survey_type === 'pre' ? 'Pre-Survey' : 'Post-Survey' }}</td>
+                <td>{{ score.aggregate_score }}/5</td>
+              </tr>
+            } @empty {
+              <p>No survey data yet.</p>
+            }
+          </tbody>
+        </table>
+      </section>
+
+      <section class="card table-panel">
+        <p class="eyebrow">Recent reflections</p>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Subject</th>
+              <th>Rating</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (reflection of dashboard.recent_reflections; track reflection.id) {
+              <tr>
+                <td>{{ reflection.date }}</td>
+                <td>{{ reflection.subject }}</td>
+                <td>{{ reflection.effectiveness_rating }}/5</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </section>
+    </div>
+
+    <div class="layout two-column">
+      <section class="card table-panel">
         <p class="eyebrow">Recent lessons</p>
         <table class="table">
           <thead>
@@ -79,21 +126,21 @@
       </section>
 
       <section class="card table-panel">
-        <p class="eyebrow">Recent reflections</p>
+        <p class="eyebrow">Recent observations</p>
         <table class="table">
           <thead>
             <tr>
               <th>Date</th>
-              <th>Subject</th>
+              <th>Teacher Observed</th>
               <th>Rating</th>
             </tr>
           </thead>
           <tbody>
-            @for (reflection of dashboard.recent_reflections; track reflection.id) {
+            @for (observation of dashboard.recent_observations; track observation.id) {
               <tr>
-                <td>{{ reflection.date }}</td>
-                <td>{{ reflection.subject }}</td>
-                <td>{{ reflection.effectiveness_rating }}/5</td>
+                <td>{{ observation.observation_date | date: 'MMM dd, yyyy' }}</td>
+                <td>{{ observation.teacher_observed }}</td>
+                <td>{{ observation.rating }}/5</td>
               </tr>
             }
           </tbody>

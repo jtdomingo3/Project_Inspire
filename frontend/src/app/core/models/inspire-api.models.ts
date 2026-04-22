@@ -108,6 +108,13 @@ export interface SurveyRecord {
   completed_at: string;
 }
 
+export interface DailySurveyScore {
+  date: string;
+  survey_type: 'pre' | 'post' | string;
+  individual_scores: Record<string, number>[];
+  aggregate_score: number;
+}
+
 export interface SurveyQuestionsResponse {
   pre: string[];
   post: string[];
@@ -142,15 +149,17 @@ export interface ResourceLibraryItem {
 }
 
 export interface AdminStats {
-  total_teachers: number;
-  active_users_this_month: number;
-  lesson_plans_generated: number;
+  user_id: number;
+  username: string;
+  display_name: string;
+  lessons_created: number;
   reflections_submitted: number;
   observations_submitted: number;
   survey_completion: string;
   average_effectiveness_rating: number;
   top_difficulties: Array<{ name: string; value: number }>;
   top_supports: Array<{ name: string; value: number }>;
+  daily_survey_scores: DailySurveyScore[];
   recent_lessons: LessonRecord[];
   recent_reflections: ReflectionRecord[];
   recent_observations: ObservationRecord[];

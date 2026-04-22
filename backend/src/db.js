@@ -471,6 +471,14 @@ export async function findUserByUsername(username) {
   return result ? result : null;
 }
 
+export async function getUser(id) {
+  const db = getDatabase();
+  const pDb = promisifyDb(db);
+
+  const result = await pDb.get('SELECT * FROM users WHERE id = ?', [id]);
+  return result ? sanitizeUser(result) : null;
+}
+
 export async function listUsers() {
   const db = getDatabase();
   const pDb = promisifyDb(db);

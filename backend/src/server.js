@@ -617,14 +617,18 @@ app.delete('/api/surveys/:id', async (request, response) => {
   sendJson(response, 200, { success: true });
 });
 
-app.get('/api/admin/stats', async (_request, response) => {
+app.get('/api/admin/stats', async (request, response) => {
   try {
-    const lessons = await db.listLessons();
-    const reflections = await db.listReflections();
-    const observations = await db.listObservations();
-    const surveys = await db.listSurveys();
+    const userId = request.user?.userId || 1;
+    const user = await db.getUser(userId);
+
+    const lessons = await db.listLessons(userId);
+    const reflections = await db.listReflections(userId);
+    const observations = await db.listObservations(userId);
+    const surveys = await db.listSurveys(userId);
 
     const completedPostSurveys = surveys.filter((survey) => survey.survey_type === 'post').length;
+    const completedPreSurveys = surveys.filter((survey) => survey.survey_type === 'pre').length;
     const averageEffectiveness = reflections.length
       ? (reflections.reduce((total, reflection) => total + Number(reflection.effectiveness_rating || 0), 0) / reflections.length)
       : 0;
@@ -652,16 +656,56 @@ app.get('/api/admin/stats', async (_request, response) => {
       .sort((left, right) => right.value - left.value)
       .slice(0, 5);
 
+    // Calculate daily survey scores
+    const dailyScores = new Map();
+    for (const survey of surveys) {
+      const date = normalizeText(survey.completed_at, '').split('T')[0];
+      const key = `${date}|${survey.survey_type}`;
+      
+      if (!dailyScores.has(key)) {
+        dailyScores.set(key, {
+          date,
+          survey_type: survey.survey_type,
+          individual_scores: [],
+          scores_for_average: []
+        });
+      }
+
+      const entry = dailyScores.get(key);
+      const responses = typeof survey.question_responses === 'string'
+        ? JSON.parse(survey.question_responses)
+        : survey.question_responses || {};
+
+      entry.individual_scores.push(responses);
+      const values = Object.values(responses).filter(v => typeof v === 'number');
+      entry.scores_for_average.push(...values);
+    }
+
+    const daily_survey_scores = Array.from(dailyScores.values()).map(entry => {
+      const avgScore = entry.scores_for_average.length
+        ? Number((entry.scores_for_average.reduce((a, b) => a + b, 0) / entry.scores_for_average.length).toFixed(1))
+        : 0;
+
+      return {
+        date: entry.date,
+        survey_type: entry.survey_type,
+        individual_scores: entry.individual_scores,
+        aggregate_score: avgScore
+      };
+    }).sort((a, b) => new Date(b.date) - new Date(a.date));
+
     sendJson(response, 200, {
-      total_teachers: 54,
-      active_users_this_month: 38,
-      lesson_plans_generated: lessons.length,
+      user_id: userId,
+      username: user?.username || 'User',
+      display_name: user?.display_name || 'User',
+      lessons_created: lessons.length,
       reflections_submitted: reflections.length,
       observations_submitted: observations.length,
-      survey_completion: `${surveys.filter((survey) => survey.survey_type === 'pre').length} Pre · ${completedPostSurveys} Post`,
+      survey_completion: `${completedPreSurveys} Pre · ${completedPostSurveys} Post`,
       average_effectiveness_rating: Number(averageEffectiveness.toFixed(1)),
       top_difficulties: topDifficulties,
       top_supports: topSupports,
+      daily_survey_scores,
       recent_lessons: lessons.slice(0, 5),
       recent_reflections: reflections.slice(0, 5),
       recent_observations: observations.slice(0, 5),
