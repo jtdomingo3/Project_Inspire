@@ -262,6 +262,26 @@ export class MyLessonsComponent implements OnInit {
     return this.toItems(text, /\r?\n|•|;|\|/g);
   }
 
+  competencyItems(): string[] {
+    const text = this.viewingPlan().competencies || '';
+    if (!text) {
+      return [];
+    }
+
+    const normalized = text
+      .replace(/\r\n/g, '\n')
+      .replace(/\s+(?=\d+\.\s)/g, '\n');
+
+    const numberedItems = normalized.match(/\d+\.\s[\s\S]*?(?=(?:\n\d+\.\s)|$)/g);
+    const rawItems = (numberedItems && numberedItems.length > 0)
+      ? numberedItems
+      : this.toItems(normalized, /\r?\n|•|;|\|/g);
+
+    return rawItems
+      .map((item) => this.formatObjective(item))
+      .filter(Boolean);
+  }
+
   lessonDateTime(lesson: LessonRecord | null): string {
     if (!lesson?.created_at) {
       return 'Not specified';
@@ -529,6 +549,25 @@ export class MyLessonsComponent implements OnInit {
     }
 
     return this.toItems(normalized, /\r?\n|;|\|/g);
+  }
+
+  private formatObjective(text: string): string {
+    const compact = text
+      .replace(/^\d+\.\s*/, '')
+      .replace(/^[-*]\s*/, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    if (!compact) {
+      return '';
+    }
+
+    const professionalCase = compact.charAt(0).toUpperCase() + compact.slice(1);
+    if (/[.!?]$/.test(professionalCase)) {
+      return professionalCase;
+    }
+
+    return `${professionalCase}.`;
   }
 
   private printableText(plan: ViewPlan): string {

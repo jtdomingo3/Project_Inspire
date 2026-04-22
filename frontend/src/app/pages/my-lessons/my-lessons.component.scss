@@ -161,6 +161,16 @@
   padding-left: 20px;
 }
 
+.objective-list {
+  list-style: decimal;
+  padding-left: 24px;
+}
+
+.objective-list li {
+  margin-bottom: 6px;
+  line-height: 1.5;
+}
+
 .support-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

@@ -93,13 +93,13 @@
 
           <div class="section-block">
             <h5>C. Learning Competencies and Objectives</h5>
-            <ul>
-              @for (item of detailLines(viewingPlan().competencies); track item) {
+            <ol class="objective-list">
+              @for (item of competencyItems(); track item) {
                 <li>{{ item }}</li>
               } @empty {
-                <li>No competencies provided.</li>
+                <li>No competencies and objectives provided.</li>
               }
-            </ul>
+            </ol>
           </div>
 
           <div class="section-block">
