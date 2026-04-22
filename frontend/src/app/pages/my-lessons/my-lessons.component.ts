@@ -276,25 +276,25 @@ export class MyLessonsComponent implements OnInit {
   }
 
   accommodationItems(): string[] {
-    const direct = this.toItems(this.viewingPlan().accommodations || '', /\r?\n|;|\|/g);
+    const direct = this.supportItems(this.viewingPlan().accommodations || '');
     if (direct.length > 0) {
       return direct.filter((item) => !/^accommodations?:?$/i.test(item));
     }
 
     const notes = this.viewingPlan().custom_support || '';
-    const items = this.toItems(notes, /\r?\n|;|\|/g);
+    const items = this.supportItems(notes);
     const keyword = /(modify|reduced|simplified|fewer|shorten|alternative|focus)/i;
     return items.filter((item) => !keyword.test(item));
   }
 
   modificationItems(): string[] {
-    const direct = this.toItems(this.viewingPlan().modifications || '', /\r?\n|;|\|/g);
+    const direct = this.supportItems(this.viewingPlan().modifications || '');
     if (direct.length > 0) {
       return direct.filter((item) => !/^modifications?:?$/i.test(item));
     }
 
     const notes = this.viewingPlan().custom_support || '';
-    const items = this.toItems(notes, /\r?\n|;|\|/g);
+    const items = this.supportItems(notes);
     const keyword = /(modify|reduced|simplified|fewer|shorten|alternative|focus)/i;
     return items.filter((item) => keyword.test(item));
   }
@@ -510,6 +510,25 @@ export class MyLessonsComponent implements OnInit {
       .split(splitter)
       .map((item) => item.trim())
       .filter(Boolean);
+  }
+
+  private supportItems(text: string): string[] {
+    if (!text) {
+      return [];
+    }
+
+    const normalized = text
+      .replace(/\r\n/g, '\n')
+      .replace(/\s+(?=\d+\.\s)/g, '\n');
+
+    const numberedItems = normalized.match(/\d+\.\s[\s\S]*?(?=(?:\n\d+\.\s)|$)/g);
+    if (numberedItems && numberedItems.length > 0) {
+      return numberedItems
+        .map((item) => item.trim())
+        .filter(Boolean);
+    }
+
+    return this.toItems(normalized, /\r?\n|;|\|/g);
   }
 
   private printableText(plan: ViewPlan): string {
