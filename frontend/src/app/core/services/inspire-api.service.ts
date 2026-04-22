@@ -6,6 +6,7 @@ import {
   AdminStats,
   ApiListResponse,
   BackendLessonDraft,
+  DifficultyCategoryRecord,
   LessonRecord,
   LoginResponse,
   LessonDraft,
@@ -69,6 +70,23 @@ export class InspireApiService {
 
   deleteReference(fileName: string): Observable<{ success: boolean }> {
     return this.http.delete<{ success: boolean }>(`/api/resource-library/${encodeURIComponent(fileName)}`);
+  }
+
+  getDifficultyCategories(): Observable<DifficultyCategoryRecord[]> {
+    return this.http.get<{ categories?: DifficultyCategoryRecord[] }>('/api/difficulty-categories').pipe(
+      map((response) => response.categories ?? [])
+    );
+  }
+
+  saveDifficultyCategory(payload: Partial<DifficultyCategoryRecord> & { name: string }): Observable<{ success: boolean; category: DifficultyCategoryRecord }> {
+    if (payload.id) {
+      return this.http.put<{ success: boolean; category: DifficultyCategoryRecord }>(`/api/difficulty-categories/${payload.id}`, payload);
+    }
+    return this.http.post<{ success: boolean; category: DifficultyCategoryRecord }>('/api/difficulty-categories', payload);
+  }
+
+  deleteDifficultyCategory(id: number): Observable<{ success: boolean }> {
+    return this.http.delete<{ success: boolean }>(`/api/difficulty-categories/${id}`);
   }
 
   getLessons(): Observable<LessonRecord[]> {
@@ -234,6 +252,10 @@ export class InspireApiService {
 
   login(username: string, password: string): Observable<LoginResponse> {
     return this.http.post<LoginResponse>('/api/auth/login', { username, password });
+  }
+
+  refreshToken(): Observable<LoginResponse> {
+    return this.http.post<LoginResponse>('/api/auth/refresh', {});
   }
 
   listAccounts(): Observable<UserAccount[]> {

@@ -8,9 +8,19 @@ import { projectRoot, referencesDir, supportedModels, surveyQuestions } from './
 import { generateLessonPlan } from './openrouter.js';
 import { loadReferenceTextByFileName } from './reference-loader.js';
 import { initializeDatabase, closeDatabase } from './database/init.js';
-import { authMiddleware } from './auth.middleware.js';
+import { authMiddleware, roleMiddleware } from './auth.middleware.js';
 import { hashPassword, verifyPassword } from './utils/password.js';
 import { generateToken } from './utils/jwt.js';
+import {
+  validateDifficultyCategoryPayload,
+  validateLessonPayload,
+  validateLoginPayload,
+  validateObservationPayload,
+  validateReflectionPayload,
+  validateResourceMetadataPayload,
+  validateSurveyPayload,
+  validateUserPayload
+} from './validators.js';
 import * as db from './db.js';
 
 // Utility functions from store.js that we still need
@@ -53,6 +63,11 @@ app.use((request, response, next) => {
 
 function sendJson(res, status, payload) {
   res.status(status).json(payload);
+}
+
+function handleRouteError(response, error, status = 400) {
+  const message = error instanceof Error ? error.message : String(error);
+  sendJson(response, status, { success: false, error: message });
 }
 
 function ensureObject(value, fieldName) {
@@ -171,6 +186,19 @@ function normalizeResourcePayload(body) {
   };
 }
 
+function normalizeDifficultyCategoryPayload(body) {
+  const payload = ensureObject(body, 'Request body');
+  return {
+    id: payload.id,
+    name: normalizeText(payload.name),
+    description: normalizeText(payload.description),
+    observable_characteristics: normalizeArray(payload.observable_characteristics),
+    accommodation_tips: normalizeText(payload.accommodation_tips),
+    referral_note: normalizeText(payload.referral_note),
+    has_subcategories: payload.has_subcategories === true
+  };
+}
+
 function sanitizeReferenceFileName(fileName) {
   const normalized = normalizeText(fileName).replace(/[\\/]/g, '');
   if (!normalized) {
@@ -252,13 +280,9 @@ app.get('/api/models', async (_request, response) => {
 
 app.post('/api/auth/login', async (request, response) => {
   try {
-    const payload = ensureObject(request.body, 'Request body');
-    const username = normalizeText(payload.username ?? payload.email).toLowerCase();
-    const password = normalizeText(payload.password);
-    if (!username || !password) {
-      sendJson(response, 400, { success: false, error: 'username and password are required' });
-      return;
-    }
+    const payload = validateLoginPayload(ensureObject(request.body, 'Request body'));
+    const username = payload.username.toLowerCase();
+    const password = payload.password;
 
     const user = await db.findUserByUsername(username);
     if (!user) {
@@ -282,7 +306,32 @@ app.post('/api/auth/login', async (request, response) => {
       user: sanitizeUser(user)
     });
   } catch (error) {
-    sendJson(response, 400, { success: false, error: String(error.message || error) });
+    handleRouteError(response, error, 400);
+  }
+});
+
+app.post('/api/auth/refresh', async (request, response) => {
+  try {
+    const userId = request.user?.userId;
+    if (!userId) {
+      sendJson(response, 401, { success: false, error: 'Authentication required' });
+      return;
+    }
+
+    const user = await db.getUser(userId);
+    if (!user || !user.active) {
+      sendJson(response, 401, { success: false, error: 'Account is inactive or unavailable' });
+      return;
+    }
+
+    const token = generateToken(user.id, user.username, user.role);
+    sendJson(response, 200, {
+      success: true,
+      token,
+      user: sanitizeUser(user)
+    });
+  } catch (error) {
+    handleRouteError(response, error, 500);
   }
 });
 
@@ -347,7 +396,7 @@ app.get('/api/resource-library/preview-text/:fileName', async (request, response
 app.put('/api/resource-library/:fileName', async (request, response) => {
   try {
     const fileName = sanitizeReferenceFileName(decodeURIComponent(request.params.fileName));
-    const normalized = normalizeResourcePayload(request.body);
+    const normalized = validateResourceMetadataPayload(normalizeResourcePayload(request.body));
     await db.upsertReferenceMetadata(fileName, normalized);
     const metadata = await db.getReferenceMetadata();
     const item = {
@@ -361,7 +410,7 @@ app.put('/api/resource-library/:fileName', async (request, response) => {
     };
     sendJson(response, 200, { success: true, item });
   } catch (error) {
-    sendJson(response, 400, { success: false, error: String(error.message || error) });
+    handleRouteError(response, error, 400);
   }
 });
 
@@ -391,10 +440,12 @@ app.post('/api/resource-library/upload', async (request, response) => {
 
     await fs.writeFile(targetPath, buffer);
 
-    const resourcePayload = normalizeResourcePayload(payload);
-    await db.upsertReferenceMetadata(fileName, {
-      ...resourcePayload,
+    const resourcePayload = validateResourceMetadataPayload({
+      ...normalizeResourcePayload(payload),
       title: normalizeText(payload.title, fileName.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' '))
+    });
+    await db.upsertReferenceMetadata(fileName, {
+      ...resourcePayload
     });
 
     const metadata = await db.getReferenceMetadata();
@@ -410,7 +461,7 @@ app.post('/api/resource-library/upload', async (request, response) => {
 
     sendJson(response, 201, { success: true, item });
   } catch (error) {
-    sendJson(response, 400, { success: false, error: String(error.message || error) });
+    handleRouteError(response, error, 400);
   }
 });
 
@@ -429,7 +480,48 @@ app.delete('/api/resource-library/:fileName', async (request, response) => {
     await db.deleteReferenceMetadata(fileName);
     sendJson(response, 200, { success: true });
   } catch (error) {
-    sendJson(response, 400, { success: false, error: String(error.message || error) });
+    handleRouteError(response, error, 400);
+  }
+});
+
+app.get('/api/difficulty-categories', async (_request, response) => {
+  try {
+    const categories = await db.listDifficultyCategories();
+    sendJson(response, 200, { categories });
+  } catch (error) {
+    handleRouteError(response, error, 500);
+  }
+});
+
+app.post('/api/difficulty-categories', roleMiddleware(['admin']), async (request, response) => {
+  try {
+    const normalized = normalizeDifficultyCategoryPayload(request.body);
+    const category = await db.upsertDifficultyCategory(validateDifficultyCategoryPayload(normalized));
+    sendJson(response, 201, { success: true, category });
+  } catch (error) {
+    handleRouteError(response, error, 400);
+  }
+});
+
+app.put('/api/difficulty-categories/:id', roleMiddleware(['admin']), async (request, response) => {
+  try {
+    const normalized = normalizeDifficultyCategoryPayload(request.body);
+    const category = await db.upsertDifficultyCategory(validateDifficultyCategoryPayload({
+      ...normalized,
+      id: Number(request.params.id)
+    }));
+    sendJson(response, 200, { success: true, category });
+  } catch (error) {
+    handleRouteError(response, error, 400);
+  }
+});
+
+app.delete('/api/difficulty-categories/:id', roleMiddleware(['admin']), async (request, response) => {
+  try {
+    await db.deleteDifficultyCategory(Number(request.params.id));
+    sendJson(response, 200, { success: true });
+  } catch (error) {
+    handleRouteError(response, error, 400);
   }
 });
 
@@ -451,22 +543,22 @@ app.get('/api/lessons/:id', async (request, response) => {
 app.post('/api/lessons', async (request, response) => {
   try {
     const userId = request.user?.userId || 1;
-    const normalized = normalizeLessonPayload(request.body);
+    const normalized = validateLessonPayload(normalizeLessonPayload(request.body));
     const lesson = await db.upsertLesson({ ...normalized, user_id: userId });
     sendJson(response, 201, { success: true, lesson });
   } catch (error) {
-    sendJson(response, 400, { success: false, error: String(error.message || error) });
+    handleRouteError(response, error, 400);
   }
 });
 
 app.put('/api/lessons/:id', async (request, response) => {
   try {
     const userId = request.user?.userId || 1;
-    const normalized = normalizeLessonPayload(request.body);
+    const normalized = validateLessonPayload(normalizeLessonPayload(request.body));
     const lesson = await db.upsertLesson({ ...normalized, id: Number(request.params.id), user_id: userId });
     sendJson(response, 200, { success: true, lesson });
   } catch (error) {
-    sendJson(response, 400, { success: false, error: String(error.message || error) });
+    handleRouteError(response, error, 400);
   }
 });
 
@@ -489,7 +581,7 @@ app.post('/api/generate', async (request, response) => {
 
     const generation = await generateLessonPlan(lessonData, { model, selectedRefs: references });
     const lesson = await db.upsertLesson({
-      ...normalizeLessonPayload(request.body),
+      ...validateLessonPayload(normalizeLessonPayload(request.body)),
       user_id: userId,
       title: normalizeText(lessonData.title, 'Untitled Lesson'),
       generated_output: generation.output,
@@ -509,7 +601,7 @@ app.post('/api/generate', async (request, response) => {
       lesson
     });
   } catch (error) {
-    sendJson(response, 500, { success: false, error: String(error.message || error) });
+    handleRouteError(response, error, 500);
   }
 });
 
@@ -522,22 +614,22 @@ app.get('/api/reflections', async (request, response) => {
 app.post('/api/reflections', async (request, response) => {
   try {
     const userId = request.user?.userId || 1;
-    const body = normalizeReflectionPayload(request.body);
+    const body = validateReflectionPayload(normalizeReflectionPayload(request.body));
     const record = await db.upsertReflection({ ...body, user_id: userId });
     sendJson(response, 201, { success: true, reflection: record });
   } catch (error) {
-    sendJson(response, 400, { success: false, error: String(error.message || error) });
+    handleRouteError(response, error, 400);
   }
 });
 
 app.put('/api/reflections/:id', async (request, response) => {
   try {
     const userId = request.user?.userId || 1;
-    const body = normalizeReflectionPayload(request.body);
+    const body = validateReflectionPayload(normalizeReflectionPayload(request.body));
     const record = await db.upsertReflection({ ...body, id: Number(request.params.id), user_id: userId });
     sendJson(response, 200, { success: true, reflection: record });
   } catch (error) {
-    sendJson(response, 400, { success: false, error: String(error.message || error) });
+    handleRouteError(response, error, 400);
   }
 });
 
@@ -559,22 +651,22 @@ app.get('/api/observations', async (request, response) => {
 app.post('/api/observations', async (request, response) => {
   try {
     const userId = request.user?.userId || 1;
-    const body = normalizeObservationPayload(request.body);
+    const body = validateObservationPayload(normalizeObservationPayload(request.body));
     const record = await db.upsertObservation({ ...body, user_id: userId });
     sendJson(response, 201, { success: true, observation: record });
   } catch (error) {
-    sendJson(response, 400, { success: false, error: String(error.message || error) });
+    handleRouteError(response, error, 400);
   }
 });
 
 app.put('/api/observations/:id', async (request, response) => {
   try {
     const userId = request.user?.userId || 1;
-    const body = normalizeObservationPayload(request.body);
+    const body = validateObservationPayload(normalizeObservationPayload(request.body));
     const record = await db.upsertObservation({ ...body, id: Number(request.params.id), user_id: userId });
     sendJson(response, 200, { success: true, observation: record });
   } catch (error) {
-    sendJson(response, 400, { success: false, error: String(error.message || error) });
+    handleRouteError(response, error, 400);
   }
 });
 
@@ -600,11 +692,11 @@ app.get('/api/surveys', async (request, response) => {
 app.post('/api/surveys', async (request, response) => {
   try {
     const userId = request.user?.userId || 1;
-    const body = normalizeSurveyPayload(request.body);
+    const body = validateSurveyPayload(normalizeSurveyPayload(request.body));
     const record = await db.upsertSurvey({ ...body, user_id: userId });
     sendJson(response, 201, { success: true, survey: record });
   } catch (error) {
-    sendJson(response, 400, { success: false, error: String(error.message || error) });
+    handleRouteError(response, error, 400);
   }
 });
 
@@ -617,7 +709,7 @@ app.delete('/api/surveys/:id', async (request, response) => {
   sendJson(response, 200, { success: true });
 });
 
-app.get('/api/admin/stats', async (request, response) => {
+app.get('/api/admin/stats', roleMiddleware(['admin', 'researcher']), async (request, response) => {
   try {
     const userId = request.user?.userId || 1;
     const user = await db.getUser(userId);
@@ -712,22 +804,22 @@ app.get('/api/admin/stats', async (request, response) => {
       recent_surveys: surveys.slice(0, 5)
     });
   } catch (error) {
-    sendJson(response, 500, { success: false, error: String(error.message || error) });
+    handleRouteError(response, error, 500);
   }
 });
 
-app.get('/api/admin/accounts', async (_request, response) => {
+app.get('/api/admin/accounts', roleMiddleware(['admin']), async (_request, response) => {
   try {
     const users = await db.listUsers();
     sendJson(response, 200, { users: users.map(sanitizeUser) });
   } catch (error) {
-    sendJson(response, 400, { success: false, error: String(error.message || error) });
+    handleRouteError(response, error, 400);
   }
 });
 
-app.post('/api/admin/accounts', async (request, response) => {
+app.post('/api/admin/accounts', roleMiddleware(['admin']), async (request, response) => {
   try {
-    const payload = normalizeUserPayload(request.body);
+    const payload = validateUserPayload(normalizeUserPayload(request.body));
     const passwordHash = await hashPassword(payload.password);
     const user = await db.upsertUser({
       username: payload.username,
@@ -739,13 +831,13 @@ app.post('/api/admin/accounts', async (request, response) => {
     });
     sendJson(response, 201, { success: true, user: sanitizeUser(user) });
   } catch (error) {
-    sendJson(response, 400, { success: false, error: String(error.message || error) });
+    handleRouteError(response, error, 400);
   }
 });
 
-app.put('/api/admin/accounts/:id', async (request, response) => {
+app.put('/api/admin/accounts/:id', roleMiddleware(['admin']), async (request, response) => {
   try {
-    const payload = normalizeUserPayload(request.body);
+    const payload = validateUserPayload(normalizeUserPayload(request.body));
     const passwordHash = await hashPassword(payload.password);
     const user = await db.upsertUser({
       id: Number(request.params.id),
@@ -758,11 +850,11 @@ app.put('/api/admin/accounts/:id', async (request, response) => {
     });
     sendJson(response, 200, { success: true, user: sanitizeUser(user) });
   } catch (error) {
-    sendJson(response, 400, { success: false, error: String(error.message || error) });
+    handleRouteError(response, error, 400);
   }
 });
 
-app.delete('/api/admin/accounts/:id', async (request, response) => {
+app.delete('/api/admin/accounts/:id', roleMiddleware(['admin']), async (request, response) => {
   try {
     const deleted = await db.deleteUser(Number(request.params.id));
     if (!deleted) {
@@ -771,21 +863,26 @@ app.delete('/api/admin/accounts/:id', async (request, response) => {
     }
     sendJson(response, 200, { success: true });
   } catch (error) {
-    sendJson(response, 400, { success: false, error: String(error.message || error) });
+    handleRouteError(response, error, 400);
   }
 });
 
-app.post('/api/admin/reset', async (_request, response) => {
+app.post('/api/admin/reset', roleMiddleware(['admin']), async (_request, response) => {
   try {
     console.warn('⚠️ Admin reset requested - database will not be reset');
     sendJson(response, 200, { success: true, message: 'Reset functionality disabled in production. Please backup your database manually.' });
   } catch (error) {
-    sendJson(response, 500, { success: false, error: String(error.message || error) });
+    handleRouteError(response, error, 500);
   }
 });
 
 app.use((_request, response) => {
   sendJson(response, 404, { error: 'Not found' });
+});
+
+app.use((error, _request, response, _next) => {
+  console.error('[UNHANDLED API ERROR]', error);
+  handleRouteError(response, error, 500);
 });
 
 const server = app.listen(port, '0.0.0.0', async () => {

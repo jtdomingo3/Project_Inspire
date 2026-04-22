@@ -7,10 +7,13 @@ This project was generated using [Angular CLI](https://github.com/angular/angula
 To start a local development server, run:
 
 ```bash
+npm install
 ng serve
 ```
 
 Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+
+This frontend expects the backend API at `http://localhost:3000` (configured through `proxy.conf.json`) and uses JWT authentication with role-protected routes.
 
 ## Code scaffolding
 

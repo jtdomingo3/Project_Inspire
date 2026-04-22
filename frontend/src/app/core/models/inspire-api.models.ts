@@ -148,6 +148,16 @@ export interface ResourceLibraryItem {
   updated_at?: string;
 }
 
+export interface DifficultyCategoryRecord {
+  id: number;
+  name: string;
+  description: string;
+  observable_characteristics: string[];
+  accommodation_tips: string;
+  referral_note: string;
+  has_subcategories: boolean;
+}
+
 export interface AdminStats {
   user_id: number;
   username: string;

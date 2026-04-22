@@ -6,15 +6,23 @@
     </div>
     <div class="header-actions">
       <p>Browse categories to understand common observable characteristics and support strategies.</p>
-      <button type="button" class="add-btn" (click)="openAddModal()">+ Add Difficulty</button>
+      @if (canManage()) {
+        <button type="button" class="add-btn" (click)="openAddModal()">+ Add Difficulty</button>
+      }
     </div>
   </div>
+
+  @if (loading()) {
+    <section class="details-panel">Loading difficulty categories...</section>
+  } @else if (error()) {
+    <section class="details-panel">{{ error() }}</section>
+  }
 
   <div class="category-grid">
     @for (category of categories(); track category.id) {
       <article
         class="category-card"
-        [class.active]="selected().id === category.id"
+        [class.active]="selected()?.id === category.id"
         tabindex="0"
         (click)="selectCategory(category)"
         (keydown.enter)="selectCategory(category)"
@@ -23,8 +31,10 @@
         <p>{{ category.summary }}</p>
         <div class="card-actions">
           <button type="button" class="detail-btn" (click)="selectCategory(category); $event.stopPropagation()">View Details</button>
-          <button type="button" class="detail-btn" (click)="openEditModal(category); $event.stopPropagation()">Edit</button>
-          <button type="button" class="delete-btn" (click)="deleteDifficulty(category); $event.stopPropagation()">Delete</button>
+          @if (canManage()) {
+            <button type="button" class="detail-btn" (click)="openEditModal(category); $event.stopPropagation()">Edit</button>
+            <button type="button" class="delete-btn" (click)="deleteDifficulty(category); $event.stopPropagation()">Delete</button>
+          }
         </div>
       </article>
     }
@@ -39,6 +49,8 @@
       <ul>
         @for (indicator of category.indicators; track indicator) {
           <li>{{ indicator }}</li>
+        } @empty {
+          <li>No observable characteristics are available for this category yet.</li>
         }
       </ul>
 
@@ -46,6 +58,8 @@
       <ul>
         @for (tip of category.tips; track tip) {
           <li>{{ tip }}</li>
+        } @empty {
+          <li>No accommodation tips are available for this category yet.</li>
         }
       </ul>
     }

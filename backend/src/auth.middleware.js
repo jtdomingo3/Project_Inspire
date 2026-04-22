@@ -1,4 +1,4 @@
-import { extractToken, verifyToken } from './utils/jwt.js';
+import { decodeToken, extractToken, verifyToken } from './utils/jwt.js';
 
 export function authMiddleware(req, res, next) {
   const publicPaths = ['/api/auth/login', '/api/health'];
@@ -20,6 +20,13 @@ export function authMiddleware(req, res, next) {
     console.log(`[AUTH] Valid token for user: ${payload.username} (${req.method} ${req.path})`);
     next();
   } catch (error) {
+    if (req.path === '/api/auth/refresh') {
+      const decoded = decodeToken(token);
+      if (decoded && typeof decoded === 'object' && 'userId' in decoded) {
+        req.user = decoded;
+        return next();
+      }
+    }
     console.error(`[AUTH] Invalid/expired token for ${req.method} ${req.path}:`, error instanceof Error ? error.message : error);
     return res.status(401).json({ error: 'Invalid or expired token' });
   }

@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 
+import { AuthService } from './core/services/auth.service';
 import { InspireApiService } from './core/services/inspire-api.service';
 
 interface NavigationItem {
@@ -24,6 +25,7 @@ export class App {
   private readonly document = inject(DOCUMENT);
   private readonly router = inject(Router);
   private readonly api = inject(InspireApiService);
+  private readonly auth = inject(AuthService);
 
   protected readonly theme = signal<'day' | 'night'>('day');
   protected readonly isAuthenticated = signal(false);
@@ -136,24 +138,40 @@ export class App {
   constructor() {
     const savedTheme = window.localStorage.getItem('inspire-theme');
     const savedAuth = window.localStorage.getItem('inspire-demo-auth');
+    const savedToken = window.localStorage.getItem('inspire-token');
 
     if (savedTheme === 'dark') {
       this.theme.set('night');
     }
 
-    if (savedAuth) {
+    if (savedAuth && savedToken) {
       try {
         const parsed = JSON.parse(savedAuth) as { role?: 'teacher' | 'researcher' | 'admin'; name?: string; roleLabel?: string; username?: string; school?: string };
         if (parsed.role === 'admin') {
-          this.setAuthenticatedState('admin', parsed.name || 'Janice D. Quinones', parsed.roleLabel || 'Admin', parsed.username || 'admin', parsed.school || 'San Felipe National High School · Basud, Camarines Norte');
+          this.setAuthenticatedState('admin', parsed.name || 'Janice D. Quinones', parsed.roleLabel || 'Admin', parsed.username || 'admin', parsed.school || 'San Felipe National High School · Basud, Camarines Norte', savedToken);
         } else if (parsed.role === 'researcher') {
-          this.setAuthenticatedState('researcher', parsed.name || 'Research Coordinator', parsed.roleLabel || 'Researcher', parsed.username || 'researcher', parsed.school || 'San Felipe National High School · Basud, Camarines Norte');
+          this.setAuthenticatedState('researcher', parsed.name || 'Research Coordinator', parsed.roleLabel || 'Researcher', parsed.username || 'researcher', parsed.school || 'San Felipe National High School · Basud, Camarines Norte', savedToken);
         } else if (parsed.role === 'teacher') {
-          this.setAuthenticatedState('teacher', parsed.name || 'Janice D. Quinones', parsed.roleLabel || 'Teacher', parsed.username || 'teacher', parsed.school || 'San Felipe National High School · Basud, Camarines Norte');
+          this.setAuthenticatedState('teacher', parsed.name || 'Janice D. Quinones', parsed.roleLabel || 'Teacher', parsed.username || 'teacher', parsed.school || 'San Felipe National High School · Basud, Camarines Norte', savedToken);
         }
       } catch {
         window.localStorage.removeItem('inspire-demo-auth');
       }
+    } else if (savedAuth && !savedToken) {
+      window.localStorage.removeItem('inspire-demo-auth');
+    }
+
+    if (this.auth.isAuthenticated()) {
+      this.auth.refreshAuthSession().subscribe({
+        next: (refreshed) => {
+          if (!refreshed) {
+            this.logout();
+          }
+        },
+        error: () => {
+          this.logout();
+        }
+      });
     }
 
     effect(() => {
@@ -221,8 +239,7 @@ export class App {
     this.loginPassword = 'password123';
     this.loginError.set('');
     this.notificationsOpen.set(false);
-    window.localStorage.removeItem('inspire-demo-auth');
-    window.localStorage.removeItem('inspire-token');
+    this.auth.clearSession();
     this.router.navigateByUrl('/dashboard');
   }
 

@@ -121,10 +121,9 @@ export async function upsertLesson(record) {
     );
   }
 
-  const result = await pDb.get(
-    'SELECT * FROM lessons WHERE id = ? AND user_id = ?',
-    [id || record.id, user_id]
-  );
+  const result = id
+    ? await pDb.get('SELECT * FROM lessons WHERE id = ? AND user_id = ?', [id, user_id])
+    : await pDb.get('SELECT * FROM lessons WHERE id = last_insert_rowid()');
 
   return formatLesson(result);
 }
@@ -248,10 +247,9 @@ export async function upsertReflection(record) {
     );
   }
 
-  const result = await pDb.get(
-    'SELECT * FROM reflections WHERE id = ? AND user_id = ?',
-    [id || record.id, user_id]
-  );
+  const result = id
+    ? await pDb.get('SELECT * FROM reflections WHERE id = ? AND user_id = ?', [id, user_id])
+    : await pDb.get('SELECT * FROM reflections WHERE id = last_insert_rowid()');
 
   return result;
 }
@@ -317,10 +315,9 @@ export async function upsertObservation(record) {
     );
   }
 
-  const result = await pDb.get(
-    'SELECT * FROM observations WHERE id = ? AND user_id = ?',
-    [id || record.id, user_id]
-  );
+  const result = id
+    ? await pDb.get('SELECT * FROM observations WHERE id = ? AND user_id = ?', [id, user_id])
+    : await pDb.get('SELECT * FROM observations WHERE id = last_insert_rowid()');
 
   return result;
 }
@@ -373,10 +370,9 @@ export async function upsertSurvey(record) {
     );
   }
 
-  const result = await pDb.get(
-    'SELECT * FROM surveys WHERE id = ? AND user_id = ?',
-    [id || record.id, user_id]
-  );
+  const result = id
+    ? await pDb.get('SELECT * FROM surveys WHERE id = ? AND user_id = ?', [id, user_id])
+    : await pDb.get('SELECT * FROM surveys WHERE id = last_insert_rowid()');
 
   return {
     ...result,
@@ -529,6 +525,84 @@ export async function getReferenceMetadata() {
   return result;
 }
 
+function formatDifficultyCategory(row) {
+  return {
+    id: Number(row.id),
+    name: row.name,
+    description: row.description || '',
+    observable_characteristics: deserializeJson(row.observable_characteristics) || [],
+    accommodation_tips: row.accommodation_tips || '',
+    referral_note: row.referral_note || '',
+    has_subcategories: row.has_subcategories === 1
+  };
+}
+
+export async function listDifficultyCategories() {
+  const db = getDatabase();
+  const pDb = promisifyDb(db);
+  const rows = await pDb.all('SELECT * FROM difficulty_categories ORDER BY id ASC');
+  return rows.map(formatDifficultyCategory);
+}
+
+export async function upsertDifficultyCategory(record) {
+  const db = getDatabase();
+  const pDb = promisifyDb(db);
+
+  const {
+    id,
+    name,
+    description = '',
+    observable_characteristics = [],
+    accommodation_tips = '',
+    referral_note = '',
+    has_subcategories = false
+  } = record;
+
+  if (id) {
+    await pDb.run(
+      `UPDATE difficulty_categories
+       SET name = ?, description = ?, observable_characteristics = ?,
+           accommodation_tips = ?, referral_note = ?, has_subcategories = ?
+       WHERE id = ?`,
+      [
+        name,
+        description,
+        serializeJson(observable_characteristics),
+        accommodation_tips,
+        referral_note,
+        has_subcategories ? 1 : 0,
+        id
+      ]
+    );
+    const updated = await pDb.get('SELECT * FROM difficulty_categories WHERE id = ?', [id]);
+    return updated ? formatDifficultyCategory(updated) : null;
+  }
+
+  await pDb.run(
+    `INSERT INTO difficulty_categories (
+      name, description, observable_characteristics, accommodation_tips, referral_note, has_subcategories
+    ) VALUES (?, ?, ?, ?, ?, ?)`,
+    [
+      name,
+      description,
+      serializeJson(observable_characteristics),
+      accommodation_tips,
+      referral_note,
+      has_subcategories ? 1 : 0
+    ]
+  );
+
+  const inserted = await pDb.get('SELECT * FROM difficulty_categories WHERE id = last_insert_rowid()');
+  return inserted ? formatDifficultyCategory(inserted) : null;
+}
+
+export async function deleteDifficultyCategory(id) {
+  const db = getDatabase();
+  const pDb = promisifyDb(db);
+  await pDb.run('DELETE FROM difficulty_categories WHERE id = ?', [id]);
+  return true;
+}
+
 function sanitizeUser(user) {
   return {
     id: user.id,
@@ -592,5 +666,8 @@ export default {
   upsertReferenceMetadata,
   deleteReferenceMetadata,
   getReferenceMetadata,
+  listDifficultyCategories,
+  upsertDifficultyCategory,
+  deleteDifficultyCategory,
   getStats,
 };

@@ -81,7 +81,7 @@
             </label>
 
             <div class="difficulty-grid">
-              @for (difficulty of difficultyOptions; track difficulty; let idx = $index) {
+              @for (difficulty of difficultyOptions(); track difficulty; let idx = $index) {
                 <button
                   type="button"
                   class="difficulty-card"

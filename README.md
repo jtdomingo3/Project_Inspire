@@ -4,12 +4,13 @@ Project INSPIRE is a full-stack teaching support app with:
 
 - Angular frontend in `frontend/`
 - Node.js/Express backend in `backend/`
-- Local JSON persistence in `backend/data/store.json`
+- Local SQLite persistence in `backend/data/inspire.db`
 
 ## Repository Layout
 
 - `frontend/` - Angular UI
 - `backend/` - Express API and local persistence
+- `backend/src/database/schema.sql` - SQLite schema and seed data
 - `reference/` - Large source documents used by the app (ignored in git by default)
 - `prototype/` - prototype assets and mockups
 
@@ -32,6 +33,14 @@ Default local URLs:
 
 - Frontend: http://localhost:4200
 - Backend: http://localhost:3000
+
+Key API capabilities now include:
+
+- JWT login and token refresh
+- CRUD for lessons, reflections, observations, surveys
+- Resource library file + metadata management
+- Difficulty category library (SQLite-backed)
+- Admin analytics and account management (role protected)
 
 ## Environment
 

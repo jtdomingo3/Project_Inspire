@@ -3,7 +3,7 @@ import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angula
 import { Router } from '@angular/router';
 import { forkJoin } from 'rxjs';
 
-import { LessonRecord, ResourceLibraryItem } from '../../core/models/inspire-api.models';
+import { DifficultyCategoryRecord, LessonRecord, ResourceLibraryItem } from '../../core/models/inspire-api.models';
 import { InspireApiService } from '../../core/services/inspire-api.service';
 
 @Component({
@@ -41,7 +41,7 @@ export class LessonWorkbenchComponent implements OnInit {
   readonly gradeOptions = ['ALS', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10'] as const;
   readonly quarterOptions = ['Q1', 'Q2', 'Q3', 'Q4'] as const;
   readonly deliveryModes = ['Face-to-face', 'Online', 'Blended', 'Small Group', 'Pull-out Support'] as const;
-  readonly difficultyOptions = [
+  private readonly defaultDifficultyOptions = [
     'Difficulty in Displaying Interpersonal Behaviors',
     'Difficulty in Basic Learning and Applying Knowledge',
     'Difficulty in Communication',
@@ -56,6 +56,7 @@ export class LessonWorkbenchComponent implements OnInit {
     'Difficulty in Communicating — Autism',
     'Difficulty in Communicating — Tourette Syndrome'
   ] as const;
+  readonly difficultyOptions = signal<string[]>([...this.defaultDifficultyOptions]);
   readonly indicatorOptions = [
     'Struggles to complete tasks within the allotted time',
     'Requires repeated instructions before starting tasks',
@@ -138,12 +139,14 @@ export class LessonWorkbenchComponent implements OnInit {
     forkJoin({
       models: this.api.getModels(),
       library: this.api.getResourceLibrary(),
-      lessons: this.api.getLessons()
+      lessons: this.api.getLessons(),
+      difficulties: this.api.getDifficultyCategories()
     }).subscribe({
-      next: ({ models, library, lessons }) => {
+      next: ({ models, library, lessons, difficulties }) => {
         this.models.set(models);
         this.resourceLibrary.set(library);
         this.savedLessons.set(lessons);
+        this.setDifficultyOptions(difficulties);
         if (models.length > 0) {
           this.form.controls.model.setValue(models[0]);
         }
@@ -155,6 +158,11 @@ export class LessonWorkbenchComponent implements OnInit {
         this.loading.set(false);
       }
     });
+  }
+
+  private setDifficultyOptions(categories: DifficultyCategoryRecord[]): void {
+    const names = categories.map((item) => String(item.name || '').trim()).filter(Boolean);
+    this.difficultyOptions.set(names.length > 0 ? names : [...this.defaultDifficultyOptions]);
   }
 
   toggleDifficulty(difficulty: string, checked: boolean): void {
