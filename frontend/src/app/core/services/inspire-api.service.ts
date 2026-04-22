@@ -31,7 +31,12 @@ export class InspireApiService {
 
   private getDesktopApiBase(): string {
     const apiBase = (globalThis as { inspireDesktop?: { apiBase?: string } }).inspireDesktop?.apiBase;
-    return typeof apiBase === 'string' ? apiBase.replace(/\/$/, '') : '';
+    if (typeof apiBase === 'string' && apiBase.trim()) {
+      return apiBase.replace(/\/$/, '');
+    }
+
+    const apiBaseFromUrl = new URL(globalThis.location.href).searchParams.get('inspireApiBase');
+    return typeof apiBaseFromUrl === 'string' ? apiBaseFromUrl.replace(/\/$/, '') : '';
   }
 
   getModels(): Observable<string[]> {

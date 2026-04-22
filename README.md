@@ -29,6 +29,37 @@ Project INSPIRE is a full-stack teaching support app with:
 
    npm start
 
+## Electron Desktop
+
+Run the desktop app from the repository root.
+
+Single-command test launcher (recommended):
+
+   npm run electron:test
+
+This command automatically starts the Angular dev server on a free local port and then launches Electron with the correct `INSPIRE_DEV_SERVER_URL`.
+
+1. Build frontend assets for Electron and launch the desktop app:
+
+   npm run build:frontend
+   npx --no-install electron .
+
+2. For live frontend changes in Electron (dev mode), run frontend and Electron in separate terminals:
+
+   Terminal A:
+   npm --prefix frontend run start
+
+   Terminal B:
+   npm run electron:dev
+
+3. If port 4200 is already in use, start frontend on another port and point Electron to it:
+
+   Terminal A:
+   npm --prefix frontend run start -- --port 4201
+
+   Terminal B (PowerShell):
+   $env:INSPIRE_DEV_SERVER_URL='http://localhost:4201'; npx --no-install electron .
+
 Default local URLs:
 
 - Frontend: http://localhost:4200

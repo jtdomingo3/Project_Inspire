@@ -6,6 +6,24 @@ let mainWindow = null;
 let backendStop = async () => {};
 let shuttingDown = false;
 
+const singleInstanceLock = app.requestSingleInstanceLock();
+if (!singleInstanceLock) {
+  app.quit();
+}
+
+app.on('second-instance', () => {
+  if (!mainWindow || mainWindow.isDestroyed()) {
+    return;
+  }
+
+  if (mainWindow.isMinimized()) {
+    mainWindow.restore();
+  }
+
+  mainWindow.show();
+  mainWindow.focus();
+});
+
 async function copyDefaultReferences(sourceDir, targetDir) {
   await fs.mkdir(targetDir, { recursive: true });
 
@@ -53,7 +71,20 @@ async function startEmbeddedBackend() {
   process.env.INSPIRE_DB_PATH = path.join(dataDir, 'inspire.db');
 
   const backendModule = await import('../backend/src/server.js');
-  const server = await backendModule.startBackendServer({ port: 0, host: '127.0.0.1' });
+  const preferredPort = Number(process.env.INSPIRE_EMBEDDED_BACKEND_PORT || 3002);
+
+  let server;
+  try {
+    server = await backendModule.startBackendServer({ port: preferredPort, host: '127.0.0.1' });
+  } catch (error) {
+    const code = error && typeof error === 'object' && 'code' in error ? String((error).code) : '';
+    if (code !== 'EADDRINUSE') {
+      throw error;
+    }
+
+    console.warn(`Embedded backend port ${preferredPort} is in use. Falling back to a random port.`);
+    server = await backendModule.startBackendServer({ port: 0, host: '127.0.0.1' });
+  }
   backendStop = backendModule.stopBackendServer;
 
   const address = server.address();
@@ -66,12 +97,28 @@ async function startEmbeddedBackend() {
 
 async function createMainWindow() {
   const preloadPath = path.join(app.getAppPath(), 'electron', 'preload.mjs');
+  const iconCandidates = [
+    path.join(app.getAppPath(), 'frontend', 'public', 'icon.png'),
+    path.join(app.getAppPath(), 'frontend', 'public', 'icon-taskbar.ico'),
+    path.join(app.getAppPath(), 'frontend', 'public', 'favicon.ico')
+  ];
+
+  let windowIcon;
+  for (const candidate of iconCandidates) {
+    const exists = await fs.access(candidate).then(() => true).catch(() => false);
+    if (exists) {
+      windowIcon = candidate;
+      break;
+    }
+  }
+
   mainWindow = new BrowserWindow({
     width: 1440,
     height: 900,
     minWidth: 1200,
     minHeight: 720,
     show: false,
+    ...(windowIcon ? { icon: windowIcon } : {}),
     webPreferences: {
       contextIsolation: true,
       nodeIntegration: false,
@@ -79,17 +126,39 @@ async function createMainWindow() {
     }
   });
 
+  // Some dev-server states can delay ready-to-show; keep the window visible with safe fallbacks.
+  let hasShownWindow = false;
+  const showWindow = () => {
+    if (!mainWindow || mainWindow.isDestroyed() || hasShownWindow) {
+      return;
+    }
+    hasShownWindow = true;
+    mainWindow.show();
+    mainWindow.focus();
+  };
+
+  mainWindow.once('ready-to-show', showWindow);
+  mainWindow.webContents.once('did-finish-load', showWindow);
+
+  mainWindow.webContents.on('did-fail-load', (_event, code, description, validatedUrl) => {
+    console.error('Window failed to load:', { code, description, validatedUrl });
+    showWindow();
+  });
+
   const devUrl = process.env.INSPIRE_DEV_SERVER_URL;
   if (devUrl) {
-    await mainWindow.loadURL(devUrl);
+    const resolvedDevUrl = new URL(devUrl);
+    const apiBase = process.env.INSPIRE_API_BASE || '';
+    if (apiBase) {
+      resolvedDevUrl.searchParams.set('inspireApiBase', apiBase);
+    }
+    await mainWindow.loadURL(resolvedDevUrl.toString());
   } else {
     const indexPath = await resolveFrontendIndex();
     await mainWindow.loadFile(indexPath);
   }
 
-  mainWindow.once('ready-to-show', () => {
-    mainWindow?.show();
-  });
+  setTimeout(showWindow, 3000);
 }
 
 async function shutdownBackend() {
@@ -117,11 +186,23 @@ app.on('window-all-closed', () => {
   }
 });
 
-app.whenReady().then(async () => {
-  await startEmbeddedBackend();
-  await createMainWindow();
-}).catch(async (error) => {
-  console.error('Failed to start desktop app:', error);
-  await shutdownBackend();
-  app.exit(1);
+app.on('activate', async () => {
+  if (!mainWindow || mainWindow.isDestroyed()) {
+    await createMainWindow();
+    return;
+  }
+
+  mainWindow.show();
+  mainWindow.focus();
 });
+
+if (singleInstanceLock) {
+  app.whenReady().then(async () => {
+    await startEmbeddedBackend();
+    await createMainWindow();
+  }).catch(async (error) => {
+    console.error('Failed to start desktop app:', error);
+    await shutdownBackend();
+    app.exit(1);
+  });
+}

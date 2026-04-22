@@ -9,10 +9,12 @@ files:
   - backend/package.json
   - backend/node_modules/**/*
   - frontend/dist/frontend/**/*
+  - frontend/public/**/*
   - reference/**/*
 asarUnpack:
   - backend/node_modules/sqlite3/**/*
 win:
+  icon: frontend/public/icon-taskbar.ico
   target:
     - target: nsis
       arch:
@@ -21,3 +23,5 @@ win:
 nsis:
   oneClick: false
   allowToChangeInstallationDirectory: true
+  installerIcon: frontend/public/icon-taskbar.ico
+  uninstallerIcon: frontend/public/icon-taskbar.ico

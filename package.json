@@ -9,13 +9,17 @@
     "dev": "npm run start",
     "ng:serve": "npm --prefix frontend run start",
     "electron:dev": "cross-env INSPIRE_DEV_SERVER_URL=http://localhost:4200 electron .",
+    "electron:test": "node scripts/start-electron-dev.js",
+    "icon:win": "node scripts/generate-win-icon.js",
     "build:frontend": "npm --prefix frontend run build",
-    "build:electron": "npm run build:frontend && electron-builder --config electron-builder.yml"
+    "build:electron": "npm run icon:win && npm run build:frontend && electron-builder --config electron-builder.yml"
   },
   "devDependencies": {
     "concurrently": "^9.2.1",
     "cross-env": "^10.1.0",
     "electron": "^37.2.1",
-    "electron-builder": "^25.1.8"
+    "electron-builder": "^25.1.8",
+    "png-to-ico": "^2.1.8",
+    "sharp": "^0.34.2"
   }
 }
