@@ -1,0 +1,30 @@
+appId: com.projectinspire.desktop
+productName: Project INSPIRE
+directories:
+  output: dist/installer-output
+files:
+  - package.json
+  - electron/**/*
+  - frontend/dist/frontend/**/*
+  - frontend/public/**/*
+  - reference/**/*
+extraResources:
+  - from: backend
+    to: backend
+asarUnpack:
+  - backend/node_modules/sqlite3/**/*
+win:
+  icon: frontend/public/icon-taskbar.ico
+  target:
+    - target: nsis
+      arch:
+        - x64
+  artifactName: ${productName}-Setup-${version}.${ext}
+nsis:
+  oneClick: false
+  perMachine: false
+  allowElevation: true
+  selectPerMachineByDefault: false
+  allowToChangeInstallationDirectory: true
+  installerIcon: frontend/public/icon-taskbar.ico
+  uninstallerIcon: frontend/public/icon-taskbar.ico

@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 
+import { SetupBootstrapPayload } from './core/models/inspire-api.models';
 import { AuthService } from './core/services/auth.service';
 import { InspireApiService } from './core/services/inspire-api.service';
 
@@ -34,10 +35,23 @@ export class App {
   protected readonly currentUserRoleLabel = signal('Teacher');
   protected readonly loginError = signal('');
   protected readonly loginLoading = signal(false);
+  protected readonly setupLoading = signal(true);
+  protected readonly setupRequired = signal(false);
+  protected readonly setupSaving = signal(false);
+  protected readonly setupError = signal('');
+  protected readonly setupMode = signal<'single-admin' | 'admin-plus-user'>('single-admin');
   protected readonly notificationsOpen = signal(false);
   protected readonly sidebarOpen = signal(true);
   protected loginUsername = 'admin';
   protected loginPassword = 'password123';
+  protected setupAdminUsername = 'admin';
+  protected setupAdminPassword = 'password123';
+  protected setupAdminName = 'System Administrator';
+  protected setupAdminSchool = 'San Felipe National High School · Basud, Camarines Norte';
+  protected setupUserUsername = 'teacher';
+  protected setupUserPassword = 'password123';
+  protected setupUserName = 'Teacher User';
+  protected setupUserSchool = 'San Felipe National High School · Basud, Camarines Norte';
   protected readonly mainNavigation: NavigationItem[] = [
     {
       label: 'Dashboard',
@@ -137,12 +151,24 @@ export class App {
 
   constructor() {
     const savedTheme = window.localStorage.getItem('inspire-theme');
-    const savedAuth = window.localStorage.getItem('inspire-demo-auth');
-    const savedToken = window.localStorage.getItem('inspire-token');
 
     if (savedTheme === 'dark') {
       this.theme.set('night');
     }
+
+    this.restoreStoredSession();
+    this.loadSetupStatus();
+
+    effect(() => {
+      const theme = this.theme();
+      this.document.body.setAttribute('data-theme', theme === 'night' ? 'dark' : 'light');
+      window.localStorage.setItem('inspire-theme', theme);
+    });
+  }
+
+  private restoreStoredSession(): void {
+    const savedAuth = window.localStorage.getItem('inspire-demo-auth');
+    const savedToken = window.localStorage.getItem('inspire-token');
 
     if (savedAuth && savedToken) {
       try {
@@ -160,24 +186,41 @@ export class App {
     } else if (savedAuth && !savedToken) {
       window.localStorage.removeItem('inspire-demo-auth');
     }
+  }
 
-    if (this.auth.isAuthenticated()) {
-      this.auth.refreshAuthSession().subscribe({
-        next: (refreshed) => {
-          if (!refreshed) {
-            this.logout();
-          }
-        },
-        error: () => {
-          this.logout();
+  private loadSetupStatus(): void {
+    this.setupLoading.set(true);
+    this.setupError.set('');
+    this.api.getSetupStatus().subscribe({
+      next: (status) => {
+        this.setupLoading.set(false);
+        this.setupRequired.set(status.requires_setup);
+
+        if (status.requires_setup) {
+          this.auth.clearSession();
+          this.isAuthenticated.set(false);
+          this.loginError.set('');
+          return;
         }
-      });
-    }
 
-    effect(() => {
-      const theme = this.theme();
-      this.document.body.setAttribute('data-theme', theme === 'night' ? 'dark' : 'light');
-      window.localStorage.setItem('inspire-theme', theme);
+        if (this.auth.isAuthenticated()) {
+          this.auth.refreshAuthSession().subscribe({
+            next: (refreshed) => {
+              if (!refreshed) {
+                this.logout();
+              }
+            },
+            error: () => {
+              this.logout();
+            }
+          });
+        }
+      },
+      error: (error) => {
+        this.setupLoading.set(false);
+        this.setupRequired.set(false);
+        this.setupError.set(this.api.describeError(error));
+      }
     });
   }
 
@@ -226,6 +269,68 @@ export class App {
       error: (error) => {
         this.loginLoading.set(false);
         this.loginError.set(this.api.describeError(error));
+      }
+    });
+  }
+
+  protected setSetupMode(mode: 'single-admin' | 'admin-plus-user'): void {
+    this.setupMode.set(mode);
+    this.setupError.set('');
+  }
+
+  protected completeSetup(): void {
+    const adminUsername = this.setupAdminUsername.trim().toLowerCase();
+    const adminPassword = this.setupAdminPassword.trim();
+    const adminName = this.setupAdminName.trim() || 'System Administrator';
+    const adminSchool = this.setupAdminSchool.trim() || 'San Felipe National High School · Basud, Camarines Norte';
+
+    if (!adminUsername || !adminPassword) {
+      this.setupError.set('Enter admin username and password.');
+      return;
+    }
+
+    const payload: SetupBootstrapPayload = {
+      mode: this.setupMode(),
+      admin: {
+        username: adminUsername,
+        password: adminPassword,
+        display_name: adminName,
+        affiliated_school: adminSchool
+      }
+    };
+
+    if (payload.mode === 'admin-plus-user') {
+      const userUsername = this.setupUserUsername.trim().toLowerCase();
+      const userPassword = this.setupUserPassword.trim();
+      const userName = this.setupUserName.trim() || 'Teacher User';
+      const userSchool = this.setupUserSchool.trim() || adminSchool;
+
+      if (!userUsername || !userPassword) {
+        this.setupError.set('Enter user username and password.');
+        return;
+      }
+
+      payload.user = {
+        username: userUsername,
+        password: userPassword,
+        display_name: userName,
+        affiliated_school: userSchool
+      };
+    }
+
+    this.setupSaving.set(true);
+    this.setupError.set('');
+    this.api.bootstrapSetup(payload).subscribe({
+      next: () => {
+        this.setupSaving.set(false);
+        this.setupRequired.set(false);
+        this.loginUsername = adminUsername;
+        this.loginPassword = adminPassword;
+        this.login();
+      },
+      error: (error) => {
+        this.setupSaving.set(false);
+        this.setupError.set(this.api.describeError(error));
       }
     });
   }

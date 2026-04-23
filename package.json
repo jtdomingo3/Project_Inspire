@@ -1,12 +1,36 @@
 {
   "name": "project-inspire",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
+  "main": "electron/main.mjs",
   "scripts": {
     "start": "concurrently -k -n backend,frontend \"npm --prefix backend run start\" \"npm --prefix frontend run start\"",
-    "dev": "npm run start"
+    "dev": "npm run start",
+    "ng:serve": "npm --prefix frontend run start",
+    "electron:dev": "cross-env INSPIRE_DEV_SERVER_URL=http://localhost:4200 electron .",
+    "electron:test": "node scripts/start-electron-dev.js",
+    "icon:win": "node scripts/generate-win-icon.js",
+    "build:frontend": "npm --prefix frontend run build",
+    "build:installer": "npm run icon:win && npm run build:frontend && electron-builder --config electron-builder.yml",
+    "build:electron": "npm run build:installer"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.3",
+    "mammoth": "^1.8.0",
+    "pdf-parse": "^1.1.1",
+    "sqlite3": "^6.0.1"
   },
   "devDependencies": {
-    "concurrently": "^9.2.1"
+    "concurrently": "^9.2.1",
+    "cross-env": "^10.1.0",
+    "electron": "^37.2.1",
+    "electron-builder": "^25.1.8",
+    "png-to-ico": "^2.1.8",
+    "sharp": "^0.34.2"
   }
 }

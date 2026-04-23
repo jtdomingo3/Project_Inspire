@@ -138,6 +138,27 @@ export interface LoginResponse {
   error?: string;
 }
 
+export interface SetupAccountPayload {
+  username: string;
+  password: string;
+  display_name: string;
+  affiliated_school?: string;
+}
+
+export interface SetupMode {
+  mode: 'single-admin' | 'admin-plus-user';
+}
+
+export interface SetupStatusResponse {
+  requires_setup: boolean;
+  supported_modes: Array<'single-admin' | 'admin-plus-user'>;
+}
+
+export interface SetupBootstrapPayload extends SetupMode {
+  admin: SetupAccountPayload;
+  user?: SetupAccountPayload;
+}
+
 export interface ResourceLibraryItem {
   id: string;
   file_name: string;

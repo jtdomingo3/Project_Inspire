@@ -4,11 +4,14 @@ import path from 'path';
 import fs from 'fs/promises';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import { dataRootDir } from '../config.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const dbPath = path.join(__dirname, '../../..', 'backend/data/inspire.db');
+const dbPath = process.env.INSPIRE_DB_PATH
+  ? path.resolve(process.env.INSPIRE_DB_PATH)
+  : path.join(dataRootDir, 'inspire.db');
 
 let db = null;
 
@@ -22,6 +25,8 @@ function promisifyDb(database) {
 }
 
 export async function initializeDatabase() {
+  await fs.mkdir(path.dirname(dbPath), { recursive: true });
+
   return new Promise((resolve, reject) => {
     db = new sqlite3.Database(dbPath, (err) => {
       if (err) {
