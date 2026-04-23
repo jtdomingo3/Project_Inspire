@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
 import fs from 'node:fs/promises';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import cors from 'cors';
 import express from 'express';
@@ -937,13 +937,17 @@ app.post('/api/admin/reset', roleMiddleware(['admin']), async (_request, respons
 // Electron (and any browser pointed at localhost) can load the SPA.  All paths
 // that do NOT start with /api are handled as SPA routes and served index.html.
 const angularDistPath = path.join(projectRoot, 'frontend', 'dist', 'frontend', 'browser');
-if (existsSync(angularDistPath)) {
+const angularIndexPath = path.join(angularDistPath, 'index.html');
+if (existsSync(angularDistPath) && existsSync(angularIndexPath)) {
+  // Cache index.html once at startup – no per-request file-system access needed.
+  const angularIndexHtml = require('node:fs').readFileSync(angularIndexPath, 'utf8');
   app.use(express.static(angularDistPath));
   app.get('*', (request, response, next) => {
     if (request.path.startsWith('/api')) {
       return next();
     }
-    response.sendFile(path.join(angularDistPath, 'index.html'));
+    response.setHeader('Content-Type', 'text/html; charset=utf-8');
+    response.send(angularIndexHtml);
   });
 }
 // ─────────────────────────────────────────────────────────────────────────────
