@@ -297,6 +297,28 @@ export class MyLessonsComponent implements OnInit {
       ? 'deped-seal.png'
       : './deped-seal.png';
 
+    // Format Objectives as Ordered List
+    const objectivesList = this.competencyItems();
+    const objectivesHtml = objectivesList.length > 0
+      ? `<ol style="margin-left: 16px; margin-top: 4px;">${objectivesList.map(obj => `<li>${e(obj)}</li>`).join('')}</ol>`
+      : nl2br(plan.competencies);
+
+    // Format Accommodations & Modifications
+    const accList = this.accommodationItems();
+    const modList = this.modificationItems();
+    let supportHtml = '';
+    
+    if (accList.length > 0 || modList.length > 0) {
+      supportHtml += `<div style="margin-top: 8px;">`;
+      if (accList.length > 0) {
+        supportHtml += `<strong>Accommodations:</strong><ul style="margin-left: 16px; margin-top: 2px; margin-bottom: 4px;">${accList.map(a => `<li>${e(a)}</li>`).join('')}</ul>`;
+      }
+      if (modList.length > 0) {
+        supportHtml += `<strong>Modifications:</strong><ul style="margin-left: 16px; margin-top: 2px; margin-bottom: 0;">${modList.map(m => `<li>${e(m)}</li>`).join('')}</ul>`;
+      }
+      supportHtml += `</div>`;
+    }
+
     return `<!doctype html>
 <html>
 <head>
@@ -383,9 +405,9 @@ export class MyLessonsComponent implements OnInit {
     <td class="content-cell">${nl2br(plan.content_standards)}</td>
   </tr>
   <tr><td class="sub-label">B. Performance Standards</td><td class="content-cell">${nl2br(plan.performance_standards)}</td></tr>
-  <tr><td class="sub-label">C. Learning Competencies and Objectives</td><td class="content-cell">${nl2br(plan.competencies)}</td></tr>
+  <tr><td class="sub-label">C. Learning Competencies and Objectives</td><td class="content-cell">${objectivesHtml}</td></tr>
   <tr><td class="sub-label">D. Content</td><td class="content-cell"><strong>Topic:</strong> ${e(plan.content || plan.title)}<br><strong>Lesson:</strong> ${e(plan.title)}</td></tr>
-  <tr><td class="sub-label">E. Integration</td><td class="content-cell"><strong>Inclusive Education Focus:</strong> ${e(plan.difficulty)}<br>${nl2br(plan.integration)}</td></tr>
+  <tr><td class="sub-label">E. Integration</td><td class="content-cell"><strong>Inclusive Education Focus:</strong> ${e(plan.difficulty)}<br>${nl2br(plan.integration)}${supportHtml}</td></tr>
 </table>
 <table class="dlp-table">
   <tr>
