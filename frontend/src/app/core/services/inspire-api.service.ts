@@ -15,6 +15,8 @@ import {
   ObservationRecord,
   ReflectionRecord,
   ResourceLibraryItem,
+  SetupBootstrapPayload,
+  SetupStatusResponse,
   SurveyQuestionsResponse,
   SurveyRecord,
   UserAccount,
@@ -25,6 +27,17 @@ import {
 })
 export class InspireApiService {
   private readonly http = inject(HttpClient);
+  private readonly desktopApiBase = this.getDesktopApiBase();
+
+  private getDesktopApiBase(): string {
+    const apiBase = (globalThis as { inspireDesktop?: { apiBase?: string } }).inspireDesktop?.apiBase;
+    if (typeof apiBase === 'string' && apiBase.trim()) {
+      return apiBase.replace(/\/$/, '');
+    }
+
+    const apiBaseFromUrl = new URL(globalThis.location.href).searchParams.get('inspireApiBase');
+    return typeof apiBaseFromUrl === 'string' ? apiBaseFromUrl.replace(/\/$/, '') : '';
+  }
 
   getModels(): Observable<string[]> {
     return this.http.get<ApiListResponse>('/api/models').pipe(
@@ -45,7 +58,7 @@ export class InspireApiService {
   }
 
   getReferenceFileUrl(fileName: string): string {
-    return `/api/resource-library/file/${encodeURIComponent(fileName)}`;
+    return `${this.desktopApiBase}/api/resource-library/file/${encodeURIComponent(fileName)}`;
   }
 
   getReferenceFileBuffer(fileName: string): Observable<ArrayBuffer> {
@@ -142,7 +155,7 @@ export class InspireApiService {
       const htmlLikeBody = rawBody.trim().toLowerCase().startsWith('<!doctype') || rawBody.trim().startsWith('<html');
 
       if (error.error instanceof SyntaxError || htmlLikeBody) {
-        return `API response was HTML instead of JSON at ${error.url || 'unknown endpoint'}. Verify backend is running at http://localhost:3000 and proxy is active.`;
+        return `API response was HTML instead of JSON at ${error.url || 'unknown endpoint'}. Verify backend is running and API routing is configured.`;
       }
 
       const backendError = (error.error && typeof error.error === 'object' && 'error' in error.error)
@@ -256,6 +269,14 @@ export class InspireApiService {
 
   refreshToken(): Observable<LoginResponse> {
     return this.http.post<LoginResponse>('/api/auth/refresh', {});
+  }
+
+  getSetupStatus(): Observable<SetupStatusResponse> {
+    return this.http.get<SetupStatusResponse>('/api/setup/status');
+  }
+
+  bootstrapSetup(payload: SetupBootstrapPayload): Observable<{ success: boolean }> {
+    return this.http.post<{ success: boolean }>('/api/setup/bootstrap', payload);
   }
 
   listAccounts(): Observable<UserAccount[]> {

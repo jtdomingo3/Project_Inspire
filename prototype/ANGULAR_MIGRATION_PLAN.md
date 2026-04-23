@@ -619,7 +619,7 @@ ng build --configuration production
 # Build Electron app (creates .exe, .dmg, .AppImage)
 npm run build:electron
 
-# Output files in ./dist/packages/
+# Output files in ./dist/installer-output/
 ```
 
 ### 9.3 Auto-Updates (Optional, Phase 2+)
