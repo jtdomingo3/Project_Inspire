@@ -159,43 +159,264 @@ export class MyLessonsComponent implements OnInit {
       return;
     }
 
-    const printWindow = window.open('', '_blank', 'noopener,noreferrer,width=980,height=760');
+    const printWindow = window.open('', '_blank', 'width=1100,height=700');
     if (!printWindow) {
       this.error.set('Unable to open print window. Please allow pop-ups and try again.');
       return;
     }
 
-    const escapedTitle = this.escapeHtml(lesson.title || 'Daily Lesson Plan');
     const plan = this.viewingPlan();
-    const escapedOutput = this.escapeHtml(this.printableText(plan)).replace(/\n/g, '<br>');
-    printWindow.document.write(`
-      <!doctype html>
-      <html>
-        <head>
-          <meta charset="utf-8" />
-          <title>${escapedTitle}</title>
-          <style>
-            body { font-family: 'Segoe UI', Tahoma, sans-serif; padding: 24px; color: #1f2937; }
-            h1 { margin: 0 0 12px; font-size: 24px; }
-            .meta { margin-bottom: 16px; color: #334155; }
-            .content { border: 1px solid #dbe3dd; border-radius: 10px; padding: 16px; line-height: 1.5; }
-            @media print { body { padding: 0; } .content { border: none; padding: 0; } }
-          </style>
-        </head>
-        <body>
-          <h1>${escapedTitle}</h1>
-          <div class="meta">${this.escapeHtml(this.currentSchool())} · ${this.escapeHtml(this.currentTeacher())}</div>
-          <div class="content">${escapedOutput}</div>
-        </body>
-      </html>
-    `);
+    const html = this.buildDepEdDlpHtml(plan, lesson);
+    printWindow.document.write(html);
     printWindow.document.close();
     printWindow.focus();
-    printWindow.print();
+    setTimeout(() => printWindow.print(), 400);
   }
 
-  exportPdf(): void {
-    this.printLesson();
+  async exportPdf(): Promise<void> {
+    const lesson = this.viewingLesson();
+    if (!lesson) {
+      return;
+    }
+
+    const plan = this.viewingPlan();
+    const html = this.buildDepEdDlpHtml(plan, lesson);
+
+    const iframe = document.createElement('iframe');
+    iframe.style.cssText = 'position:fixed;left:-9999px;top:0;width:1123px;border:none;';
+    document.body.appendChild(iframe);
+
+    const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+    if (!iframeDoc) {
+      document.body.removeChild(iframe);
+      this.error.set('Could not create PDF rendering context.');
+      return;
+    }
+
+    iframeDoc.open();
+    iframeDoc.write(html);
+    iframeDoc.close();
+
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    // Let iframe auto-size to content height
+    iframe.style.height = iframeDoc.body.scrollHeight + 'px';
+
+    try {
+      const { default: html2canvas } = await import('html2canvas-pro');
+      const { jsPDF } = await import('jspdf');
+
+      // 1. Capture the header separately for stamping on every page
+      const headerEl = iframeDoc.querySelector('.deped-header') as HTMLElement;
+      let headerImg: string | null = null;
+      let headerH = 0;
+      if (headerEl) {
+        const headerCanvas = await html2canvas(headerEl, { scale: 2, useCORS: true, width: 1123, windowWidth: 1123 });
+        headerImg = headerCanvas.toDataURL('image/png');
+        // Header height in mm (proportional)
+        headerH = (headerCanvas.height / headerCanvas.width) * (297 - 10);
+      }
+
+      // 2. Capture the main body content
+      const bodyEl = iframeDoc.querySelector('.dlp-body') as HTMLElement;
+      const targetEl = bodyEl || iframeDoc.body;
+      const canvas = await html2canvas(targetEl, { scale: 2, useCORS: true, width: 1123, windowWidth: 1123 });
+
+      const imgData = canvas.toDataURL('image/png');
+
+      // A4 landscape: 297 x 210 mm
+      const pageWidth = 297;
+      const pageHeight = 210;
+      const margin = 5;
+      const contentWidth = pageWidth - margin * 2;
+      const topOffset = headerImg ? headerH + 2 : margin;
+      const usableHeight = pageHeight - topOffset - margin;
+
+      const imgWidth = contentWidth;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+      const pdf = new jsPDF('l', 'mm', 'a4');
+      let yDrawn = 0;
+      let pageNum = 0;
+
+      while (yDrawn < imgHeight) {
+        if (pageNum > 0) {
+          pdf.addPage();
+        }
+
+        // Stamp header on every page
+        if (headerImg) {
+          pdf.addImage(headerImg, 'PNG', margin, margin, contentWidth, headerH);
+        }
+
+        // Draw the content slice
+        const srcY = (yDrawn / imgHeight) * canvas.height;
+        const srcH = (usableHeight / imgHeight) * canvas.height;
+
+        // Create a slice canvas
+        const sliceCanvas = document.createElement('canvas');
+        sliceCanvas.width = canvas.width;
+        sliceCanvas.height = Math.min(srcH, canvas.height - srcY);
+        const ctx = sliceCanvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(canvas, 0, srcY, canvas.width, sliceCanvas.height, 0, 0, canvas.width, sliceCanvas.height);
+          const sliceData = sliceCanvas.toDataURL('image/png');
+          const sliceH = (sliceCanvas.height * imgWidth) / canvas.width;
+          pdf.addImage(sliceData, 'PNG', margin, topOffset, imgWidth, sliceH);
+        }
+
+        yDrawn += usableHeight;
+        pageNum++;
+      }
+
+      const fileName = (plan.title || lesson.title || 'Lesson-Plan')
+        .replace(/[^a-zA-Z0-9\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .substring(0, 60);
+      pdf.save(`${fileName}.pdf`);
+    } catch (err) {
+      console.error('PDF export failed:', err);
+      this.error.set('PDF export failed. Falling back to print dialog.');
+      this.printLesson();
+    } finally {
+      document.body.removeChild(iframe);
+    }
+  }
+
+  private buildDepEdDlpHtml(plan: ViewPlan, lesson: LessonRecord): string {
+    const e = (v: string) => this.escapeHtml(v || '');
+    const nl2br = (v: string) => this.escapeHtml(v || '').replace(/\n/g, '<br>');
+    const school = e(this.currentSchool());
+    const teacher = e(this.currentTeacher());
+    const grade = e(plan.grade || lesson.grade || '');
+    const quarter = e(plan.quarter || lesson.quarter || '');
+    const subject = e(plan.subject || lesson.subject || '');
+    const dateStr = e(this.lessonDateTime(lesson));
+
+    const sealUrl = (typeof globalThis.location?.protocol === 'string' && globalThis.location.protocol === 'file:')
+      ? 'deped-seal.png'
+      : './deped-seal.png';
+
+    return `<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>${e(plan.title || lesson.title || 'Daily Lesson Plan')}</title>
+<style>
+  @page { size: landscape; margin: 8mm 10mm; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.3; }
+
+  .page-wrapper { width: 100%; }
+  .page-wrapper > thead { display: table-header-group; }
+  .page-wrapper > thead td { border: none; padding: 0; }
+  .page-wrapper > tbody { display: table-row-group; }
+  .page-wrapper > tbody > tr > td { border: none; padding: 0; }
+
+  .deped-header { text-align: center; padding-bottom: 4px; }
+  .deped-header img.seal { width: 46px; height: 46px; }
+  .deped-header .republic { font-family: 'Old English Text MT', 'Times New Roman', serif; font-size: 11pt; font-style: italic; }
+  .deped-header .deped-title { font-family: 'Old English Text MT', 'Times New Roman', serif; font-size: 13pt; font-weight: bold; }
+
+  .info-table { width: 100%; border-collapse: collapse; margin-bottom: 4px; font-size: 9pt; }
+  .info-table td { padding: 1px 4px; border: 1px solid #000; }
+  .info-table .highlight { background: #fce4c6; }
+  .info-table .logo-cell { width: 46px; text-align: center; vertical-align: middle; }
+  .info-table .logo-cell img { width: 38px; }
+  .info-table .subject-cell { font-weight: bold; font-size: 10pt; text-align: center; vertical-align: middle; width: 90px; }
+
+  .dlp-table { width: 100%; border-collapse: collapse; font-size: 9.5pt; }
+  .dlp-table td { border: 1px solid #000; padding: 4px 6px; vertical-align: top; }
+  .dlp-table .section-label {
+    width: 46px; min-width: 46px; max-width: 46px;
+    text-align: center; vertical-align: middle;
+    padding: 8px 2px;
+    font-weight: bold; font-size: 7.5pt;
+    line-height: 1.2; text-transform: uppercase;
+    writing-mode: vertical-lr;
+    transform: rotate(180deg);
+  }
+  .dlp-table .sub-label { width: 120px; font-weight: bold; font-size: 9pt; vertical-align: top; }
+  .dlp-table .content-cell { font-size: 9.5pt; }
+
+  .sig-section { margin-top: 16px; font-size: 10pt; page-break-inside: avoid; }
+  .sig-section p { margin-bottom: 22px; }
+
+  @media print {
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body>
+<table class="page-wrapper" style="width:100%;border-collapse:collapse;">
+<thead><tr><td>
+  <div class="deped-header">
+    <img class="seal" src="${sealUrl}" alt="DepEd Seal"><br>
+    <span class="republic">Republic of the Philippines</span><br>
+    <span class="deped-title">Department of Education</span>
+  </div>
+</td></tr></thead>
+<tbody><tr><td>
+<div class="dlp-body">
+<table class="info-table">
+  <tr>
+    <td class="logo-cell" rowspan="3"><img src="${sealUrl}" alt=""></td>
+    <td class="subject-cell" rowspan="3">${subject}</td>
+    <td>School</td><td class="highlight">${school}</td>
+    <td>Grade Level</td><td class="highlight">${grade}</td>
+    <td>Quarter</td><td class="highlight">${quarter}</td>
+  </tr>
+  <tr>
+    <td>Teacher</td><td class="highlight">${teacher}</td>
+    <td>Learning Area</td><td class="highlight">${subject}</td>
+    <td colspan="2"></td>
+  </tr>
+  <tr>
+    <td>Teaching Date and Time</td><td class="highlight">${dateStr}</td>
+    <td colspan="4"></td>
+  </tr>
+</table>
+<table class="dlp-table">
+  <tr>
+    <td class="section-label" rowspan="5">I. CURRICULUM CONTENT,<br>STANDARDS AND LESSON<br>COMPETENCIES</td>
+    <td class="sub-label">A. Content Standards</td>
+    <td class="content-cell">${nl2br(plan.content_standards)}</td>
+  </tr>
+  <tr><td class="sub-label">B. Performance Standards</td><td class="content-cell">${nl2br(plan.performance_standards)}</td></tr>
+  <tr><td class="sub-label">C. Learning Competencies and Objectives</td><td class="content-cell">${nl2br(plan.competencies)}</td></tr>
+  <tr><td class="sub-label">D. Content</td><td class="content-cell"><strong>Topic:</strong> ${e(plan.content || plan.title)}<br><strong>Lesson:</strong> ${e(plan.title)}</td></tr>
+  <tr><td class="sub-label">E. Integration</td><td class="content-cell"><strong>Inclusive Education Focus:</strong> ${e(plan.difficulty)}<br>${nl2br(plan.integration)}</td></tr>
+</table>
+<table class="dlp-table">
+  <tr>
+    <td class="section-label">II. LEARNING<br>RESOURCES</td>
+    <td class="sub-label">Learning Resources</td>
+    <td class="content-cell">${nl2br(plan.resources)}</td>
+  </tr>
+</table>
+<table class="dlp-table">
+  <tr>
+    <td class="section-label" rowspan="7" style="vertical-align: top; padding-bottom: 20px;">III. TEACHING AND<br>LEARNING PROCEDURE</td>
+    <td class="sub-label">A. Activating Prior Knowledge</td>
+    <td class="content-cell">${nl2br(plan.prior_knowledge)}</td>
+  </tr>
+  <tr><td class="sub-label">B. Establishing Lesson Purpose</td><td class="content-cell">${nl2br(plan.lesson_purpose)}</td></tr>
+  <tr><td class="sub-label">C. Developing and Deepening Understanding</td><td class="content-cell">${nl2br(plan.developing)}</td></tr>
+  <tr><td class="sub-label">D. Making Generalization</td><td class="content-cell">${nl2br(plan.generalization)}</td></tr>
+  <tr><td class="sub-label">E. Evaluating Learning</td><td class="content-cell">${nl2br(plan.evaluation)}</td></tr>
+  <tr><td class="sub-label">F. Teacher&rsquo;s Remarks</td><td class="content-cell">${nl2br(plan.remarks)}</td></tr>
+  <tr><td class="sub-label">G. Reflection</td><td class="content-cell">${nl2br(plan.reflection)}</td></tr>
+</table>
+<div class="sig-section">
+  <p>PREPARED BY: <strong>${teacher}</strong></p>
+  <p>REVIEWED BY: ___________________________</p>
+  <p>NOTED BY: ___________________________</p>
+</div>
+</div>
+</td></tr></tbody>
+</table>
+</body>
+</html>`;
   }
 
   saveEdit(): void {
@@ -568,38 +789,6 @@ export class MyLessonsComponent implements OnInit {
     }
 
     return `${professionalCase}.`;
-  }
-
-  private printableText(plan: ViewPlan): string {
-    return [
-      'DAILY LESSON PLAN',
-      '',
-      `School: ${this.currentSchool()}`,
-      `Teacher: ${this.currentTeacher()}`,
-      `Grade Level: ${plan.grade || 'N/A'}   Quarter: ${plan.quarter || 'N/A'}`,
-      `Learning Area: ${plan.subject || 'N/A'}`,
-      '',
-      'I. CURRICULUM CONTENT, STANDARDS AND LESSON COMPETENCIES',
-      `A. Content Standards: ${plan.content_standards || 'N/A'}`,
-      `B. Performance Standards: ${plan.performance_standards || 'N/A'}`,
-      `C. Learning Competencies and Objectives: ${plan.competencies || 'N/A'}`,
-      `D. Content: ${plan.content || 'N/A'}`,
-      `E. Integration: ${plan.integration || 'N/A'}`,
-      '',
-      'II. LEARNING RESOURCES',
-      plan.resources || 'N/A',
-      '',
-      'III. TEACHING AND LEARNING PROCEDURE',
-      `A. Activating Prior Knowledge: ${plan.prior_knowledge || 'N/A'}`,
-      `B. Establishing Lesson Purpose: ${plan.lesson_purpose || 'N/A'}`,
-      `C. Developing and Deepening Understanding: ${plan.developing || 'N/A'}`,
-      `D. Making Generalization: ${plan.generalization || 'N/A'}`,
-      `E. Evaluating Learning: ${plan.evaluation || 'N/A'}`,
-      `Accommodations: ${plan.accommodations || 'N/A'}`,
-      `Modifications: ${plan.modifications || 'N/A'}`,
-      `F. Teacher's Remarks: ${plan.remarks || 'N/A'}`,
-      `G. Reflection: ${plan.reflection || 'N/A'}`
-    ].join('\n');
   }
 
   private escapeHtml(value: string): string {
