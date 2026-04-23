@@ -63,3 +63,6 @@ Thumbs.db
 *.tmp
 *.log
 .claude
+
+GEMINI.md
+claude.md
