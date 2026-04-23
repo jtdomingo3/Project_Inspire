@@ -204,15 +204,24 @@
           <div class="signature-grid">
             <div>
               <strong>PREPARED BY:</strong>
-              <p>{{ currentTeacher() }}</p>
+              <p>
+                <strong>{{ viewingPlan().prepared_by || currentTeacher() }}</strong><br>
+                <span>{{ viewingPlan().prepared_by_designation || 'Teacher' }}</span>
+              </p>
             </div>
             <div>
               <strong>REVIEWED BY:</strong>
-              <p>{{ viewingPlan().reviewed_by || 'Department Head' }}</p>
+              <p>
+                <strong>{{ viewingPlan().reviewed_by || '___________________________' }}</strong><br>
+                <span>{{ viewingPlan().reviewed_by_designation || 'Master Teacher / Head Teacher' }}</span>
+              </p>
             </div>
             <div>
               <strong>NOTED BY:</strong>
-              <p>{{ viewingPlan().noted_by || 'School Principal' }}</p>
+              <p>
+                <strong>{{ viewingPlan().noted_by || '___________________________' }}</strong><br>
+                <span>{{ viewingPlan().noted_by_designation || 'School Principal' }}</span>
+              </p>
             </div>
           </div>
         </div>
@@ -278,8 +287,22 @@
           <label><span>Modifications</span><textarea rows="3" formControlName="modifications"></textarea></label>
           <label><span>Remarks</span><textarea rows="3" formControlName="remarks"></textarea></label>
           <label><span>Reflection</span><textarea rows="3" formControlName="reflection"></textarea></label>
-          <label><span>Reviewed By</span><input type="text" formControlName="reviewed_by"></label>
-          <label><span>Noted By</span><input type="text" formControlName="noted_by"></label>
+          
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-top: 16px;">
+            <div>
+              <label><span>Prepared By</span><input type="text" formControlName="prepared_by"></label>
+              <label><span>Designation</span><input type="text" formControlName="prepared_by_designation"></label>
+            </div>
+            <div>
+              <label><span>Reviewed By</span><input type="text" formControlName="reviewed_by"></label>
+              <label><span>Designation</span><input type="text" formControlName="reviewed_by_designation"></label>
+            </div>
+            <div>
+              <label><span>Noted By</span><input type="text" formControlName="noted_by"></label>
+              <label><span>Designation</span><input type="text" formControlName="noted_by_designation"></label>
+            </div>
+          </div>
+
           <div class="modal-actions">
             <button type="submit" class="btn btn-primary" [disabled]="saving()">{{ saving() ? 'Saving...' : 'Save' }}</button>
             <button type="button" class="btn" (click)="closeModal()">Cancel</button>

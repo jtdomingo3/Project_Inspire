@@ -33,8 +33,12 @@ type ViewPlan = {
   support_types: string;
   delivery_mode: string;
   subcategories: string;
+  prepared_by: string;
+  prepared_by_designation: string;
   reviewed_by: string;
+  reviewed_by_designation: string;
   noted_by: string;
+  noted_by_designation: string;
 };
 
 const emptyViewPlan = (): ViewPlan => ({
@@ -64,8 +68,12 @@ const emptyViewPlan = (): ViewPlan => ({
   support_types: '',
   delivery_mode: '',
   subcategories: '',
+  prepared_by: '',
+  prepared_by_designation: '',
   reviewed_by: '',
-  noted_by: ''
+  reviewed_by_designation: '',
+  noted_by: '',
+  noted_by_designation: ''
 });
 
 @Component({
@@ -118,8 +126,12 @@ export class MyLessonsComponent implements OnInit {
     modifications: [''],
     remarks: [''],
     reflection: [''],
+    prepared_by: [''],
+    prepared_by_designation: [''],
     reviewed_by: [''],
-    noted_by: ['']
+    reviewed_by_designation: [''],
+    noted_by: [''],
+    noted_by_designation: ['']
   });
 
   ngOnInit(): void {
@@ -184,8 +196,12 @@ export class MyLessonsComponent implements OnInit {
       modifications: plan.modifications,
       remarks: plan.remarks,
       reflection: plan.reflection,
+      prepared_by: plan.prepared_by,
+      prepared_by_designation: plan.prepared_by_designation,
       reviewed_by: plan.reviewed_by,
-      noted_by: plan.noted_by
+      reviewed_by_designation: plan.reviewed_by_designation,
+      noted_by: plan.noted_by,
+      noted_by_designation: plan.noted_by_designation
     });
   }
 
@@ -371,11 +387,31 @@ export class MyLessonsComponent implements OnInit {
   <tr><td class="sub-label">F. Teacher&rsquo;s Remarks</td><td class="content-cell">${nl2br(plan.remarks)}</td></tr>
   <tr><td class="sub-label">G. Reflection</td><td class="content-cell">${nl2br(plan.reflection)}</td></tr>
 </table>
-<div class="sig-section">
-  <p>PREPARED BY: <strong>${teacher}</strong></p>
-  <p>REVIEWED BY: <strong>${e(plan.reviewed_by) || '___________________________'}</strong></p>
-  <p>NOTED BY: <strong>${e(plan.noted_by) || '___________________________'}</strong></p>
-</div>
+<table style="width: 100%; border: none; margin-top: 40px; text-align: left; font-family: Arial, sans-serif; font-size: 11px;">
+  <tr>
+    <td style="width: 33%; vertical-align: top; border: none; padding: 0;">
+      <div>PREPARED BY:</div>
+      <div style="margin-top: 40px;">
+        <strong>${e(plan.prepared_by || teacher)}</strong><br>
+        ${e(plan.prepared_by_designation || 'Teacher')}
+      </div>
+    </td>
+    <td style="width: 33%; vertical-align: top; border: none; padding: 0;">
+      <div>REVIEWED BY:</div>
+      <div style="margin-top: 40px;">
+        <strong>${e(plan.reviewed_by) || '___________________________'}</strong><br>
+        ${e(plan.reviewed_by_designation) || 'Master Teacher / Head Teacher'}
+      </div>
+    </td>
+    <td style="width: 33%; vertical-align: top; border: none; padding: 0;">
+      <div>NOTED BY:</div>
+      <div style="margin-top: 40px;">
+        <strong>${e(plan.noted_by) || '___________________________'}</strong><br>
+        ${e(plan.noted_by_designation) || 'School Principal'}
+      </div>
+    </td>
+  </tr>
+</table>
 </div>
 </td></tr></tbody>
 </table>
@@ -590,8 +626,12 @@ export class MyLessonsComponent implements OnInit {
       support_types: this.readPlanField(parsed, 'support_types', lesson.support_types),
       delivery_mode: this.readPlanField(parsed, 'delivery_mode', lesson.delivery_mode),
       subcategories: this.readPlanField(parsed, 'subcategories', lesson.subcategories || ''),
+      prepared_by: this.readPlanField(parsed, 'prepared_by', parsedText.prepared_by || this.currentTeacher() || ''),
+      prepared_by_designation: this.readPlanField(parsed, 'prepared_by_designation', parsedText.prepared_by_designation || ''),
       reviewed_by: this.readPlanField(parsed, 'reviewed_by', parsedText.reviewed_by || ''),
-      noted_by: this.readPlanField(parsed, 'noted_by', parsedText.noted_by || '')
+      reviewed_by_designation: this.readPlanField(parsed, 'reviewed_by_designation', parsedText.reviewed_by_designation || ''),
+      noted_by: this.readPlanField(parsed, 'noted_by', parsedText.noted_by || ''),
+      noted_by_designation: this.readPlanField(parsed, 'noted_by_designation', parsedText.noted_by_designation || '')
     };
   }
 
