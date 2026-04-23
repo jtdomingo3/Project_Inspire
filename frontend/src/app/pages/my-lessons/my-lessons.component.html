@@ -269,7 +269,7 @@
 
   @if (modalMode() === 'edit-content' && selectedLesson()) {
     <div class="modal-backdrop" (click)="closeModal()">
-      <section class="modal-panel large" (click)="$event.stopPropagation()" style="max-width: 800px; max-height: 90vh; overflow-y: auto;">
+      <section class="modal-panel large" (click)="$event.stopPropagation()" style="width: 90vw; max-width: 1200px; max-height: 90vh; overflow-y: auto;">
         <h3>Edit AI Content</h3>
         <form [formGroup]="editContentForm" (ngSubmit)="saveEditContent()" class="edit-form">
           <label><span>Content Standards</span><textarea rows="3" formControlName="content_standards"></textarea></label>
