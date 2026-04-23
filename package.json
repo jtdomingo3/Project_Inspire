@@ -1,6 +1,8 @@
 {
   "name": "project-inspire",
   "version": "1.0.0",
+  "description": "Inclusive education lesson planning application",
+  "author": "Gezyne-Jamir Software Tech",
   "private": true,
   "type": "module",
   "main": "electron/main.mjs",

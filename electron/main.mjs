@@ -159,7 +159,9 @@ async function createMainWindow() {
     await mainWindow.loadURL(resolvedDevUrl.toString());
   } else {
     const indexPath = await resolveFrontendIndex();
-    await mainWindow.loadFile(indexPath);
+    const apiBase = process.env.INSPIRE_API_BASE || '';
+    const query = apiBase ? { inspireApiBase: apiBase } : {};
+    await mainWindow.loadFile(indexPath, { query });
   }
 
   setTimeout(showWindow, 3000);

@@ -1,27 +1,51 @@
 import { HttpInterceptorFn } from '@angular/common/http';
 
-function getApiBaseFromUrl(): string {
-  const apiBaseParam = new URL(globalThis.location.href).searchParams.get('inspireApiBase');
-  return typeof apiBaseParam === 'string' ? apiBaseParam.replace(/\/$/, '') : '';
-}
+const DEFAULT_EMBEDDED_PORT = 3002;
 
-function getNormalizedDesktopBase(): string {
-  const desktopApiBase = (globalThis as { inspireDesktop?: { apiBase?: string } }).inspireDesktop?.apiBase;
-  if (typeof desktopApiBase === 'string' && desktopApiBase.trim()) {
-    return desktopApiBase.replace(/\/$/, '');
+let cachedApiBase: string | null = null;
+
+function resolveApiBase(): string {
+  if (cachedApiBase !== null) {
+    return cachedApiBase;
   }
 
-  return getApiBaseFromUrl();
+  // 1. Try preload bridge (contextBridge.exposeInMainWorld)
+  const desktopApiBase = (globalThis as { inspireDesktop?: { apiBase?: string } }).inspireDesktop?.apiBase;
+  if (typeof desktopApiBase === 'string' && desktopApiBase.trim()) {
+    cachedApiBase = desktopApiBase.replace(/\/$/, '');
+    return cachedApiBase;
+  }
+
+  // 2. Try URL query parameter (passed by Electron loadFile)
+  try {
+    const apiBaseParam = new URL(globalThis.location.href).searchParams.get('inspireApiBase');
+    if (typeof apiBaseParam === 'string' && apiBaseParam.trim()) {
+      cachedApiBase = apiBaseParam.replace(/\/$/, '');
+      return cachedApiBase;
+    }
+  } catch {
+    // URL parsing can fail for unusual file:// paths
+  }
+
+  // 3. Fallback: if running under file:// protocol, use default embedded backend port
+  if (typeof globalThis.location?.protocol === 'string' && globalThis.location.protocol === 'file:') {
+    cachedApiBase = `http://127.0.0.1:${DEFAULT_EMBEDDED_PORT}`;
+    return cachedApiBase;
+  }
+
+  // 4. Running in a normal browser (http://), no rewrite needed
+  cachedApiBase = '';
+  return cachedApiBase;
 }
 
 export const desktopApiInterceptor: HttpInterceptorFn = (request, next) => {
-  const normalizedBase = getNormalizedDesktopBase();
+  const base = resolveApiBase();
 
-  if (!normalizedBase || !request.url.startsWith('/api/')) {
+  if (!base || !request.url.startsWith('/api/')) {
     return next(request);
   }
 
   return next(request.clone({
-    url: `${normalizedBase}${request.url}`
+    url: `${base}${request.url}`
   }));
 };
