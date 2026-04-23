@@ -174,6 +174,14 @@ export class App {
       });
     }
 
+    // Check whether initial setup is still required (no admin account exists).
+    // If so, redirect to the setup wizard regardless of the current route.
+    this.api.checkSetupStatus().subscribe((needed) => {
+      if (needed) {
+        this.router.navigateByUrl('/setup');
+      }
+    });
+
     effect(() => {
       const theme = this.theme();
       this.document.body.setAttribute('data-theme', theme === 'night' ? 'dark' : 'light');

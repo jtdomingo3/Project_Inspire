@@ -1,7 +1,12 @@
 import { decodeToken, extractToken, verifyToken } from './utils/jwt.js';
 
 export function authMiddleware(req, res, next) {
-  const publicPaths = ['/api/auth/login', '/api/health'];
+  // Static files and Angular SPA routes are not API calls – skip auth check.
+  if (!req.path.startsWith('/api')) {
+    return next();
+  }
+
+  const publicPaths = ['/api/auth/login', '/api/health', '/api/setup/status', '/api/setup'];
   if (publicPaths.includes(req.path)) {
     return next();
   }

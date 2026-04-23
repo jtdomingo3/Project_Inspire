@@ -1,0 +1,73 @@
+appId: com.inspireph.project-inspire
+productName: Project INSPIRE
+copyright: Copyright © 2025 Project INSPIRE Team
+
+# Entry point – must match "main" in package.json
+main: electron/main.cjs
+
+# Output directory for the installer packages
+directories:
+  output: dist/installer
+
+# Files included inside the packaged app
+files:
+  - electron/**
+  - backend/src/**
+  - backend/data/.gitkeep
+  - backend/package.json
+  - frontend/dist/frontend/browser/**
+  - package.json
+  # Exclude the live database – it is created at runtime
+  - "!backend/data/inspire.db"
+
+# Include node_modules for the backend (outside asar for native modules)
+extraResources:
+  - from: backend/node_modules
+    to: backend/node_modules
+    filter:
+      - "**/*"
+      - "!**/test/**"
+      - "!**/tests/**"
+      - "!**/*.md"
+      - "!**/.eslintrc*"
+
+# Unpack native modules and writable data directory from the asar archive
+asarUnpack:
+  - backend/node_modules/**
+  - backend/data/**
+
+# ── Windows ──────────────────────────────────────────────────────────────────
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+
+nsis:
+  # Show a multi-page installer with a license agreement page
+  oneClick: false
+  allowDirectoryChange: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: Project INSPIRE
+  # Path to the license file displayed during installation
+  license: LICENSE.txt
+
+# ── macOS ─────────────────────────────────────────────────────────────────────
+mac:
+  target:
+    - target: dmg
+      arch:
+        - x64
+        - arm64
+
+dmg:
+  # The license sheet is displayed when the user opens the DMG
+  license: LICENSE.txt
+
+# ── Linux ─────────────────────────────────────────────────────────────────────
+linux:
+  target:
+    - target: AppImage
+      arch:
+        - x64

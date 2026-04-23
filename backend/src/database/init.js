@@ -22,6 +22,9 @@ function promisifyDb(database) {
 }
 
 export async function initializeDatabase() {
+  // Ensure the data directory exists (important for the packaged Electron app)
+  await fs.mkdir(path.dirname(dbPath), { recursive: true });
+
   return new Promise((resolve, reject) => {
     db = new sqlite3.Database(dbPath, (err) => {
       if (err) {

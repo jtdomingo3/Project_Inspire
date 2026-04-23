@@ -9,6 +9,11 @@ export const routes: Routes = [
 		redirectTo: 'dashboard'
 	},
 	{
+		// First-run setup wizard – accessible without authentication
+		path: 'setup',
+		loadComponent: () => import('./pages/setup/setup.component').then((c) => c.SetupComponent)
+	},
+	{
 		path: 'dashboard',
 		loadComponent: () => import('./pages/dashboard/dashboard.component').then((component) => component.DashboardComponent)
 	},

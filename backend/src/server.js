@@ -1,5 +1,6 @@
 import dotenv from 'dotenv';
 import fs from 'node:fs/promises';
+import { existsSync } from 'node:fs';
 import path from 'node:path';
 import cors from 'cors';
 import express from 'express';
@@ -50,6 +51,61 @@ app.use((request, response, next) => {
   }
   next();
 });
+
+// ── First-run setup endpoints (no authentication required) ───────────────────
+// Returns whether the initial admin account still needs to be created.
+app.get('/api/setup/status', async (_request, response) => {
+  try {
+    const users = await db.listUsers();
+    sendJson(response, 200, { needed: users.length === 0 });
+  } catch (error) {
+    sendJson(response, 500, { needed: false, error: String(error.message || error) });
+  }
+});
+
+// Creates the first admin account. Only works when no users exist.
+app.post('/api/setup', async (request, response) => {
+  try {
+    const existingUsers = await db.listUsers();
+    if (existingUsers.length > 0) {
+      sendJson(response, 403, { success: false, error: 'Setup has already been completed.' });
+      return;
+    }
+
+    const { username, password, display_name, affiliated_school } = request.body || {};
+    const trimmedUsername = (username || '').trim().toLowerCase();
+    const trimmedPassword = (password || '').trim();
+    const trimmedDisplayName = (display_name || '').trim() || trimmedUsername;
+    const trimmedSchool = (affiliated_school || '').trim();
+
+    if (!trimmedUsername || !trimmedPassword) {
+      sendJson(response, 400, { success: false, error: 'Username and password are required.' });
+      return;
+    }
+
+    if (trimmedPassword.length < 8) {
+      sendJson(response, 400, { success: false, error: 'Password must be at least 8 characters.' });
+      return;
+    }
+
+    const passwordHash = await hashPassword(trimmedPassword);
+    const user = await db.upsertUser({
+      username: trimmedUsername,
+      password_hash: passwordHash,
+      display_name: trimmedDisplayName,
+      affiliated_school: trimmedSchool,
+      role: 'admin',
+      active: true,
+    });
+
+    const token = generateToken(user.id, user.username, user.role);
+    sendJson(response, 201, { success: true, user: sanitizeUser(user), token });
+  } catch (error) {
+    handleRouteError(response, error, 400);
+  }
+});
+// ─────────────────────────────────────────────────────────────────────────────
+
 app.use(authMiddleware);
 app.use((request, response, next) => {
   const start = Date.now();
@@ -875,6 +931,22 @@ app.post('/api/admin/reset', roleMiddleware(['admin']), async (_request, respons
     handleRouteError(response, error, 500);
   }
 });
+
+// ── Serve Angular static files (fixes white screen in packaged Electron app) ─
+// When the Angular front-end has been built, serve its output directory so that
+// Electron (and any browser pointed at localhost) can load the SPA.  All paths
+// that do NOT start with /api are handled as SPA routes and served index.html.
+const angularDistPath = path.join(projectRoot, 'frontend', 'dist', 'frontend', 'browser');
+if (existsSync(angularDistPath)) {
+  app.use(express.static(angularDistPath));
+  app.get('*', (request, response, next) => {
+    if (request.path.startsWith('/api')) {
+      return next();
+    }
+    response.sendFile(path.join(angularDistPath, 'index.html'));
+  });
+}
+// ─────────────────────────────────────────────────────────────────────────────
 
 app.use((_request, response) => {
   sendJson(response, 404, { error: 'Not found' });

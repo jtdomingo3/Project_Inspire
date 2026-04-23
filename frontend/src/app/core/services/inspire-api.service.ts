@@ -1,6 +1,6 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { map, Observable } from 'rxjs';
+import { catchError, map, Observable, of } from 'rxjs';
 
 import {
   AdminStats,
@@ -294,5 +294,29 @@ export class InspireApiService {
 
   canManageAccounts(role: string): boolean {
     return role === 'admin';
+  }
+
+  /** Returns true when no users exist yet and initial setup is required. */
+  checkSetupStatus(): Observable<boolean> {
+    return this.http.get<{ needed: boolean }>('/api/setup/status').pipe(
+      map((r) => r.needed ?? false),
+      catchError(() => of(false))
+    );
+  }
+
+  /**
+   * Creates the first administrator account.
+   * Only succeeds when no users exist in the database.
+   */
+  runSetup(payload: {
+    username: string;
+    password: string;
+    display_name: string;
+    affiliated_school?: string;
+  }): Observable<{ success: boolean; user?: UserAccount; token?: string; error?: string }> {
+    return this.http.post<{ success: boolean; user?: UserAccount; token?: string; error?: string }>(
+      '/api/setup',
+      payload
+    );
   }
 }

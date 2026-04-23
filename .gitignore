@@ -27,6 +27,14 @@ dist/
 build/
 coverage/
 
+# SQLite databases (created at runtime – not committed)
+*.db
+*.db-shm
+*.db-wal
+
+# Electron build output
+dist/installer/
+
 # ---------- Python ----------
 __pycache__/
 **/__pycache__/

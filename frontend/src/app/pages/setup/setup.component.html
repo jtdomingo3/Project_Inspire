@@ -1,0 +1,98 @@
+<div class="setup-wrapper">
+  <div class="setup-card">
+    <div class="setup-logo">
+      <span class="setup-logo-icon">🎓</span>
+      <h1>Project INSPIRE</h1>
+    </div>
+
+    <h2>Initial Setup</h2>
+    <p class="setup-subtitle">
+      Welcome! Create an administrator account to get started.
+      This account will have full access to manage the application.
+    </p>
+
+    @if (success()) {
+      <div class="alert alert-success">
+        ✅ Administrator account created successfully!
+        Redirecting to the application…
+      </div>
+    } @else {
+      <form (ngSubmit)="submit()" autocomplete="off">
+        <div class="form-group">
+          <label for="setup-username">Username <span class="required">*</span></label>
+          <input
+            id="setup-username"
+            type="text"
+            [(ngModel)]="username"
+            name="username"
+            placeholder="e.g. admin"
+            autocomplete="username"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="setup-display-name">Full Name</label>
+          <input
+            id="setup-display-name"
+            type="text"
+            [(ngModel)]="displayName"
+            name="displayName"
+            placeholder="e.g. Juan dela Cruz"
+            autocomplete="name"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="setup-school">School / Organization</label>
+          <input
+            id="setup-school"
+            type="text"
+            [(ngModel)]="affiliatedSchool"
+            name="affiliatedSchool"
+            placeholder="e.g. San Felipe National High School"
+            autocomplete="organization"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="setup-password">Password <span class="required">*</span></label>
+          <input
+            id="setup-password"
+            type="password"
+            [(ngModel)]="password"
+            name="password"
+            placeholder="At least 8 characters"
+            autocomplete="new-password"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="setup-confirm">Confirm Password <span class="required">*</span></label>
+          <input
+            id="setup-confirm"
+            type="password"
+            [(ngModel)]="confirmPassword"
+            name="confirmPassword"
+            placeholder="Re-enter your password"
+            autocomplete="new-password"
+            required
+          />
+        </div>
+
+        @if (error()) {
+          <div class="alert alert-error">{{ error() }}</div>
+        }
+
+        <button
+          class="btn-primary"
+          type="submit"
+          [disabled]="loading()"
+        >
+          {{ loading() ? 'Creating account…' : 'Create Administrator Account' }}
+        </button>
+      </form>
+    }
+  </div>
+</div>

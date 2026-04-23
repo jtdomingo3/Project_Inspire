@@ -1,0 +1,68 @@
+END-USER LICENSE AGREEMENT
+Project INSPIRE
+Copyright © 2025 Project INSPIRE Team. All rights reserved.
+
+PLEASE READ THIS END-USER LICENSE AGREEMENT ("AGREEMENT") CAREFULLY BEFORE
+INSTALLING OR USING PROJECT INSPIRE ("SOFTWARE"). BY CLICKING "I AGREE" OR
+BY INSTALLING, COPYING, OR OTHERWISE USING THE SOFTWARE, YOU AGREE TO BE
+BOUND BY THE TERMS OF THIS AGREEMENT. IF YOU DO NOT AGREE TO THESE TERMS,
+DO NOT INSTALL OR USE THE SOFTWARE.
+
+1. GRANT OF LICENSE
+   Subject to the terms and conditions of this Agreement, the Project INSPIRE
+   Team grants you a limited, non-exclusive, non-transferable license to install
+   and use the Software solely for your personal, non-commercial, educational
+   purposes.
+
+2. RESTRICTIONS
+   You may not:
+   a) Copy, modify, or distribute the Software or any portion thereof;
+   b) Reverse-engineer, decompile, or disassemble the Software;
+   c) Rent, lease, or lend the Software to third parties;
+   d) Remove or alter any proprietary notices or labels on the Software;
+   e) Use the Software for any unlawful purpose.
+
+3. INTELLECTUAL PROPERTY
+   The Software and all copies thereof are proprietary to the Project INSPIRE
+   Team and title thereto remains with the Project INSPIRE Team. All rights in
+   the Software not specifically granted in this Agreement are reserved to the
+   Project INSPIRE Team.
+
+4. DATA AND PRIVACY
+   The Software stores data locally on your device. No data is transmitted to
+   external servers unless you explicitly configure an AI model API key. You
+   are responsible for safeguarding any credentials and personal data stored
+   within the Software.
+
+5. DISCLAIMER OF WARRANTIES
+   THE SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT. THE PROJECT INSPIRE
+   TEAM DOES NOT WARRANT THAT THE SOFTWARE WILL BE ERROR-FREE OR UNINTERRUPTED.
+
+6. LIMITATION OF LIABILITY
+   IN NO EVENT SHALL THE PROJECT INSPIRE TEAM BE LIABLE FOR ANY INDIRECT,
+   INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+   NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) ARISING OUT OF OR IN CONNECTION
+   WITH THE USE OR INABILITY TO USE THE SOFTWARE, EVEN IF ADVISED OF THE
+   POSSIBILITY OF SUCH DAMAGES.
+
+7. TERMINATION
+   This Agreement is effective until terminated. Your rights under this
+   Agreement will terminate automatically without notice if you fail to comply
+   with any term of this Agreement. Upon termination you must destroy all copies
+   of the Software in your possession.
+
+8. GOVERNING LAW
+   This Agreement shall be governed by and construed in accordance with
+   applicable law. Any disputes arising under this Agreement shall be resolved
+   in the appropriate courts of competent jurisdiction.
+
+9. ENTIRE AGREEMENT
+   This Agreement constitutes the entire agreement between you and the Project
+   INSPIRE Team regarding the Software and supersedes all prior agreements,
+   representations, and understandings.
+
+By installing and using Project INSPIRE, you acknowledge that you have read
+this Agreement, understand it, and agree to be bound by its terms.
