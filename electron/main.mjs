@@ -1,6 +1,7 @@
 import { app, BrowserWindow } from 'electron';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 let mainWindow = null;
 let backendStop = async () => {};
@@ -70,7 +71,10 @@ async function startEmbeddedBackend() {
   process.env.INSPIRE_REFERENCE_DIR = referenceDir;
   process.env.INSPIRE_DB_PATH = path.join(dataDir, 'inspire.db');
 
-  const backendModule = await import('../backend/src/server.js');
+  const backendEntryPath = app.isPackaged
+    ? path.join(process.resourcesPath, 'backend', 'src', 'server.js')
+    : path.join(app.getAppPath(), 'backend', 'src', 'server.js');
+  const backendModule = await import(pathToFileURL(backendEntryPath).href);
   const preferredPort = Number(process.env.INSPIRE_EMBEDDED_BACKEND_PORT || 3002);
 
   let server;

@@ -1,16 +1,16 @@
 appId: com.projectinspire.desktop
 productName: Project INSPIRE
 directories:
-  output: dist/packages
+  output: dist/installer-output
 files:
   - package.json
   - electron/**/*
-  - backend/src/**/*
-  - backend/package.json
-  - backend/node_modules/**/*
   - frontend/dist/frontend/**/*
   - frontend/public/**/*
   - reference/**/*
+extraResources:
+  - from: backend
+    to: backend
 asarUnpack:
   - backend/node_modules/sqlite3/**/*
 win:
@@ -22,6 +22,9 @@ win:
   artifactName: ${productName}-Setup-${version}.${ext}
 nsis:
   oneClick: false
+  perMachine: false
+  allowElevation: true
+  selectPerMachineByDefault: false
   allowToChangeInstallationDirectory: true
   installerIcon: frontend/public/icon-taskbar.ico
   uninstallerIcon: frontend/public/icon-taskbar.ico

@@ -60,6 +60,8 @@ This command automatically starts the Angular dev server on a free local port an
    Terminal B (PowerShell):
    $env:INSPIRE_DEV_SERVER_URL='http://localhost:4201'; npx --no-install electron .
 
+For Windows installer build instructions, see [docs/WINDOWS_INSTALLER.md](docs/WINDOWS_INSTALLER.md).
+
 Default local URLs:
 
 - Frontend: http://localhost:4200
@@ -92,3 +94,6 @@ The root `.gitignore` is configured to ignore:
 - Build outputs, logs, lockfiles, and temporary editor files
 
 If you need to version selected documents from `reference/`, remove or adjust that rule before commit.
+
+- **Windows installer output:** `dist/installer-output/`
+

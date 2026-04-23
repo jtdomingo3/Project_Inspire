@@ -12,7 +12,18 @@
     "electron:test": "node scripts/start-electron-dev.js",
     "icon:win": "node scripts/generate-win-icon.js",
     "build:frontend": "npm --prefix frontend run build",
-    "build:electron": "npm run icon:win && npm run build:frontend && electron-builder --config electron-builder.yml"
+    "build:installer": "npm run icon:win && npm run build:frontend && electron-builder --config electron-builder.yml",
+    "build:electron": "npm run build:installer"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.3",
+    "mammoth": "^1.8.0",
+    "pdf-parse": "^1.1.1",
+    "sqlite3": "^6.0.1"
   },
   "devDependencies": {
     "concurrently": "^9.2.1",
