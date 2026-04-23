@@ -33,6 +33,8 @@ type ViewPlan = {
   support_types: string;
   delivery_mode: string;
   subcategories: string;
+  reviewed_by: string;
+  noted_by: string;
 };
 
 const emptyViewPlan = (): ViewPlan => ({
@@ -61,7 +63,9 @@ const emptyViewPlan = (): ViewPlan => ({
   indicators: '',
   support_types: '',
   delivery_mode: '',
-  subcategories: ''
+  subcategories: '',
+  reviewed_by: '',
+  noted_by: ''
 });
 
 @Component({
@@ -80,7 +84,7 @@ export class MyLessonsComponent implements OnInit {
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
   readonly lessons = signal<LessonRecord[]>([]);
-  readonly modalMode = signal<'edit' | null>(null);
+  readonly modalMode = signal<'edit' | 'edit-content' | null>(null);
   readonly selectedLesson = signal<LessonRecord | null>(null);
   readonly viewingLesson = signal<LessonRecord | null>(null);
   readonly viewingPlan = signal<ViewPlan>(emptyViewPlan());
@@ -96,6 +100,26 @@ export class MyLessonsComponent implements OnInit {
     difficulty: ['', Validators.required],
     objectives: ['', Validators.required],
     status: ['', Validators.required]
+  });
+
+  readonly editContentForm = this.fb.group({
+    content_standards: [''],
+    performance_standards: [''],
+    competencies: [''],
+    content: [''],
+    integration: [''],
+    resources: [''],
+    prior_knowledge: [''],
+    lesson_purpose: [''],
+    developing: [''],
+    generalization: [''],
+    evaluation: [''],
+    accommodations: [''],
+    modifications: [''],
+    remarks: [''],
+    reflection: [''],
+    reviewed_by: [''],
+    noted_by: ['']
   });
 
   ngOnInit(): void {
@@ -135,6 +159,33 @@ export class MyLessonsComponent implements OnInit {
       difficulty: lesson.difficulty || '',
       objectives: lesson.objectives || '',
       status: lesson.status || 'draft'
+    });
+  }
+
+  openEditContent(): void {
+    const lesson = this.viewingLesson();
+    if (!lesson) return;
+    this.selectedLesson.set(lesson);
+    this.modalMode.set('edit-content');
+    const plan = this.viewingPlan();
+    this.editContentForm.reset({
+      content_standards: plan.content_standards,
+      performance_standards: plan.performance_standards,
+      competencies: plan.competencies,
+      content: plan.content,
+      integration: plan.integration,
+      resources: plan.resources,
+      prior_knowledge: plan.prior_knowledge,
+      lesson_purpose: plan.lesson_purpose,
+      developing: plan.developing,
+      generalization: plan.generalization,
+      evaluation: plan.evaluation,
+      accommodations: plan.accommodations,
+      modifications: plan.modifications,
+      remarks: plan.remarks,
+      reflection: plan.reflection,
+      reviewed_by: plan.reviewed_by,
+      noted_by: plan.noted_by
     });
   }
 
@@ -431,8 +482,8 @@ export class MyLessonsComponent implements OnInit {
 </table>
 <div class="sig-section">
   <p>PREPARED BY: <strong>${teacher}</strong></p>
-  <p>REVIEWED BY: ___________________________</p>
-  <p>NOTED BY: ___________________________</p>
+  <p>REVIEWED BY: <strong>${e(plan.reviewed_by) || '___________________________'}</strong></p>
+  <p>NOTED BY: <strong>${e(plan.noted_by) || '___________________________'}</strong></p>
 </div>
 </div>
 </td></tr></tbody>
@@ -460,7 +511,47 @@ export class MyLessonsComponent implements OnInit {
         this.closeModal();
       },
       error: (error) => {
-        this.error.set(this.api.describeError(error));
+        window.alert(this.api.describeError(error));
+        this.saving.set(false);
+      }
+    });
+  }
+
+  saveEditContent(): void {
+    const lesson = this.selectedLesson();
+    if (!lesson) return;
+
+    this.saving.set(true);
+    const values = this.editContentForm.getRawValue();
+    
+    // Merge new values into generated_parsed
+    const currentParsed = (typeof lesson.generated_parsed === 'object' && lesson.generated_parsed !== null) 
+      ? { ...lesson.generated_parsed } 
+      : {};
+      
+    const updatedParsed = {
+      ...currentParsed,
+      ...values
+    };
+
+    const payload = {
+      ...lesson,
+      generated_parsed: updatedParsed
+    };
+
+    this.api.updateLesson(lesson.id, payload).subscribe({
+      next: (response) => {
+        this.lessons.update((list) => list.map((l) => l.id === lesson.id ? response.lesson : l));
+        this.closeModal();
+        this.saving.set(false);
+        // If viewing this lesson, update the view as well
+        if (this.viewingLesson()?.id === lesson.id) {
+          this.viewingLesson.set(response.lesson);
+          this.viewingPlan.set(this.buildViewPlan(response.lesson));
+        }
+      },
+      error: (error) => {
+        window.alert(this.api.describeError(error));
         this.saving.set(false);
       }
     });
@@ -607,7 +698,9 @@ export class MyLessonsComponent implements OnInit {
       indicators: this.readPlanField(parsed, 'indicators', lesson.indicators),
       support_types: this.readPlanField(parsed, 'support_types', lesson.support_types),
       delivery_mode: this.readPlanField(parsed, 'delivery_mode', lesson.delivery_mode),
-      subcategories: this.readPlanField(parsed, 'subcategories', lesson.subcategories || '')
+      subcategories: this.readPlanField(parsed, 'subcategories', lesson.subcategories || ''),
+      reviewed_by: this.readPlanField(parsed, 'reviewed_by', parsedText.reviewed_by || ''),
+      noted_by: this.readPlanField(parsed, 'noted_by', parsedText.noted_by || '')
     };
   }
 

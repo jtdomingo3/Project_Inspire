@@ -64,6 +64,7 @@
           </div>
           <div class="lesson-view-actions">
             <button type="button" class="action-button" (click)="closeView()">Close View</button>
+            <button type="button" class="action-button" (click)="openEditContent()">Edit Content</button>
             <button type="button" class="action-button" (click)="printLesson()">Print</button>
             <button type="button" class="action-button" (click)="exportPdf()">Export PDF</button>
           </div>
@@ -208,11 +209,11 @@
             </div>
             <div>
               <strong>REVIEWED BY:</strong>
-              <p>Department Head</p>
+              <p>{{ viewingPlan().reviewed_by || 'Department Head' }}</p>
             </div>
             <div>
               <strong>NOTED BY:</strong>
-              <p>School Principal</p>
+              <p>{{ viewingPlan().noted_by || 'School Principal' }}</p>
             </div>
           </div>
         </div>
@@ -220,7 +221,7 @@
     }
   }
 
-  @if (modalMode() && selectedLesson()) {
+  @if (modalMode() === 'edit' && selectedLesson()) {
     <div class="modal-backdrop" (click)="closeModal()">
       <section class="modal-panel" (click)="$event.stopPropagation()">
         <h3>Edit Lesson</h3>
@@ -249,6 +250,37 @@
             <span>Objectives</span>
             <textarea rows="3" formControlName="objectives"></textarea>
           </label>
+          <div class="modal-actions">
+            <button type="submit" class="btn btn-primary" [disabled]="saving()">{{ saving() ? 'Saving...' : 'Save' }}</button>
+            <button type="button" class="btn" (click)="closeModal()">Cancel</button>
+          </div>
+        </form>
+      </section>
+    </div>
+  }
+
+  @if (modalMode() === 'edit-content' && selectedLesson()) {
+    <div class="modal-backdrop" (click)="closeModal()">
+      <section class="modal-panel large" (click)="$event.stopPropagation()" style="max-width: 800px; max-height: 90vh; overflow-y: auto;">
+        <h3>Edit AI Content</h3>
+        <form [formGroup]="editContentForm" (ngSubmit)="saveEditContent()" class="edit-form">
+          <label><span>Content Standards</span><textarea rows="3" formControlName="content_standards"></textarea></label>
+          <label><span>Performance Standards</span><textarea rows="3" formControlName="performance_standards"></textarea></label>
+          <label><span>Competencies</span><textarea rows="3" formControlName="competencies"></textarea></label>
+          <label><span>Content</span><textarea rows="3" formControlName="content"></textarea></label>
+          <label><span>Integration</span><textarea rows="3" formControlName="integration"></textarea></label>
+          <label><span>Resources</span><textarea rows="3" formControlName="resources"></textarea></label>
+          <label><span>Activating Prior Knowledge</span><textarea rows="3" formControlName="prior_knowledge"></textarea></label>
+          <label><span>Lesson Purpose</span><textarea rows="3" formControlName="lesson_purpose"></textarea></label>
+          <label><span>Developing</span><textarea rows="3" formControlName="developing"></textarea></label>
+          <label><span>Generalization</span><textarea rows="3" formControlName="generalization"></textarea></label>
+          <label><span>Evaluation</span><textarea rows="3" formControlName="evaluation"></textarea></label>
+          <label><span>Accommodations</span><textarea rows="3" formControlName="accommodations"></textarea></label>
+          <label><span>Modifications</span><textarea rows="3" formControlName="modifications"></textarea></label>
+          <label><span>Remarks</span><textarea rows="3" formControlName="remarks"></textarea></label>
+          <label><span>Reflection</span><textarea rows="3" formControlName="reflection"></textarea></label>
+          <label><span>Reviewed By</span><input type="text" formControlName="reviewed_by"></label>
+          <label><span>Noted By</span><input type="text" formControlName="noted_by"></label>
           <div class="modal-actions">
             <button type="submit" class="btn btn-primary" [disabled]="saving()">{{ saving() ? 'Saving...' : 'Save' }}</button>
             <button type="button" class="btn" (click)="closeModal()">Cancel</button>
