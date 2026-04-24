@@ -222,6 +222,7 @@ export class MyLessonsComponent implements OnInit {
     });
   }
 
+
   printLesson(): void {
     const lesson = this.viewingLesson();
     if (!lesson) {
@@ -242,52 +243,6 @@ export class MyLessonsComponent implements OnInit {
     setTimeout(() => printWindow.print(), 400);
   }
 
-  async exportToPDF(): Promise<void> {
-    const element = document.getElementById('lesson-draft-content');
-    if (!element) {
-      return;
-    }
-
-    try {
-      this.saving.set(true);
-      const canvas = await html2canvas(element, {
-        scale: 2,
-        useCORS: true,
-        logging: true,
-        backgroundColor: '#ffffff'
-      });
-
-      const imgData = canvas.toDataURL('image/png');
-
-      const pdf = new jsPDF('p', 'mm', 'a4');
-
-      const imgProps = pdf.getImageProperties(imgData);
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-
-      const filename = `${this.viewingLesson()?.title || 'lesson'}-draft.pdf`;
-      
-      const blob = pdf.output('blob');
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-
-      setTimeout(() => {
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-      }, 100);
-    } catch (err) {
-      console.error('exportToPDF: Error caught', err);
-      window.alert('Failed to generate PDF. Please try again.');
-    } finally {
-      this.saving.set(false);
-    }
-  }
 
   exportToWord(): void {
     const element = document.getElementById('lesson-draft-content');

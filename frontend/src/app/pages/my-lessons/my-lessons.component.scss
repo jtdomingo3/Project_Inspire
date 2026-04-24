@@ -111,6 +111,15 @@
   max-height: 72vh;
   overflow: auto;
   padding: 16px;
+
+  &.clickable {
+    cursor: pointer;
+    transition: box-shadow 0.2s;
+
+    &:hover {
+      box-shadow: 0 0 0 2px var(--primary-light);
+    }
+  }
 }
 
 .dlp-grid {

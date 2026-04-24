@@ -41,7 +41,6 @@
                 <td>
                   <div class="action-group">
                     <button type="button" class="action-button" (click)="openView(lesson)">View</button>
-                    <button type="button" class="action-button" (click)="openEdit(lesson)">Edit</button>
                     <button type="button" class="action-button danger" [disabled]="isDeleting(lesson.id)" (click)="deleteLesson(lesson)">
                       {{ isDeleting(lesson.id) ? 'Deleting...' : 'Delete' }}
                     </button>
@@ -64,14 +63,12 @@
           </div>
           <div class="lesson-view-actions">
             <button type="button" class="action-button" (click)="closeView()">Close View</button>
-            <button type="button" class="action-button" (click)="openEditContent()">Edit Content</button>
-            <button type="button" class="action-button" (click)="exportToWord()">Save to Word</button>
-            <button type="button" class="action-button" (click)="exportToPDF()">Save to PDF</button>
-            <button type="button" class="action-button" (click)="printLesson()">Print</button>
+            <button type="button" class="action-button" (click)="exportToWord()">Save Draft to Word</button>
+            <button type="button" class="action-button" (click)="printLesson()">Print Final</button>
           </div>
         </div>
 
-        <div class="lesson-content" id="lesson-draft-content">
+        <div class="lesson-content clickable" id="lesson-draft-content" (click)="openEditContent()" title="Click to edit content">
           <div class="dlp-grid">
             <div><strong>School:</strong> {{ currentSchool() }}</div>
             <div><strong>Grade Level:</strong> {{ viewingPlan().grade || 'N/A' }}</div>
