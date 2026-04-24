@@ -174,6 +174,15 @@ export interface UserAccount {
   username: string;
   display_name: string;
   affiliated_school?: string;
+  designation?: string;
+  employee_id?: string;
+  supervisor?: string;
+  principal?: string;
+  subject_area?: string;
+  grade_level_handled?: string;
+  years_experience?: number;
+  special_education_training?: boolean;
+  research_consent?: boolean;
   role: 'teacher' | 'researcher' | 'admin' | string;
   active: boolean;
   created_at?: string;
@@ -243,6 +252,7 @@ export interface AdminStats {
   user_id: number;
   username: string;
   display_name: string;
+  affiliated_school?: string;
   lessons_created: number;
   reflections_submitted: number;
   observations_submitted: number;

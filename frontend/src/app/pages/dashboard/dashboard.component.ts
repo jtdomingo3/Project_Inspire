@@ -89,6 +89,7 @@ export class DashboardComponent implements OnInit {
       user_id: 0,
       username: '',
       display_name: '',
+      affiliated_school: '',
       lessons_created: this.lessons().length,
       reflections_submitted: 0,
       observations_submitted: 0,

@@ -369,4 +369,18 @@ export class InspireApiService {
   canManageAccounts(role: string): boolean {
     return role === 'admin';
   }
+
+  getProfile(): Observable<UserAccount> {
+    return this.http.get<{ success: boolean; user: UserAccount }>('/api/profile').pipe(
+      map(response => response.user)
+    );
+  }
+
+  updateProfile(payload: Partial<UserAccount>): Observable<{ success: boolean; user: UserAccount }> {
+    return this.http.put<{ success: boolean; user: UserAccount }>('/api/profile', payload);
+  }
+
+  changePassword(current_password: string, new_password: string): Observable<{ success: boolean; error?: string }> {
+    return this.http.put<{ success: boolean; error?: string }>('/api/profile/password', { current_password, new_password });
+  }
 }

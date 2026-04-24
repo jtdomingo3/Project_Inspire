@@ -143,10 +143,19 @@ export function validateUserPayload(payload) {
   return {
     ...payload,
     username: requireString(payload.username, 'username').toLowerCase(),
-    password: requireString(payload.password, 'password'),
+    password: payload.password ? requireString(payload.password, 'password') : undefined,
     display_name: requireString(payload.display_name, 'display_name'),
     role: requireEnum(payload.role, 'role', ['teacher', 'researcher', 'admin']),
     affiliated_school: optionalString(payload.affiliated_school),
+    designation: optionalString(payload.designation),
+    employee_id: optionalString(payload.employee_id),
+    supervisor: optionalString(payload.supervisor),
+    principal: optionalString(payload.principal),
+    subject_area: optionalString(payload.subject_area),
+    grade_level_handled: optionalString(payload.grade_level_handled),
+    years_experience: payload.years_experience !== undefined ? requireIntegerInRange(payload.years_experience, 'years_experience', 0, 100) : 0,
+    special_education_training: payload.special_education_training === true,
+    research_consent: payload.research_consent === true,
     active: payload.active !== false
   };
 }

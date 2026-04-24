@@ -1,27 +1,174 @@
 <section class="page-shell">
-  <div class="card profile-card">
-    <p class="eyebrow">Profile</p>
-    <h2>My Profile</h2>
+  <div class="view-header">
+    <h2 class="section-title">My Profile & Account</h2>
+    <div class="actions">
+      <button class="btn btn-secondary" (click)="toggleEdit()" [disabled]="isSaving()">
+        {{ isEditing() ? 'Cancel' : '✏️ Edit Profile' }}
+      </button>
+      <button class="btn btn-secondary" (click)="toggleChangePassword()" [disabled]="isSaving()">
+        {{ isChangingPassword() ? 'Cancel' : '🔑 Change Password' }}
+      </button>
+    </div>
+  </div>
 
-    @if (auth(); as user) {
-      <dl class="profile-grid">
-        <div>
-          <dt>Name</dt>
-          <dd>{{ user.name }}</dd>
+  @if (isChangingPassword()) {
+    <div class="card profile-card" style="margin-top: 1rem; max-width: 500px;">
+      <h3 class="card-title">Change Password</h3>
+      <form [formGroup]="passwordForm" (ngSubmit)="changePassword()">
+        <div class="form-group">
+          <label>Current Password</label>
+          <input type="password" formControlName="current_password" placeholder="Enter current password">
         </div>
-        <div>
-          <dt>Username</dt>
-          <dd>{{ user.username }}</dd>
+        <div class="form-group">
+          <label>New Password</label>
+          <input type="password" formControlName="new_password" placeholder="Min 6 characters">
         </div>
-        <div>
-          <dt>Role</dt>
-          <dd>{{ user.roleLabel }}</dd>
+        <div class="form-group">
+          <label>Confirm New Password</label>
+          <input type="password" formControlName="confirm_password" placeholder="Confirm new password">
+          @if (passwordForm.hasError('mismatch') && passwordForm.get('confirm_password')?.touched) {
+            <p class="error-text">Passwords do not match</p>
+          }
         </div>
-        <div>
-          <dt>Access scope</dt>
-          <dd>{{ user.role === 'admin' ? 'Full admin access' : user.role === 'researcher' ? 'Research and analytics access' : 'Teacher workspace access' }}</dd>
+        <div class="form-actions" style="margin-top: 1.5rem; text-align: right;">
+          <button type="submit" class="btn btn-primary" [disabled]="passwordForm.invalid || isSaving()">
+            {{ isSaving() ? 'Saving...' : 'Update Password' }}
+          </button>
         </div>
-      </dl>
+      </form>
+    </div>
+  }
+
+  <div class="card profile-card" [class.editing]="isEditing()" style="margin-top: 1rem;">
+    @if (user(); as u) {
+      <form [formGroup]="profileForm" (ngSubmit)="saveProfile()">
+        <div class="profile-layout">
+          <!-- Personal Header -->
+          <div class="profile-header">
+            <div class="avatar-placeholder">👤</div>
+            <div class="user-info">
+              @if (isEditing()) {
+                <input type="text" formControlName="display_name" class="h2-input" placeholder="Full Name">
+              } @else {
+                <h2>{{ u.display_name }}</h2>
+              }
+              <p class="muted">{{ u.username }} · {{ u.role }}</p>
+              
+              @if (isEditing()) {
+                <div class="form-group" style="margin-top: 0.5rem;">
+                  <label>Affiliated School</label>
+                  <input type="text" formControlName="affiliated_school" placeholder="School Name">
+                </div>
+              } @else {
+                <p class="school-label">🏫 {{ u.affiliated_school || 'No school assigned' }}</p>
+              }
+            </div>
+          </div>
+
+          <hr class="divider">
+
+          <!-- Details Grid -->
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Position / Designation</label>
+              @if (isEditing()) {
+                <input type="text" formControlName="designation" placeholder="e.g., Master Teacher I">
+              } @else {
+                <p class="detail-value">{{ u.designation || 'Not set' }}</p>
+              }
+            </div>
+
+            <div class="form-group">
+              <label>Employee ID</label>
+              @if (isEditing()) {
+                <input type="text" formControlName="employee_id" placeholder="e.g., SFNHS-1234">
+              } @else {
+                <p class="detail-value">{{ u.employee_id || 'Not set' }}</p>
+              }
+            </div>
+
+            <div class="form-group">
+              <label>Subject Area</label>
+              @if (isEditing()) {
+                <input type="text" formControlName="subject_area" placeholder="e.g., Mathematics">
+              } @else {
+                <p class="detail-value">{{ u.subject_area || 'Not set' }}</p>
+              }
+            </div>
+
+            <div class="form-group">
+              <label>Grade Level Handled</label>
+              @if (isEditing()) {
+                <input type="text" formControlName="grade_level_handled" placeholder="e.g., Grade 8">
+              } @else {
+                <p class="detail-value">{{ u.grade_level_handled || 'Not set' }}</p>
+              }
+            </div>
+
+            <div class="form-group">
+              <label>Years of Teaching Experience</label>
+              @if (isEditing()) {
+                <input type="number" formControlName="years_experience" min="0">
+              } @else {
+                <p class="detail-value">{{ u.years_experience || 0 }} years</p>
+              }
+            </div>
+
+            <div class="form-group checkbox-group">
+              <label>
+                <input type="checkbox" formControlName="special_education_training" [disabled]="!isEditing()">
+                Training in Special Needs Education
+              </label>
+            </div>
+          </div>
+
+          <hr class="divider">
+
+          <!-- Supervision Info -->
+          <h3 class="section-subtitle">Supervision & Reporting</h3>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Department Head / Supervisor</label>
+              @if (isEditing()) {
+                <input type="text" formControlName="supervisor" placeholder="Name of Department Head">
+              } @else {
+                <p class="detail-value">{{ u.supervisor || 'Not set' }}</p>
+              }
+            </div>
+
+            <div class="form-group">
+              <label>School Principal</label>
+              @if (isEditing()) {
+                <input type="text" formControlName="principal" placeholder="Name of School Principal">
+              } @else {
+                <p class="detail-value">{{ u.principal || 'Not set' }}</p>
+              }
+            </div>
+          </div>
+
+          <hr class="divider">
+
+          <!-- Consent -->
+          <div class="form-group checkbox-group consent-section">
+            <label>
+              <input type="checkbox" formControlName="research_consent" [disabled]="!isEditing()">
+              I agree to participate in the Project INSPIRE action research study and understand my data will be kept confidential.
+            </label>
+          </div>
+
+          @if (isEditing()) {
+            <div class="form-actions" style="margin-top: 2rem; text-align: right;">
+              <button type="submit" class="btn btn-cta" [disabled]="profileForm.invalid || isSaving()">
+                {{ isSaving() ? 'Saving Changes...' : '💾 Save Profile' }}
+              </button>
+            </div>
+          }
+        </div>
+      </form>
+    } @else {
+      <div class="loading-state">
+        <p>Loading profile details...</p>
+      </div>
     }
   </div>
 </section>

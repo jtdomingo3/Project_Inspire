@@ -148,32 +148,30 @@ function normalizeSurveyPayload(body) {
   };
 }
 
-function sanitizeUser(user) {
-  return {
-    id: Number(user.id),
-    username: normalizeText(user.username).toLowerCase(),
-    display_name: normalizeText(user.display_name),
-    affiliated_school: normalizeText(user.affiliated_school),
-    role: normalizeText(user.role).toLowerCase(),
-    active: user.active !== false,
-    created_at: user.created_at,
-    updated_at: user.updated_at
-  };
-}
+// Local sanitizeUser removed in favor of db.sanitizeUser
 
 function normalizeUserPayload(body) {
   const payload = ensureObject(body, 'Request body');
-  const role = normalizeText(payload.role).toLowerCase();
-  if (!['teacher', 'researcher', 'admin'].includes(role)) {
+  const role = normalizeText(payload.role).toLowerCase() || 'teacher';
+  if (role && !['teacher', 'researcher', 'admin'].includes(role)) {
     throw new Error('role must be one of: teacher, researcher, admin');
   }
 
   return {
     id: payload.id,
     username: normalizeText(payload.username).toLowerCase(),
-    password: normalizeText(payload.password, 'password123'),
+    password: payload.password ? normalizeText(payload.password) : undefined,
     display_name: normalizeText(payload.display_name ?? payload.displayName, 'Unnamed User'),
     affiliated_school: normalizeText(payload.affiliated_school ?? payload.affiliatedSchool, 'San Felipe National High School · Basud, Camarines Norte'),
+    designation: normalizeText(payload.designation),
+    employee_id: normalizeText(payload.employee_id),
+    supervisor: normalizeText(payload.supervisor),
+    principal: normalizeText(payload.principal),
+    subject_area: normalizeText(payload.subject_area),
+    grade_level_handled: normalizeText(payload.grade_level_handled),
+    years_experience: Number(payload.years_experience || 0),
+    special_education_training: payload.special_education_training === true,
+    research_consent: payload.research_consent === true,
     role,
     active: payload.active !== false
   };
@@ -397,7 +395,7 @@ app.post('/api/auth/login', async (request, response) => {
     sendJson(response, 200, {
       success: true,
       token,
-      user: sanitizeUser(user)
+      user: db.sanitizeUser(user)
     });
   } catch (error) {
     handleRouteError(response, error, 400);
@@ -422,8 +420,98 @@ app.post('/api/auth/refresh', async (request, response) => {
     sendJson(response, 200, {
       success: true,
       token,
-      user: sanitizeUser(user)
+      user: db.sanitizeUser(user)
     });
+  } catch (error) {
+    handleRouteError(response, error, 500);
+  }
+});
+
+app.get('/api/profile', async (request, response) => {
+  try {
+    const userId = request.user?.userId;
+    if (!userId) {
+      sendJson(response, 401, { success: false, error: 'Authentication required' });
+      return;
+    }
+
+    const user = await db.getUser(userId);
+    if (!user) {
+      sendJson(response, 404, { success: false, error: 'User not found' });
+      return;
+    }
+
+    sendJson(response, 200, { success: true, user });
+  } catch (error) {
+    handleRouteError(response, error, 500);
+  }
+});
+
+app.put('/api/profile', async (request, response) => {
+  try {
+    const userId = request.user?.userId;
+    if (!userId) {
+      sendJson(response, 401, { success: false, error: 'Authentication required' });
+      return;
+    }
+
+    const existing = await db.getUser(userId);
+    if (!existing) {
+      sendJson(response, 404, { success: false, error: 'User not found' });
+      return;
+    }
+
+    const payload = normalizeUserPayload(request.body);
+    // Profile update cannot change security/admin fields
+    const updateData = {
+      ...payload,
+      id: userId,
+      username: existing.username, // Cannot change username
+      role: existing.role,         // Cannot change role
+      active: existing.active,      // Cannot change active status
+      password: undefined          // Password changed via separate endpoint
+    };
+
+    const updatedUser = await db.upsertUser(updateData);
+    sendJson(response, 200, { success: true, user: updatedUser });
+  } catch (error) {
+    handleRouteError(response, error, 500);
+  }
+});
+
+app.put('/api/profile/password', async (request, response) => {
+  try {
+    const userId = request.user?.userId;
+    if (!userId) {
+      sendJson(response, 401, { success: false, error: 'Authentication required' });
+      return;
+    }
+
+    const { current_password, new_password } = request.body;
+    if (!current_password || !new_password) {
+      sendJson(response, 400, { success: false, error: 'Both current and new passwords are required' });
+      return;
+    }
+
+    // We need the hash to verify, but db.getUser returns sanitized user.
+    // Use findUserByUsername or a new getRawUser if needed.
+    // Actually findUserByUsername returns the raw row.
+    const userRow = await db.findUserByUsername(request.user.username);
+    if (!userRow) {
+      sendJson(response, 404, { success: false, error: 'User not found' });
+      return;
+    }
+
+    const isValid = await verifyPassword(current_password, userRow.password_hash);
+    if (!isValid) {
+      sendJson(response, 400, { success: false, error: 'Current password is incorrect' });
+      return;
+    }
+
+    const passwordHash = await hashPassword(new_password);
+    await db.updateUserPassword(userId, passwordHash);
+
+    sendJson(response, 200, { success: true });
   } catch (error) {
     handleRouteError(response, error, 500);
   }
@@ -461,7 +549,7 @@ app.post('/api/setup/bootstrap', async (request, response) => {
       active: true
     });
 
-    const createdUsers = [sanitizeUser(adminUser)];
+    const createdUsers = [db.sanitizeUser(adminUser)];
     if (payload.mode === 'admin-plus-user' && payload.teacher) {
       const teacherHash = await hashPassword(payload.teacher.password);
       const teacherUser = await db.upsertUser({
@@ -472,7 +560,7 @@ app.post('/api/setup/bootstrap', async (request, response) => {
         role: 'teacher',
         active: true
       });
-      createdUsers.push(sanitizeUser(teacherUser));
+      createdUsers.push(db.sanitizeUser(teacherUser));
     }
 
     await ensureReferenceMetadataDefaults();
@@ -1155,6 +1243,7 @@ app.get('/api/admin/stats', roleMiddleware(['admin', 'researcher']), async (requ
       user_id: userId,
       username: user?.username || 'User',
       display_name: user?.display_name || 'User',
+      affiliated_school: user?.affiliated_school || '',
       lessons_created: lessons.length,
       reflections_submitted: reflections.length,
       observations_submitted: observations.length,
@@ -1176,7 +1265,7 @@ app.get('/api/admin/stats', roleMiddleware(['admin', 'researcher']), async (requ
 app.get('/api/admin/accounts', roleMiddleware(['admin']), async (_request, response) => {
   try {
     const users = await db.listUsers();
-    sendJson(response, 200, { users: users.map(sanitizeUser) });
+    sendJson(response, 200, { users });
   } catch (error) {
     handleRouteError(response, error, 400);
   }
@@ -1194,7 +1283,7 @@ app.post('/api/admin/accounts', roleMiddleware(['admin']), async (request, respo
       role: payload.role,
       active: payload.active
     });
-    sendJson(response, 201, { success: true, user: sanitizeUser(user) });
+    sendJson(response, 201, { success: true, user });
   } catch (error) {
     handleRouteError(response, error, 400);
   }
@@ -1213,7 +1302,7 @@ app.put('/api/admin/accounts/:id', roleMiddleware(['admin']), async (request, re
       role: payload.role,
       active: payload.active
     });
-    sendJson(response, 200, { success: true, user: sanitizeUser(user) });
+    sendJson(response, 200, { success: true, user });
   } catch (error) {
     handleRouteError(response, error, 400);
   }

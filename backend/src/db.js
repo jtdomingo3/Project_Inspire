@@ -418,6 +418,15 @@ export async function upsertUser(record) {
     password_hash,
     display_name,
     affiliated_school,
+    designation,
+    employee_id,
+    supervisor,
+    principal,
+    subject_area,
+    grade_level_handled,
+    years_experience = 0,
+    special_education_training = false,
+    research_consent = false,
     role = 'teacher',
     active = true,
   } = record;
@@ -425,21 +434,47 @@ export async function upsertUser(record) {
   const now = new Date().toISOString();
 
   if (id) {
-    await pDb.run(
-      `UPDATE users SET
-        username = ?, password_hash = ?, display_name = ?,
-        affiliated_school = ?, role = ?, active = ?, updated_at = ?
-      WHERE id = ?`,
-      [username, password_hash, display_name, affiliated_school, role, active ? 1 : 0, now, id]
-    );
+    let query = `UPDATE users SET
+        username = ?, display_name = ?,
+        affiliated_school = ?, designation = ?, employee_id = ?,
+        supervisor = ?, principal = ?, subject_area = ?,
+        grade_level_handled = ?, years_experience = ?,
+        special_education_training = ?, research_consent = ?,
+        role = ?, active = ?, updated_at = ?`;
+    let params = [
+      username, display_name, affiliated_school, designation, employee_id,
+      supervisor, principal, subject_area, grade_level_handled, years_experience,
+      special_education_training ? 1 : 0, research_consent ? 1 : 0,
+      role, active ? 1 : 0, now
+    ];
+
+    if (password_hash) {
+      query += `, password_hash = ?`;
+      params.push(password_hash);
+    }
+
+    query += ` WHERE id = ?`;
+    params.push(id);
+
+    await pDb.run(query, params);
     const result = await pDb.get('SELECT * FROM users WHERE id = ?', [id]);
     return sanitizeUser(result);
   } else {
     await pDb.run(
       `INSERT INTO users (
-        username, password_hash, display_name, affiliated_school, role, active, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [username, password_hash || '', display_name, affiliated_school, role, active ? 1 : 0, now, now]
+        username, password_hash, display_name, affiliated_school,
+        designation, employee_id, supervisor, principal,
+        subject_area, grade_level_handled, years_experience,
+        special_education_training, research_consent,
+        role, active, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        username, password_hash || '', display_name, affiliated_school,
+        designation, employee_id, supervisor, principal,
+        subject_area, grade_level_handled, years_experience,
+        special_education_training ? 1 : 0, research_consent ? 1 : 0,
+        role, active ? 1 : 0, now, now
+      ]
     );
     const result = await pDb.get('SELECT * FROM users WHERE username = ?', [username.toLowerCase()]);
     if (!result) {
@@ -447,6 +482,17 @@ export async function upsertUser(record) {
     }
     return sanitizeUser(result);
   }
+}
+
+export async function updateUserPassword(userId, passwordHash) {
+  const db = getDatabase();
+  const pDb = promisifyDb(db);
+  const now = new Date().toISOString();
+  await pDb.run(
+    'UPDATE users SET password_hash = ?, updated_at = ? WHERE id = ?',
+    [passwordHash, now, userId]
+  );
+  return true;
 }
 
 export async function deleteUser(id) {
@@ -607,14 +653,24 @@ export async function deleteDifficultyCategory(id) {
   return true;
 }
 
-function sanitizeUser(user) {
+export function sanitizeUser(user) {
+  if (!user) return null;
   return {
     id: user.id,
     username: user.username,
     display_name: user.display_name,
     affiliated_school: user.affiliated_school,
+    designation: user.designation,
+    employee_id: user.employee_id,
+    supervisor: user.supervisor,
+    principal: user.principal,
+    subject_area: user.subject_area,
+    grade_level_handled: user.grade_level_handled,
+    years_experience: Number(user.years_experience || 0),
+    active: user.active === 1 || user.active === true,
+    special_education_training: user.special_education_training === 1 || user.special_education_training === true,
+    research_consent: user.research_consent === 1 || user.research_consent === true,
     role: user.role,
-    active: user.active === 1,
     created_at: user.created_at,
     updated_at: user.updated_at,
   };

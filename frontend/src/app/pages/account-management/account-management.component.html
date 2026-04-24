@@ -23,7 +23,7 @@
 
       <label>
         Affiliated school
-        <input type="text" [(ngModel)]="form.affiliated_school" placeholder="San Felipe National High School · Basud, Camarines Norte">
+        <input type="text" [(ngModel)]="form.affiliated_school" placeholder="School Name">
       </label>
 
       <label>
@@ -36,14 +36,65 @@
       </label>
 
       <label>
-        Password
-        <input type="text" [(ngModel)]="form.password" placeholder="password123">
+        Password (leave blank to keep current)
+        <input type="text" [(ngModel)]="form.password" placeholder="New password or blank">
       </label>
 
       <label class="inline-toggle">
         <input type="checkbox" [(ngModel)]="form.active">
         Active account
       </label>
+    </div>
+
+    <hr style="margin: 1.5rem 0; border: none; border-top: 1px solid var(--color-border);">
+    
+    <div class="form-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+      <label>
+        Designation
+        <input type="text" [(ngModel)]="form.designation" placeholder="e.g., Master Teacher I">
+      </label>
+
+      <label>
+        Employee ID
+        <input type="text" [(ngModel)]="form.employee_id" placeholder="e.g., SFNHS-1234">
+      </label>
+
+      <label>
+        Subject Area
+        <input type="text" [(ngModel)]="form.subject_area" placeholder="e.g., Mathematics">
+      </label>
+
+      <label>
+        Grade Level
+        <input type="text" [(ngModel)]="form.grade_level_handled" placeholder="e.g., Grade 8">
+      </label>
+
+      <label>
+        Years Exp.
+        <input type="number" [(ngModel)]="form.years_experience" min="0">
+      </label>
+
+      <label>
+        Supervisor (Dept Head)
+        <input type="text" [(ngModel)]="form.supervisor" placeholder="Supervisor Name">
+      </label>
+
+      <label>
+        Principal
+        <input type="text" [(ngModel)]="form.principal" placeholder="Principal Name">
+      </label>
+
+      <div style="grid-column: 1 / -1; display: flex; gap: 2rem; margin-top: 0.5rem;">
+        <label class="inline-toggle">
+          <input type="checkbox" [(ngModel)]="form.special_education_training">
+          SpEd Training
+        </label>
+
+        <label class="inline-toggle">
+          <input type="checkbox" [(ngModel)]="form.research_consent">
+          Research Consent
+        </label>
+      </div>
     </div>
 
     <div class="actions">

@@ -16,6 +16,18 @@ export class NotificationService {
     this._notifications.update(current => [message, ...current]);
   }
 
+  success(message: string): void {
+    this.addNotification(`✅ ${message}`);
+  }
+
+  error(title: string, message?: string): void {
+    this.addNotification(`❌ ${title}${message ? ': ' + message : ''}`);
+  }
+
+  info(message: string): void {
+    this.addNotification(`ℹ️ ${message}`);
+  }
+
   clearNotifications(): void {
     this._notifications.set([]);
   }

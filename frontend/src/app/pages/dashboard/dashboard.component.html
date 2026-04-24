@@ -2,7 +2,9 @@
   <div class="breadcrumbs">Home · Dashboard</div>
   <div class="view-header">
     <h2 class="section-title">Teacher Dashboard</h2>
-    <span class="muted">San Felipe National High School · Basud, Camarines Norte</span>
+    @if (stats(); as s) {
+      <span class="muted">{{ s.affiliated_school || 'No school assigned' }}</span>
+    }
   </div>
 
   @if (warning()) {
