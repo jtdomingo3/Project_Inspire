@@ -7,94 +7,97 @@
     <div class="header-actions">
       <p>Browse categories to understand common observable characteristics and support strategies.</p>
       @if (canManage()) {
-        <button type="button" class="add-btn" (click)="openAddModal()">+ Add Difficulty</button>
+      <button type="button" class="add-btn" (click)="openAddModal()">+ Add Difficulty</button>
       }
     </div>
   </div>
 
   @if (loading()) {
-    <section class="details-panel">Loading difficulty categories...</section>
+  <section class="details-panel">Loading difficulty categories...</section>
   } @else if (error()) {
-    <section class="details-panel">{{ error() }}</section>
+  <section class="details-panel">{{ error() }}</section>
   }
 
   <div class="category-grid">
     @for (category of categories(); track category.id) {
-      <article
-        class="category-card"
-        [class.active]="selected()?.id === category.id"
-        tabindex="0"
-        (click)="selectCategory(category)"
-        (keydown.enter)="selectCategory(category)"
-      >
-        <h3>{{ category.id }}. {{ category.title }}</h3>
-        <p>{{ category.summary }}</p>
-        <div class="card-actions">
-          <button type="button" class="detail-btn" (click)="selectCategory(category); $event.stopPropagation()">View Details</button>
-          @if (canManage()) {
-            <button type="button" class="detail-btn" (click)="openEditModal(category); $event.stopPropagation()">Edit</button>
-            <button type="button" class="delete-btn" (click)="deleteDifficulty(category); $event.stopPropagation()">Delete</button>
-          }
-        </div>
-      </article>
+    <article class="category-card" [class.active]="selected()?.id === category.id" tabindex="0"
+      (click)="selectCategory(category)" (keydown.enter)="selectCategory(category)">
+      <h3>{{ category.id }}. {{ category.title }}</h3>
+      <p>{{ category.summary }}</p>
+      <div class="card-actions">
+        <button type="button" class="detail-btn" (click)="selectCategory(category); $event.stopPropagation()">View
+          Details</button>
+        @if (canManage()) {
+        <button type="button" class="detail-btn"
+          (click)="openEditModal(category); $event.stopPropagation()">Edit</button>
+        <button type="button" class="delete-btn"
+          (click)="deleteDifficulty(category); $event.stopPropagation()">Delete</button>
+        }
+      </div>
+    </article>
     }
   </div>
 
   <section class="details-panel">
     @if (selected(); as category) {
-      <h3>{{ category.id }}. {{ category.title }} — Details</h3>
-      <p>{{ category.summary }}</p>
+    <h3>{{ category.id }}. {{ category.title }} — Details</h3>
+    <p>{{ category.summary }}</p>
 
-      <h4>Observable Characteristics</h4>
-      <ul>
-        @for (indicator of category.indicators; track indicator) {
-          <li>{{ indicator }}</li>
-        } @empty {
-          <li>No observable characteristics are available for this category yet.</li>
-        }
-      </ul>
+    <h4>Observable Characteristics</h4>
+    <ul>
+      @for (indicator of category.indicators; track indicator) {
+      <li>{{ indicator }}</li>
+      } @empty {
+      <li>No observable characteristics are available for this category yet.</li>
+      }
+    </ul>
 
-      <h4>Classroom Reminders and Accommodation Tips</h4>
-      <ul>
-        @for (tip of category.tips; track tip) {
-          <li>{{ tip }}</li>
-        } @empty {
-          <li>No accommodation tips are available for this category yet.</li>
-        }
-      </ul>
+    <h4>Classroom Reminders and Accommodation Tips</h4>
+    <ul>
+      @for (tip of category.tips; track tip) {
+      <li>{{ tip }}</li>
+      } @empty {
+      <li>No accommodation tips are available for this category yet.</li>
+      }
+    </ul>
     }
   </section>
 
   @if (addModalOpen()) {
-    <div class="modal-backdrop" (click)="closeAddModal()">
-      <section class="modal-panel" (click)="$event.stopPropagation()">
-        <h3>{{ editMode() ? 'Edit Difficulty' : 'Add New Difficulty' }}</h3>
+  <div class="modal-backdrop" (click)="closeAddModal()">
+    <section class="modal-panel" (click)="$event.stopPropagation()">
+      <h3>{{ editMode() ? 'Edit Difficulty' : 'Add New Difficulty' }}</h3>
 
-        <label>
-          <span>Title</span>
-          <input type="text" [(ngModel)]="draftTitle" [ngModelOptions]="{ standalone: true }" placeholder="Difficulty in ...">
-        </label>
+      <label>
+        <span>Title</span>
+        <input type="text" [(ngModel)]="draftTitle" [ngModelOptions]="{ standalone: true }"
+          placeholder="Difficulty in ...">
+      </label>
 
-        <label>
-          <span>Summary</span>
-          <textarea rows="2" [(ngModel)]="draftSummary" [ngModelOptions]="{ standalone: true }" placeholder="Short description"></textarea>
-        </label>
+      <label>
+        <span>Summary</span>
+        <textarea rows="2" [(ngModel)]="draftSummary" [ngModelOptions]="{ standalone: true }"
+          placeholder="Short description"></textarea>
+      </label>
 
-        <label>
-          <span>Indicators (one per line or comma-separated)</span>
-          <textarea rows="4" [(ngModel)]="draftIndicators" [ngModelOptions]="{ standalone: true }" placeholder="Indicator 1"></textarea>
-        </label>
+      <label>
+        <span>Observable Characteristics (one per line or comma-separated)</span>
+        <textarea rows="4" [(ngModel)]="draftIndicators" [ngModelOptions]="{ standalone: true }"
+          placeholder="Indicator 1"></textarea>
+      </label>
 
-        <label>
-          <span>Tips (one per line or comma-separated)</span>
-          <textarea rows="4" [(ngModel)]="draftTips" [ngModelOptions]="{ standalone: true }" placeholder="Tip 1"></textarea>
-        </label>
+      <label>
+        <span>Classroom Reminders and Accommodation Tips (one per line or comma-separated)</span>
+        <textarea rows="4" [(ngModel)]="draftTips" [ngModelOptions]="{ standalone: true }"
+          placeholder="Tip 1"></textarea>
+      </label>
 
-        <div class="modal-actions">
-          <button type="button" class="add-btn" (click)="saveDifficulty()">{{ editMode() ? 'Save Changes' : 'Save Difficulty' }}</button>
-          <button type="button" class="detail-btn" (click)="closeAddModal()">Cancel</button>
-        </div>
-      </section>
-    </div>
+      <div class="modal-actions">
+        <button type="button" class="add-btn" (click)="saveDifficulty()">{{ editMode() ? 'Save Changes' : 'Save
+          Difficulty' }}</button>
+        <button type="button" class="detail-btn" (click)="closeAddModal()">Cancel</button>
+      </div>
+    </section>
+  </div>
   }
 </section>
