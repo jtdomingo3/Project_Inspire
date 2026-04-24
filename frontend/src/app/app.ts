@@ -38,19 +38,10 @@ export class App {
   protected readonly currentUserRoleLabel = signal('Teacher');
   protected readonly loginError = signal('');
   protected readonly loginLoading = signal(false);
-  protected readonly loginLoading = signal(false);
   protected readonly notificationsOpen = signal(false);
   protected readonly sidebarOpen = signal(true);
-  protected loginUsername = 'admin';
-  protected loginPassword = 'password123';
-  protected setupAdminUsername = 'admin';
-  protected setupAdminPassword = 'password123';
-  protected setupAdminName = 'System Administrator';
-  protected setupAdminSchool = 'San Felipe National High School · Basud, Camarines Norte';
-  protected setupUserUsername = 'teacher';
-  protected setupUserPassword = 'password123';
-  protected setupUserName = 'Teacher User';
-  protected setupUserSchool = 'San Felipe National High School · Basud, Camarines Norte';
+  protected loginUsername = '';
+  protected loginPassword = '';
   protected readonly mainNavigation: NavigationItem[] = [
     {
       label: 'Dashboard',
@@ -271,8 +262,8 @@ export class App {
     this.currentRole.set('teacher');
     this.currentUserName.set('Janice D. Quinones');
     this.currentUserRoleLabel.set('Teacher');
-    this.loginUsername = 'admin';
-    this.loginPassword = 'password123';
+    this.loginUsername = '';
+    this.loginPassword = '';
     this.loginError.set('');
     this.notificationsOpen.set(false);
     this.auth.clearSession();

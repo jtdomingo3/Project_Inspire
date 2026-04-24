@@ -13,11 +13,11 @@
 
     <div class="form-group">
       <label for="login-username">Username</label>
-      <input id="login-username" type="text" [(ngModel)]="loginUsername" placeholder="admin">
+      <input id="login-username" type="text" [(ngModel)]="loginUsername">
     </div>
     <div class="form-group">
       <label for="login-password">Password</label>
-      <input id="login-password" type="password" [(ngModel)]="loginPassword" placeholder="password123">
+      <input id="login-password" type="password" [(ngModel)]="loginPassword">
     </div>
 
     <div class="login-actions">
@@ -30,9 +30,6 @@
     <div class="login-error">{{ loginError() }}</div>
     }
 
-    @if (setupError()) {
-    <div class="login-error">{{ setupError() }}</div>
-    }
   </div>
 </div>
 } @else {
