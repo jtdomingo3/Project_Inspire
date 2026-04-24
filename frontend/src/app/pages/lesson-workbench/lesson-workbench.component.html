@@ -257,8 +257,12 @@
                       [checked]="selectedReferences().includes(reference.file_name)"
                       (change)="toggleReference(reference.file_name, $any($event.target).checked)"
                     >
-                    <div>
-                      <strong>{{ reference.title }}</strong>
+                    <div class="reference-info">
+                      <div class="reference-header">
+                        <strong>{{ reference.title }}</strong>
+                        <span class="ref-category">{{ reference.category }}</span>
+                      </div>
+                      <p class="ref-description">{{ reference.description }}</p>
                       <small>{{ reference.file_name }}</small>
                     </div>
                   </label>

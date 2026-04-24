@@ -320,22 +320,60 @@ textarea:focus {
 .reference-pill {
   display: grid;
   grid-template-columns: auto 1fr;
-  align-items: center;
-  gap: 8px;
-  padding: 9px 11px;
-  border-radius: 10px;
+  align-items: start;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 12px;
   border: 1px solid var(--border);
   background: #fefefe;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: #1f5f34;
+    background: #f9fbf9;
+  }
 }
 
 .reference-pill input {
-  width: auto;
-  margin: 0;
+  width: 1.1rem;
+  height: 1.1rem;
+  margin: 4px 0 0;
+}
+
+.reference-info {
+  display: grid;
+  gap: 4px;
+}
+
+.reference-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.ref-category {
+  font-size: 0.7rem;
+  background: #f1f5f9;
+  color: #475569;
+  padding: 2px 8px;
+  border-radius: 100px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.ref-description {
+  margin: 2px 0;
+  font-size: 0.85rem;
+  color: #64748b;
+  line-height: 1.4;
 }
 
 .reference-pill small {
   display: block;
-  color: #64748b;
+  color: #94a3b8;
+  font-size: 0.75rem;
 }
 
 .support-list {
@@ -476,4 +514,66 @@ textarea:focus {
     align-items: flex-start;
     flex-direction: column;
   }
+}
+
+/* Generating Overlay */
+.generating-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  display: grid;
+  place-items: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.loader-content {
+  background: #fff;
+  padding: 40px;
+  border-radius: 24px;
+  text-align: center;
+  width: min(440px, 90vw);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  display: grid;
+  gap: 16px;
+  animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.loader-content h2 {
+  margin: 0;
+  font-family: 'Fraunces', serif;
+  color: #1f5f34;
+  font-size: 1.75rem;
+}
+
+.loader-content p {
+  margin: 0;
+  color: #64748b;
+  line-height: 1.6;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #f1f5f9;
+  border-top: 4px solid #1f5f34;
+  border-radius: 50%;
+  margin: 0 auto 10px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes popIn {
+  from { transform: scale(0.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
 }
