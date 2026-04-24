@@ -5,6 +5,8 @@ import { map, Observable } from 'rxjs';
 import {
   AdminStats,
   ApiListResponse,
+  ChatbotQueryRequest,
+  ChatbotQueryResponse,
   BackendLessonDraft,
   DifficultyCategoryRecord,
   LessonRecord,
@@ -44,6 +46,10 @@ export class InspireApiService {
     return this.http.get<ApiListResponse>('/api/models').pipe(
       map((response) => response.models ?? [])
     );
+  }
+
+  queryChatbot(payload: ChatbotQueryRequest): Observable<ChatbotQueryResponse> {
+    return this.http.post<ChatbotQueryResponse>('/api/chatbot/query', payload);
   }
 
   getReferences(): Observable<string[]> {

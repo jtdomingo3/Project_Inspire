@@ -1,6 +1,16 @@
 import { supportedModels } from './config.js';
 import { buildReferenceContext, findRelevantChunks, loadReferenceChunks } from './reference-loader.js';
 
+const freeChatModels = supportedModels.filter((model) => typeof model === 'string' && model.includes(':free'));
+
+function pickChatModel(requestedModel) {
+  if (requestedModel && freeChatModels.includes(requestedModel)) {
+    return requestedModel;
+  }
+
+  return freeChatModels[0] || supportedModels[0];
+}
+
 function extractJsonObject(text) {
   let start = null;
   let stack = 0;
@@ -661,6 +671,117 @@ async function callPhaseWithRetry(buildPromptFn, lessonData, selectedRefs, refer
   return extracted;
 }
 
+function buildAppKnowledgeContext() {
+  return [
+    'Project INSPIRE app scope:',
+    '- Dashboard: platform overview and shortcuts.',
+    '- New Lesson Plan: AI-assisted inclusive DepEd-aligned lesson plan generation.',
+    '- My Lessons: review and manage saved generated lessons.',
+    '- Learner Difficulty Library: category definitions, indicators, and support references.',
+    '- Reflection Logs: teacher reflection records after lesson delivery.',
+    '- Observations: classroom observation logging and tracking.',
+    '- Resource Library: uploaded PDF/DOCX references used by AI outputs.',
+    '- Pre/Post Survey: baseline and outcome surveys for inclusive teaching confidence and practice.',
+    '- Reminders: to-do and due-date reminders for users.',
+    '- Profile: account details and user profile context.',
+    '- Admin Analytics (admin/researcher): usage and effectiveness insights.',
+    '- Account Management (admin): user account administration.',
+    '- Authentication: token-based login, refresh, and role-based access control.',
+    '- Inclusive education focus: support accommodations, modifications, differentiated instruction, and adaptive assessment.',
+    'Answer user inquiries about workflows and app capabilities using this context and supplied references. If unsure, say what is known and suggest checking the relevant page in the app.'
+  ].join('\n');
+}
+
+function buildChatMessages(question, referenceContext, userContext) {
+  const userLabel = userContext?.username ? `Current user: ${userContext.username}` : 'Current user: authenticated user';
+  const roleLabel = userContext?.role ? `User role: ${userContext.role}` : 'User role: unknown';
+
+  return [
+    {
+      role: 'system',
+      content: 'You are the universal assistant for Project INSPIRE. Provide accurate, concise, actionable answers for app help and inclusive teaching support. Use only provided context and reference excerpts when making claims. If references are missing for a factual claim, clearly say so.'
+    },
+    {
+      role: 'system',
+      content: `${buildAppKnowledgeContext()}\n${userLabel}\n${roleLabel}`
+    },
+    {
+      role: 'system',
+      content: referenceContext
+        ? `Reference excerpts that may be relevant:\n\n${referenceContext}`
+        : 'No reference excerpts were matched for this question.'
+    },
+    {
+      role: 'user',
+      content: question
+    }
+  ];
+}
+
+export async function generateChatResponse(question, options = {}) {
+  const normalizedQuestion = String(question || '').trim();
+  if (!normalizedQuestion) {
+    throw new Error('Question is required.');
+  }
+
+  const model = pickChatModel(options.model);
+  const selectedRefs = Array.isArray(options.selectedRefs) ? options.selectedRefs.filter(Boolean) : [];
+  const selectedRefTitles = Array.isArray(options.selectedRefTitles) ? options.selectedRefTitles.filter(Boolean) : [];
+  const referenceChunks = await loadReferenceChunks(selectedRefs);
+  const relevant = referenceChunks.length > 0
+    ? findRelevantChunks(normalizedQuestion, referenceChunks, 6)
+    : [];
+  const referenceContext = relevant.length > 0 ? buildReferenceContext(relevant) : '';
+
+  const apiKey = process.env.OPENROUTER_API_KEY;
+  if (!apiKey) {
+    return {
+      success: true,
+      model,
+      selected_refs: selectedRefs,
+      selected_ref_titles: selectedRefTitles,
+      answer: 'Chat assistant is available, but OpenRouter API key is not configured in the backend environment. Please set OPENROUTER_API_KEY to enable live responses.',
+      sources: relevant.map((chunk) => ({ source: chunk.source, index: chunk.index })),
+      source: 'fallback'
+    };
+  }
+
+  const configuredMaxTokens = Number(options.maxTokens ?? process.env.OPENROUTER_CHAT_MAX_TOKENS ?? 900);
+  const maxTokens = Number.isFinite(configuredMaxTokens)
+    ? Math.min(2048, Math.max(300, Math.trunc(configuredMaxTokens)))
+    : 900;
+
+  const messages = buildChatMessages(normalizedQuestion, referenceContext, {
+    username: options.username,
+    role: options.role
+  });
+
+  try {
+    const raw = await callOpenRouter(messages, apiKey, model, maxTokens);
+    const answer = String(raw || '').trim();
+    return {
+      success: true,
+      model,
+      selected_refs: selectedRefs,
+      selected_ref_titles: selectedRefTitles,
+      answer: answer || 'No response was generated. Please try asking again with more detail.',
+      sources: relevant.map((chunk) => ({ source: chunk.source, index: chunk.index })),
+      source: 'openrouter'
+    };
+  } catch (error) {
+    return {
+      success: true,
+      model,
+      selected_refs: selectedRefs,
+      selected_ref_titles: selectedRefTitles,
+      answer: 'I could not complete the request from the language model right now. Please try again in a moment or use a different free model.',
+      sources: relevant.map((chunk) => ({ source: chunk.source, index: chunk.index })),
+      source: 'fallback',
+      warning: String(error?.message || error)
+    };
+  }
+}
+
 export async function generateLessonPlan(lessonData, options = {}) {
   const model = options.model && supportedModels.includes(options.model)
     ? options.model
@@ -756,4 +877,4 @@ export async function generateLessonPlan(lessonData, options = {}) {
       model
     };
   }
-}
+}

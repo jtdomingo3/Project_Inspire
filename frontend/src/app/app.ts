@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 
 import { SetupBootstrapPayload } from './core/models/inspire-api.models';
+import { ChatbotWidgetComponent } from './core/components/chatbot-widget/chatbot-widget.component';
 import { AuthService } from './core/services/auth.service';
 import { InspireApiService } from './core/services/inspire-api.service';
 import { NotificationService } from './core/services/notification.service';
@@ -19,7 +20,7 @@ interface NavigationItem {
 
 @Component({
   selector: 'app-root',
-  imports: [FormsModule, RouterLink, RouterLinkActive, RouterOutlet],
+  imports: [FormsModule, RouterLink, RouterLinkActive, RouterOutlet, ChatbotWidgetComponent],
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })
@@ -60,6 +61,12 @@ export class App {
       path: '/dashboard',
       icon: '📋',
       note: 'Overview and shortcuts'
+    },
+    {
+      label: 'Inspire Assistant',
+      path: '/assistant',
+      icon: '🤖',
+      note: 'Full-page AI assistant panel'
     },
   ];
 

@@ -1,0 +1,93 @@
+@if (!isAssistantRoute()) {
+<button
+  type="button"
+  class="chat-launcher"
+  aria-label="Open chatbot"
+  [attr.aria-expanded]="open()"
+  (click)="toggleOpen()">
+  💬
+</button>
+}
+
+@if (open() && !isAssistantRoute()) {
+<div class="chat-panel" role="dialog" aria-label="INSPIRE chatbot">
+  <div class="chat-header">
+    <div>
+      <div class="chat-title">INSPIRE Assistant</div>
+      <div class="chat-subtitle">App guidance + reference-aware Q and A</div>
+    </div>
+    <div class="chat-header-actions">
+      <button type="button" class="chat-maximize" aria-label="Open assistant page" (click)="openAssistantPage()">⤢</button>
+      <button type="button" class="chat-close" aria-label="Close chatbot" (click)="close()">✕</button>
+    </div>
+  </div>
+
+  <div class="chat-controls">
+    <div class="form-group">
+      <label for="chat-model">Model</label>
+      <select id="chat-model" [ngModel]="selectedModel()" (ngModelChange)="selectedModel.set($event)">
+        @for (model of availableModels(); track model) {
+        <option [value]="model">{{ model }}</option>
+        }
+      </select>
+    </div>
+
+    <details class="refs-picker">
+      <summary>Reference filters (optional)</summary>
+      <div class="refs-list">
+        @for (item of references(); track item.file_name) {
+        <label class="ref-item">
+          <input
+            type="checkbox"
+            [checked]="selectedReferences().includes(item.file_name)"
+            (change)="onReferenceToggle(item.file_name, $any($event.target).checked)">
+          <span>{{ item.title }}</span>
+        </label>
+        }
+      </div>
+    </details>
+  </div>
+
+  <div class="chat-messages">
+    @for (message of messages(); track message.id) {
+    <div class="message" [class.message-user]="message.role === 'user'" [class.message-assistant]="message.role === 'assistant'">
+      @if (message.role === 'assistant' && message.htmlContent) {
+      <div class="message-content message-content-rich" [innerHTML]="message.htmlContent"></div>
+      } @else {
+      <div class="message-content">{{ message.content }}</div>
+      }
+      @if (message.sources && message.sources.length > 0) {
+      <div class="message-sources">
+        Sources:
+        @for (source of message.sources; track source) {
+        <span class="source-pill">{{ sourceLabel(source) }}</span>
+        }
+      </div>
+      }
+    </div>
+    }
+
+    @if (sending()) {
+    <div class="message message-assistant typing">Thinking...</div>
+    }
+  </div>
+
+  <div class="chat-input">
+    <textarea
+      rows="2"
+      [(ngModel)]="draftQuestion"
+      (keydown)="onComposerKeydown($event)"
+      [disabled]="sending()"
+      placeholder="Ask anything about INSPIRE workflows, lesson planning, references, or inclusive strategies."></textarea>
+
+    <div class="chat-input-actions">
+      @if (loadError()) {
+      <div class="chat-error">{{ loadError() }}</div>
+      }
+      <button type="button" class="btn btn-primary" (click)="send()" [disabled]="sending() || !draftQuestion.trim()">
+        {{ sending() ? 'Sending...' : 'Send' }}
+      </button>
+    </div>
+  </div>
+</div>
+}

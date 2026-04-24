@@ -47,6 +47,29 @@ export interface ApiListResponse {
   references?: string[];
 }
 
+export interface ChatbotQueryRequest {
+  question: string;
+  model?: string;
+  references?: string[];
+}
+
+export interface ChatbotSourceChunk {
+  source: string;
+  index: number;
+}
+
+export interface ChatbotQueryResponse {
+  success: boolean;
+  answer?: string;
+  model?: string;
+  source?: string;
+  warning?: string;
+  selected_refs?: string[];
+  selected_ref_titles?: string[];
+  sources?: ChatbotSourceChunk[];
+  error?: string;
+}
+
 export interface LessonRecord {
   id: number;
   subject: string;

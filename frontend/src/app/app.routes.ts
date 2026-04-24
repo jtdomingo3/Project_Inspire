@@ -13,6 +13,11 @@ export const routes: Routes = [
 		loadComponent: () => import('./pages/dashboard/dashboard.component').then((component) => component.DashboardComponent)
 	},
 	{
+		path: 'assistant',
+		canActivate: [authGuard],
+		loadComponent: () => import('./pages/inspire-assistant/inspire-assistant.component').then((component) => component.InspireAssistantComponent)
+	},
+	{
 		path: 'lessons',
 		canActivate: [authGuard],
 		loadComponent: () => import('./pages/lesson-workbench/lesson-workbench.component').then((component) => component.LessonWorkbenchComponent)

@@ -6,7 +6,7 @@ import cors from 'cors';
 import express from 'express';
 
 import { projectRoot, referencesDir, supportedModels, surveyQuestions } from './config.js';
-import { generateLessonPlan } from './openrouter.js';
+import { generateChatResponse, generateLessonPlan } from './openrouter.js';
 import { loadReferenceTextByFileName } from './reference-loader.js';
 import { initializeDatabase, closeDatabase } from './database/init.js';
 import { authMiddleware, roleMiddleware } from './auth.middleware.js';
@@ -751,6 +751,44 @@ app.post('/api/generate', async (request, response) => {
       output: generation.output,
       parsed: generation.parsed,
       lesson
+    });
+  } catch (error) {
+    handleRouteError(response, error, 500);
+  }
+});
+
+app.post('/api/chatbot/query', async (request, response) => {
+  try {
+    const payload = ensureObject(request.body, 'Request body');
+    const question = normalizeText(payload.question);
+    const model = normalizeText(payload.model);
+    const references = normalizeArray(payload.references);
+
+    if (!question) {
+      sendJson(response, 400, { success: false, error: 'question is required' });
+      return;
+    }
+
+    const referenceMetadata = await db.getReferenceMetadata();
+    const referenceTitles = references.map((ref) => referenceMetadata[ref]?.title || ref);
+
+    const chat = await generateChatResponse(question, {
+      model,
+      selectedRefs: references,
+      selectedRefTitles: referenceTitles,
+      username: request.user?.username,
+      role: request.user?.role
+    });
+
+    sendJson(response, 200, {
+      success: true,
+      source: chat.source,
+      warning: chat.warning,
+      answer: chat.answer,
+      model: chat.model,
+      selected_refs: chat.selected_refs,
+      selected_ref_titles: chat.selected_ref_titles,
+      sources: chat.sources ?? []
     });
   } catch (error) {
     handleRouteError(response, error, 500);
