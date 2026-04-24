@@ -1,0 +1,60 @@
+<div class="page-container">
+  <header class="page-header">
+    <div class="header-content">
+      <h1>⏰ Reminders & Events</h1>
+      <p>Keep track of important tasks, deadlines, and classroom events.</p>
+    </div>
+  </header>
+
+  <div class="reminders-layout">
+    <!-- Add Reminder Form -->
+    <section class="add-reminder-card card">
+      <h2>Add New Reminder</h2>
+      <div class="form-group">
+        <label for="reminder-content">What needs to be done?</label>
+        <textarea id="reminder-content" [(ngModel)]="newReminderContent" placeholder="e.g., Submit reflection log for Science 6 class"></textarea>
+      </div>
+      <div class="form-group">
+        <label for="reminder-date">Due Date (Optional)</label>
+        <input type="date" id="reminder-date" [(ngModel)]="newReminderDueDate">
+      </div>
+      <button class="btn btn-primary" (click)="addReminder()" [disabled]="!newReminderContent.trim()">
+        ➕ Add Reminder
+      </button>
+    </section>
+
+    <!-- Reminders List -->
+    <section class="reminders-list-container">
+      <div *ngIf="loading()" class="loading-state">
+        <span class="spinner">⏳</span> Loading reminders...
+      </div>
+
+      <div *ngIf="error()" class="error-state">
+        {{ error() }}
+      </div>
+
+      <div *ngIf="!loading() && reminders().length === 0" class="empty-state">
+        <div class="empty-icon">🗓️</div>
+        <h3>No reminders yet</h3>
+        <p>Your upcoming tasks and events will appear here.</p>
+      </div>
+
+      <div *ngIf="!loading() && reminders().length > 0" class="reminders-grid">
+        <div *ngFor="let reminder of reminders()" class="reminder-card card" [class.completed]="reminder.is_completed">
+          <div class="reminder-checkbox">
+            <input type="checkbox" [checked]="reminder.is_completed" (change)="toggleReminder(reminder)">
+          </div>
+          <div class="reminder-body">
+            <div class="reminder-text">{{ reminder.content }}</div>
+            <div class="reminder-meta" *ngIf="reminder.due_date">
+              <span class="calendar-icon">📅</span> {{ formatDate(reminder.due_date) }}
+            </div>
+          </div>
+          <div class="reminder-actions">
+            <button class="delete-btn" (click)="deleteReminder(reminder.id)" title="Delete Reminder">🗑️</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>

@@ -120,110 +120,134 @@ CREATE INDEX IF NOT EXISTS idx_observations_user_id ON observations(user_id);
 CREATE INDEX IF NOT EXISTS idx_surveys_user_id ON surveys(user_id);
 CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
 
--- Seed and backfill difficulty categories (13 categories from migration plan)
+CREATE TABLE IF NOT EXISTS difficulty_categories (
+  id INTEGER PRIMARY KEY,
+  name TEXT NOT NULL,
+  description TEXT,
+  observable_characteristics TEXT, -- JSON array
+  subcategories TEXT,              -- JSON array of strings
+  accommodation_tips TEXT,
+  referral_note TEXT,
+  has_subcategories BOOLEAN DEFAULT 0,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Seed and backfill difficulty categories (13 categories from prototype)
 INSERT INTO difficulty_categories (
-  id, name, description, observable_characteristics, accommodation_tips, referral_note, has_subcategories
+  id, name, description, observable_characteristics, subcategories, accommodation_tips, referral_note, has_subcategories
 ) VALUES
-(1, 'Difficulty in Seeing',
- 'Learners may have low vision or visual impairment that affects access to printed and visual learning materials.',
- '["Moves close to printed text or board work","Misses visual details in diagrams or charts","Needs high-contrast or enlarged materials"]',
- 'Provide high-contrast and enlarged materials, Seat learner near the board and main speaker, Use tactile and verbal descriptions of visual content',
- 'Coordinate with SPED coordinator for assistive visual supports.',
+(1, 'Difficulty in Displaying Interpersonal Behaviors',
+ 'Challenges in forming and maintaining positive relationships with peers and adults.',
+ '["Avoids group work or isolates self during activities","Frequent conflicts or misunderstandings with classmates","Difficulty taking turns or sharing materials","Limited eye contact or flat affect when interacting","Overly dependent on teacher prompts to interact","May misinterpret social cues and jokes"]',
+ '[]',
+ 'Use structured cooperative learning roles (leader, recorder, reporter)., Model and role-play expected social behaviors., Provide clear, visual rules for group work., Offer positive reinforcement for successful peer interactions.',
+ 'Consult the school guidance counselor if interpersonal difficulties are persistent and cause significant distress.',
  0),
-(2, 'Difficulty in Hearing',
- 'Learners may have partial or significant hearing loss affecting verbal instruction and class discussion.',
- '["Frequently asks for repetition of spoken directions","Responds better to visual cues than spoken instructions","Misses parts of oral classroom discussion"]',
- 'Face the learner while speaking, Pair oral directions with written instructions, Reduce classroom background noise when giving key instructions',
- 'Coordinate with hearing support services and family for communication strategies.',
- 0),
-(3, 'Difficulty in Walking',
+(2, 'Difficulty in Basic Learning and Applying Knowledge',
+ 'Difficulties in acquiring and applying academic concepts such as reading, writing, or mathematics.',
+ '["Difficulty learning connections between letters and sounds","Confuses small words (e.g., \"at\" and \"to\")","Letter reversals (e.g., d for b)","Word reversals (e.g., \"tip\" for \"pit\")","Avoids reading aloud","Trouble following oral instructions","Poor spelling despite effort","Appears restless or easily distracted during reading"]',
+ '["Dyslexia (Reading)","Dysgraphia (Writing)","Dyscalculia (Calculating)","Spelling Difficulty"]',
+ 'Provide multi-sensory instruction combining visual, auditory, and kinesthetic cues., Break tasks into smaller, manageable steps., Allow alternative ways to demonstrate learning (oral, project-based)., Use frequent, low-stakes formative assessment.',
+ 'Consider referral for psychoeducational assessment when persistent academic difficulties are observed across subjects.',
+ 1),
+(3, 'Difficulty in Communication',
+ 'Challenges in understanding or producing spoken language.',
+ '["Delayed response when questions are asked","Limited vocabulary compared to peers","Difficulty organizing thoughts into sentences","Speech that is hard to understand","Frustration when asked to explain ideas","Reliance on gestures instead of words"]',
+ '["Speech Sound Errors","Articulation Disorders","Phonological Disorder","Fluency Disorder — Stuttering","Fluency Disorder — Cluttering"]',
+ 'Allow extra time to respond to questions., Use visual supports, pictures, and gestures., Model expanded sentences based on learner responses., Avoid interrupting; acknowledge all communication attempts.',
+ 'Coordinate with a speech-language pathologist for ongoing communication concerns.',
+ 1),
+(4, 'Difficulty in Mobility',
  'Learners may experience mobility limitations that affect movement, transitions, and access to learning spaces.',
  '["Needs extra time to move between classroom areas","Avoids tasks requiring frequent movement","Uses mobility aids or needs physical support"]',
+ '[]',
  'Keep classroom pathways clear and accessible, Allow extra transition and activity time, Offer seated or low-movement alternatives when needed',
  'Refer for physical therapy or mobility assessment when needed.',
  0),
-(4, 'Difficulty in Grasping',
- 'Learners may have fine motor challenges that affect writing, holding tools, and manipulation tasks.',
- '["Struggles to hold pencils or scissors steadily","Writes slowly due to hand fatigue","Avoids tasks requiring precise hand movements"]',
- 'Provide adaptive grips and larger writing tools, Allow oral or digital alternatives to handwriting, Break fine-motor tasks into short segments',
- 'Coordinate occupational therapy support for fine motor interventions.',
+(5, 'Difficulty in Hearing',
+ 'Learners may have partial or significant hearing loss affecting verbal instruction and class discussion.',
+ '["Frequently asks for repetition of spoken directions","Responds better to visual cues than spoken instructions","Misses parts of oral classroom discussion"]',
+ '[]',
+ 'Face the learner while speaking, Pair oral directions with written instructions, Reduce classroom background noise when giving key instructions',
+ 'Coordinate with hearing support services and family for communication strategies.',
  0),
-(5, 'Difficulty in Speaking',
- 'Learners may have speech production or fluency issues affecting classroom participation.',
- '["Speech may be unclear or fragmented","Hesitates or avoids speaking in group activities","Needs additional time to express ideas verbally"]',
- 'Allow additional response time, Accept alternative response formats (written, visual, gestures), Use supportive turn-taking and peer listening routines',
- 'Consider speech-language referral for targeted communication support.',
+(6, 'Difficulty in Seeing',
+ 'Learners may have low vision or visual impairment that affects access to printed and visual learning materials.',
+ '["Moves close to printed text or board work","Misses visual details in diagrams or charts","Needs high-contrast or enlarged materials"]',
+ '[]',
+ 'Provide high-contrast and enlarged materials, Seat learner near the board and main speaker, Use tactile and verbal descriptions of visual content',
+ 'Coordinate with SPED coordinator for assistive visual supports.',
  0),
-(6, 'Difficulty in Learning',
- 'Learners may need differentiated pacing and scaffolded instruction to master core competencies.',
- '["Needs repeated and simplified instructions","Shows inconsistent performance across similar tasks","Requires guided examples before independent work"]',
- 'Use explicit step-by-step modeling, Chunk activities into smaller tasks, Provide guided practice before independent tasks',
- 'Coordinate with SPED team for individualized instructional planning.',
- 0),
-(7, 'Difficulty in Attending/Concentrating',
- 'Learners may experience short attention span and distractibility during classroom tasks.',
- '["Loses focus quickly during seatwork","Needs frequent prompts to remain on task","Shifts attention to unrelated classroom stimuli"]',
- 'Use short, timed work intervals with breaks, Place learner near low-distraction zones, Give concise instructions and quick check-ins',
+(7, 'Difficulty in Remembering / Concentrating',
+ 'Learners may experience short attention span, distractibility, or working-memory challenges.',
+ '["Loses focus quickly during seatwork","Needs frequent prompts to remain on task","Shifts attention to unrelated classroom stimuli","Forgets multi-step directions","Needs repeated reminders for routines"]',
+ '["Physical and Motor Domain","Personal and Social Domain","Learning / Cognitive Domain","Spoken Language Domain"]',
+ 'Use short, timed work intervals with breaks, Place learner near low-distraction zones, Give concise instructions and quick check-ins, Use visual schedules and memory cues',
  'Monitor behavior trends and refer for focused support when needed.',
+ 1),
+(8, 'Difficulty in Performing Adaptive Skills',
+ 'Challenges in performing daily self-care, safety, and social tasks appropriate for age.',
+ '["Struggles with basic self-care routines","Difficulty following safety rules in the classroom","Needs significant support for age-appropriate independence"]',
+ '[]',
+ 'Break life skills into small, teachable steps., Use visual checklists for routines., Provide consistent, immediate feedback., Practice skills in the natural environment.',
+ 'Coordinate with occupational therapists and families for functional goal setting.',
  0),
-(8, 'Difficulty in Remembering',
- 'Learners may have working-memory or recall challenges that affect retention and task completion.',
- '["Forgets multi-step directions after initial instruction","Needs repeated reminders for routines","Has difficulty recalling prior lesson content"]',
- 'Use visual schedules and memory cues, Repeat and summarize key points regularly, Provide checklists for multi-step tasks',
- 'Consider further assessment for cognitive and memory supports.',
+(9, 'Difficulty in Seeing and Hearing (Deaf-Blindness)',
+ 'Combined vision and hearing loss that significantly limits communication and access to information.',
+ '["Limited response to both visual and auditory stimuli","Relies heavily on touch for exploration","Needs specialized communication support (e.g., tactile signing)"]',
+ '[]',
+ 'Use consistent tactile cues and routines., Provide a dedicated intervener or support person., Adapt materials for tactile exploration., Ensure a stable and predictable environment.',
+ 'Requires highly specialized multidisciplinary support and assistive technology.',
  0),
-(9, 'Difficulty in Understanding',
- 'Learners may struggle to comprehend abstract, complex, or language-heavy instruction.',
- '["Needs concepts explained in simpler language","Has difficulty answering comprehension questions","Performs better with concrete examples"]',
- 'Use concrete examples and visual organizers, Rephrase instructions in simpler language, Check understanding through short formative checks',
- 'Coordinate language and learning assessment as needed.',
+(10, 'Difficulty in Hearing with Other Disabilities',
+ 'Hearing loss accompanied by other cognitive, physical, or sensory challenges.',
+ '["Multiple barriers to communication and learning","Complex support needs requiring tiered interventions"]',
+ '[]',
+ 'Combine auditory supports with other specialized accommodations., Use a total communication approach., Coordinate between multiple support specialists.',
+ 'Requires integrated case management and comprehensive support planning.',
  0),
-(10, 'Difficulty in Behaving',
- 'Learners may show behavior regulation challenges that affect classroom participation and safety.',
- '["Displays impulsive or disruptive responses","Finds it difficult to follow classroom routines","Needs frequent redirection for appropriate behavior"]',
- 'Set clear routines and behavior expectations, Use consistent positive reinforcement, Apply proactive de-escalation and calm-down strategies',
- 'Develop behavior intervention plan with guidance team as needed.',
+(11, 'Difficulty in Communicating — ADHD',
+ 'Difficulties with attention, impulse control, and/or hyperactivity associated with ADHD.',
+ '["Easily distracted by sounds, lights, or movement","Does not seem to listen when spoken to","Difficulty following multi-step directions","Frequently loses materials","Fails to finish schoolwork","Appears confused or overwhelmed","Poor study skills / weak executive function"]',
+ '["Inattention","Hyperactivity","Impulsivity"]',
+ 'Seat the learner away from high-traffic and noisy areas., Provide clear, concise instructions one step at a time., Use timers and visual schedules to structure tasks., Offer movement breaks and hands-on learning opportunities.',
+ 'Collaborate with parents, school health personnel, and specialists for comprehensive ADHD assessment.',
+ 1),
+(12, 'Difficulty in Communicating — Autism',
+ 'Challenges with social interaction, restricted interests, and repetitive behaviors.',
+ '["Difficulty with social-emotional reciprocity","Limited non-verbal communicative behaviors","Fixated interests or repetitive motor movements","Insistence on sameness and routines"]',
+ '[]',
+ 'Use visual schedules and predictable routines., Provide clear, literal instructions., Offer a quiet "calm-down" space., Support social interactions with explicit scripts.',
+ 'Coordinate with behavior specialists and speech therapists for social-communication support.',
  0),
-(11, 'Emotional/Social Difficulty',
- 'Learners may experience emotional regulation or social interaction barriers that affect engagement.',
- '["Appears withdrawn, anxious, or easily upset","Has difficulty initiating or sustaining peer interaction","Shows low confidence during group tasks"]',
- 'Build predictable and supportive classroom routines, Use structured cooperative activities with clear roles, Provide regular emotional check-ins and encouragement',
- 'Coordinate counseling and family collaboration for sustained support.',
- 0),
-(12, 'Difficulty in Interacting with Others',
- 'Learners may struggle with peer communication, social reciprocity, or collaborative behavior.',
- '["Avoids peer interaction during group work","Misreads social cues and expectations","Needs support resolving social conflicts"]',
- 'Teach explicit social scripts and routines, Use guided peer pairing and role assignment, Reinforce respectful communication through modeling',
- 'Refer to social skills support programs where available.',
- 0),
-(13, 'Difficulty in Multiple Areas',
- 'Learners present overlapping needs across cognitive, communication, sensory, behavioral, or physical domains.',
- '["Needs support across more than one functional area","Progress varies significantly by task type","Requires coordinated accommodations from multiple strategies"]',
- 'Combine accommodations from relevant domains, Use individualized support plans with frequent progress review, Coordinate with multidisciplinary school support team',
- 'Prioritize case conferencing and individualized planning.',
- 1)
+(13, 'Difficulty in Communicating — Tourette Syndrome',
+ 'Presence of multiple motor tics and one or more vocal tics.',
+ '["Involuntary, rapid, recurrent motor movements","Involuntary vocalizations","Tics may increase during stress or excitement"]',
+ '[]',
+ 'Allow for "tic breaks" in a private space., Provide extra time for tasks affected by tics., Educate peers to reduce stigma., Focus on task completion rather than fine motor precision.',
+ 'Collaborate with health professionals to manage classroom triggers and stress.',
+ 0)
 ON CONFLICT(id) DO UPDATE SET
-  name = CASE
-    WHEN COALESCE(TRIM(difficulty_categories.name), '') = '' THEN excluded.name
-    ELSE difficulty_categories.name
-  END,
-  description = CASE
-    WHEN COALESCE(TRIM(difficulty_categories.description), '') = '' THEN excluded.description
-    ELSE difficulty_categories.description
-  END,
-  observable_characteristics = CASE
-    WHEN COALESCE(TRIM(difficulty_categories.observable_characteristics), '') = '' THEN excluded.observable_characteristics
-    ELSE difficulty_categories.observable_characteristics
-  END,
-  accommodation_tips = CASE
-    WHEN COALESCE(TRIM(difficulty_categories.accommodation_tips), '') = '' THEN excluded.accommodation_tips
-    ELSE difficulty_categories.accommodation_tips
-  END,
-  referral_note = CASE
-    WHEN COALESCE(TRIM(difficulty_categories.referral_note), '') = '' THEN excluded.referral_note
-    ELSE difficulty_categories.referral_note
-  END,
-  has_subcategories = CASE
-    WHEN difficulty_categories.has_subcategories IS NULL THEN excluded.has_subcategories
-    ELSE difficulty_categories.has_subcategories
-  END;
+  name = excluded.name,
+  description = excluded.description,
+  observable_characteristics = excluded.observable_characteristics,
+  subcategories = excluded.subcategories,
+  accommodation_tips = excluded.accommodation_tips,
+  referral_note = excluded.referral_note,
+  has_subcategories = excluded.has_subcategories;
+
+-- Reminders table
+CREATE TABLE IF NOT EXISTS reminders (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL,
+  content TEXT NOT NULL,
+  due_date TEXT,
+  is_completed BOOLEAN DEFAULT 0,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_reminders_user_id ON reminders(user_id);
+CREATE INDEX IF NOT EXISTS idx_reminders_due_date ON reminders(due_date);

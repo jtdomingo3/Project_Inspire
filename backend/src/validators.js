@@ -170,13 +170,28 @@ export function validateDifficultyCategoryPayload(payload) {
   }
 
   const observable = toStringArray(payload.observable_characteristics);
+  const subcategories = toStringArray(payload.subcategories);
   return {
     id: payload.id ? Number(payload.id) : undefined,
     name: requireString(payload.name, 'name'),
     description: optionalString(payload.description),
     observable_characteristics: observable,
+    subcategories: subcategories,
     accommodation_tips: optionalString(payload.accommodation_tips),
     referral_note: optionalString(payload.referral_note),
     has_subcategories: payload.has_subcategories === true
+  };
+}
+
+export function validateReminderPayload(payload) {
+  if (!isObject(payload)) {
+    throw new Error('reminder payload must be an object');
+  }
+
+  return {
+    ...payload,
+    content: requireString(payload.content, 'content'),
+    due_date: optionalString(payload.due_date ?? payload.dueDate),
+    is_completed: payload.is_completed === true || payload.isCompleted === true
   };
 }

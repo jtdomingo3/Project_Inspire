@@ -46,10 +46,15 @@
       </div>
       <div class="layout-col-3">
         <div class="card">
-          <div class="card-title">Upcoming Reminders</div>
+          <div class="card-header">
+            <div class="card-title">Upcoming Reminders</div>
+            <a routerLink="/reminders" class="view-all-link" style="font-size: 0.75rem; color: var(--color-primary);">Manage All</a>
+          </div>
           <ul class="reminders-list">
-            @for (reminder of reminders; track reminder) {
-              <li>{{ reminder }}</li>
+            @for (reminder of reminders(); track reminder.id) {
+              <li>{{ reminder.content }}</li>
+            } @empty {
+              <li class="muted">No upcoming reminders.</li>
             }
           </ul>
         </div>

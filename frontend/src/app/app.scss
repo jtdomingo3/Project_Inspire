@@ -208,6 +208,31 @@
 	z-index: 30;
 }
 
+.notif-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 4px 6px 8px;
+	border-bottom: 1px solid var(--color-border);
+	margin-bottom: 6px;
+}
+
+.clear-notif-btn {
+	background: transparent;
+	border: none;
+	color: var(--color-primary);
+	font-size: 0.7rem;
+	font-weight: 600;
+	cursor: pointer;
+	padding: 2px 6px;
+	border-radius: 4px;
+
+	&:hover {
+		background: rgba(30, 77, 43, 0.08);
+		text-decoration: underline;
+	}
+}
+
 .notif-item {
 	padding: 6px 6px;
 	border-radius: 6px;

@@ -531,6 +531,7 @@ function formatDifficultyCategory(row) {
     name: row.name,
     description: row.description || '',
     observable_characteristics: deserializeJson(row.observable_characteristics) || [],
+    subcategories: deserializeJson(row.subcategories) || [],
     accommodation_tips: row.accommodation_tips || '',
     referral_note: row.referral_note || '',
     has_subcategories: row.has_subcategories === 1
@@ -553,6 +554,7 @@ export async function upsertDifficultyCategory(record) {
     name,
     description = '',
     observable_characteristics = [],
+    subcategories = [],
     accommodation_tips = '',
     referral_note = '',
     has_subcategories = false
@@ -561,13 +563,14 @@ export async function upsertDifficultyCategory(record) {
   if (id) {
     await pDb.run(
       `UPDATE difficulty_categories
-       SET name = ?, description = ?, observable_characteristics = ?,
+       SET name = ?, description = ?, observable_characteristics = ?, subcategories = ?,
            accommodation_tips = ?, referral_note = ?, has_subcategories = ?
        WHERE id = ?`,
       [
         name,
         description,
         serializeJson(observable_characteristics),
+        serializeJson(subcategories),
         accommodation_tips,
         referral_note,
         has_subcategories ? 1 : 0,
@@ -580,12 +583,13 @@ export async function upsertDifficultyCategory(record) {
 
   await pDb.run(
     `INSERT INTO difficulty_categories (
-      name, description, observable_characteristics, accommodation_tips, referral_note, has_subcategories
-    ) VALUES (?, ?, ?, ?, ?, ?)`,
+      name, description, observable_characteristics, subcategories, accommodation_tips, referral_note, has_subcategories
+    ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
     [
       name,
       description,
       serializeJson(observable_characteristics),
+      serializeJson(subcategories),
       accommodation_tips,
       referral_note,
       has_subcategories ? 1 : 0
@@ -614,6 +618,68 @@ function sanitizeUser(user) {
     created_at: user.created_at,
     updated_at: user.updated_at,
   };
+}
+
+export async function upsertReminder(record) {
+  const db = getDatabase();
+  const pDb = promisifyDb(db);
+
+  const {
+    id,
+    user_id = 1,
+    content,
+    due_date,
+    is_completed = false,
+  } = record;
+
+  const now = new Date().toISOString();
+
+  if (id) {
+    await pDb.run(
+      `UPDATE reminders SET
+        content = ?, due_date = ?, is_completed = ?, updated_at = ?
+      WHERE id = ? AND user_id = ?`,
+      [content, due_date, is_completed ? 1 : 0, now, id, user_id]
+    );
+  } else {
+    await pDb.run(
+      `INSERT INTO reminders (
+        user_id, content, due_date, is_completed, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?)`,
+      [user_id, content, due_date, is_completed ? 1 : 0, now, now]
+    );
+  }
+
+  const result = id
+    ? await pDb.get('SELECT * FROM reminders WHERE id = ? AND user_id = ?', [id, user_id])
+    : await pDb.get('SELECT * FROM reminders WHERE id = last_insert_rowid()');
+
+  return { ...result, is_completed: result.is_completed === 1 };
+}
+
+export async function deleteReminder(id) {
+  const db = getDatabase();
+  const pDb = promisifyDb(db);
+  await pDb.run('DELETE FROM reminders WHERE id = ?', [id]);
+  return true;
+}
+
+export async function listReminders(userId) {
+  const db = getDatabase();
+  const pDb = promisifyDb(db);
+
+  let query = 'SELECT * FROM reminders';
+  let params = [];
+
+  if (userId) {
+    query += ' WHERE user_id = ?';
+    params = [userId];
+  }
+
+  query += ' ORDER BY created_at DESC';
+
+  const rows = await pDb.all(query, params);
+  return rows.map(row => ({ ...row, is_completed: row.is_completed === 1 }));
 }
 
 export async function getStats() {
@@ -669,5 +735,8 @@ export default {
   listDifficultyCategories,
   upsertDifficultyCategory,
   deleteDifficultyCategory,
+  upsertReminder,
+  deleteReminder,
+  listReminders,
   getStats,
 };

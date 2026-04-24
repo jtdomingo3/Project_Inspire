@@ -43,6 +43,17 @@
     <h3>{{ category.id }}. {{ category.title }} — Details</h3>
     <p>{{ category.summary }}</p>
 
+    @if (category.subcategories.length > 0) {
+      <div class="subcategory-chips">
+        <p class="chip-label">Subcategories:</p>
+        <div class="chips-row">
+          @for (sub of category.subcategories; track sub) {
+            <span class="subcategory-chip">{{ sub }}</span>
+          }
+        </div>
+      </div>
+    }
+
     <h4>Observable Characteristics</h4>
     <ul>
       @for (indicator of category.indicators; track indicator) {
@@ -90,6 +101,12 @@
         <span>Classroom Reminders and Accommodation Tips (one per line or comma-separated)</span>
         <textarea rows="4" [(ngModel)]="draftTips" [ngModelOptions]="{ standalone: true }"
           placeholder="Tip 1"></textarea>
+      </label>
+
+      <label>
+        <span>Subcategories (one per line or comma-separated - Optional)</span>
+        <textarea rows="3" [(ngModel)]="draftSubcategories" [ngModelOptions]="{ standalone: true }"
+          placeholder="Subcategory 1"></textarea>
       </label>
 
       <div class="modal-actions">

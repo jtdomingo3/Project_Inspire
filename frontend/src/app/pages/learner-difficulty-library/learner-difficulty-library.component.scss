@@ -153,6 +153,37 @@
   line-height: 1.4;
 }
 
+.subcategory-chips {
+  margin: 12px 0;
+  display: grid;
+  gap: 8px;
+}
+
+.chip-label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #2f855a;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 !important;
+}
+
+.chips-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.subcategory-chip {
+  background: #e6fffa;
+  color: #2c7a7b;
+  border: 1px solid #b2f5ea;
+  padding: 3px 10px;
+  border-radius: 100px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
 .modal-backdrop {
   position: fixed;
   inset: 0;

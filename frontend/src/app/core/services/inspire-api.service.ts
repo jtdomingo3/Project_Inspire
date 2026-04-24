@@ -14,6 +14,7 @@ import {
   LessonGenerationResponse,
   ObservationRecord,
   ReflectionRecord,
+  ReminderRecord,
   ResourceLibraryItem,
   SetupBootstrapPayload,
   SetupStatusResponse,
@@ -257,6 +258,24 @@ export class InspireApiService {
 
   deleteSurvey(id: number): Observable<{ success: boolean }> {
     return this.http.delete<{ success: boolean }>(`/api/surveys/${id}`);
+  }
+
+  getReminders(): Observable<ReminderRecord[]> {
+    return this.http.get<{ reminders?: ReminderRecord[] }>('/api/reminders').pipe(
+      map((response) => response.reminders ?? [])
+    );
+  }
+
+  saveReminder(payload: { content: string; due_date?: string }): Observable<{ success: boolean; reminder: ReminderRecord }> {
+    return this.http.post<{ success: boolean; reminder: ReminderRecord }>('/api/reminders', payload);
+  }
+
+  updateReminder(id: number, payload: { content?: string; due_date?: string; is_completed?: boolean }): Observable<{ success: boolean; reminder: ReminderRecord }> {
+    return this.http.put<{ success: boolean; reminder: ReminderRecord }>(`/api/reminders/${id}`, payload);
+  }
+
+  deleteReminder(id: number): Observable<{ success: boolean }> {
+    return this.http.delete<{ success: boolean }>(`/api/reminders/${id}`);
   }
 
   getAdminStats(): Observable<AdminStats> {

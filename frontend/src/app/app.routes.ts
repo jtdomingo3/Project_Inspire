@@ -65,6 +65,11 @@ export const routes: Routes = [
 		loadComponent: () => import('./pages/learner-difficulty-library/learner-difficulty-library.component').then((component) => component.LearnerDifficultyLibraryComponent)
 	},
 	{
+		path: 'reminders',
+		canActivate: [authGuard],
+		loadComponent: () => import('./pages/reminders/reminders.component').then((component) => component.RemindersComponent)
+	},
+	{
 		path: '**',
 		redirectTo: 'dashboard'
 	}

@@ -3,7 +3,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { catchError, forkJoin, of } from 'rxjs';
 
-import { AdminStats, LessonRecord } from '../../core/models/inspire-api.models';
+import { AdminStats, LessonRecord, ReminderRecord } from '../../core/models/inspire-api.models';
 import { InspireApiService } from '../../core/services/inspire-api.service';
 
 @Component({
@@ -29,24 +29,23 @@ export class DashboardComponent implements OnInit {
     { label: '📚 Browse Resources', route: '/references' }
   ];
 
-  readonly reminders = [
-    'Post-intervention survey due: Sept 1, 2026',
-    'Submit reflection log for last week'
-  ] as const;
+  readonly reminders = signal<ReminderRecord[]>([]);
 
   ngOnInit(): void {
     this.loading.set(true);
     this.warning.set(null);
     forkJoin({
       lessons: this.api.getLessons().pipe(catchError((error) => of({ __error: this.api.describeError(error), data: [] as LessonRecord[] }))),
-      stats: this.api.getAdminStats().pipe(catchError((error) => of({ __error: this.api.describeError(error), data: null as AdminStats | null })))
+      stats: this.api.getAdminStats().pipe(catchError((error) => of({ __error: this.api.describeError(error), data: null as AdminStats | null }))),
+      reminders: this.api.getReminders().pipe(catchError(() => of([] as ReminderRecord[])))
     }).subscribe({
-      next: ({ lessons, stats }) => {
+      next: ({ lessons, stats, reminders }) => {
         const lessonData = Array.isArray(lessons) ? lessons : lessons.data;
         const statsData = stats && 'top_difficulties' in stats ? stats as AdminStats : (stats as { data: AdminStats | null }).data;
 
         this.lessons.set(lessonData);
         this.stats.set(statsData ?? this.createFallbackStats());
+        this.reminders.set(reminders.filter(r => !r.is_completed).slice(0, 5));
 
         const errors: string[] = [];
         if (!Array.isArray(lessons) && lessons.__error) {

@@ -169,11 +169,22 @@ export interface ResourceLibraryItem {
   updated_at?: string;
 }
 
+export interface ReminderRecord {
+  id: number;
+  user_id: number;
+  content: string;
+  due_date?: string;
+  is_completed: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface DifficultyCategoryRecord {
   id: number;
   name: string;
   description: string;
   observable_characteristics: string[];
+  subcategories: string[];
   accommodation_tips: string;
   referral_note: string;
   has_subcategories: boolean;

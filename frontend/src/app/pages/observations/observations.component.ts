@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import { InspireApiService } from '../../core/services/inspire-api.service';
+import { NotificationService } from '../../core/services/notification.service';
 import { ObservationRecord } from '../../core/models/inspire-api.models';
 
 @Component({
@@ -15,6 +16,7 @@ import { ObservationRecord } from '../../core/models/inspire-api.models';
 export class ObservationsComponent implements OnInit {
   private readonly api = inject(InspireApiService);
   private readonly fb = inject(NonNullableFormBuilder);
+  private readonly notificationService = inject(NotificationService);
 
   readonly observations = signal<ObservationRecord[]>([]);
   readonly loading = signal(true);
@@ -72,8 +74,10 @@ export class ObservationsComponent implements OnInit {
       next: ({ observation }) => {
         if (editingId) {
           this.observations.update((current) => current.map((item) => item.id === observation.id ? observation : item));
+          this.notificationService.addNotification(`Observation for "${observation.teacher_observed}" was updated.`);
         } else {
           this.observations.update((current) => [observation, ...current]);
+          this.notificationService.addNotification(`Observation for "${observation.teacher_observed}" was recorded.`);
         }
         this.saving.set(false);
         this.activeTab.set('list');

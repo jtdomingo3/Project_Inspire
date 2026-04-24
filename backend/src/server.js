@@ -18,6 +18,7 @@ import {
   validateLoginPayload,
   validateObservationPayload,
   validateReflectionPayload,
+  validateReminderPayload,
   validateResourceMetadataPayload,
   validateSurveyPayload,
   validateUserPayload
@@ -189,7 +190,6 @@ function normalizeResourcePayload(body) {
     category
   };
 }
-
 function normalizeDifficultyCategoryPayload(body) {
   const payload = ensureObject(body, 'Request body');
   return {
@@ -197,9 +197,19 @@ function normalizeDifficultyCategoryPayload(body) {
     name: normalizeText(payload.name),
     description: normalizeText(payload.description),
     observable_characteristics: normalizeArray(payload.observable_characteristics),
+    subcategories: normalizeArray(payload.subcategories),
     accommodation_tips: normalizeText(payload.accommodation_tips),
     referral_note: normalizeText(payload.referral_note),
     has_subcategories: payload.has_subcategories === true
+  };
+}
+
+function normalizeReminderPayload(body) {
+  const payload = ensureObject(body, 'Request body');
+  return {
+    content: normalizeText(payload.content),
+    due_date: normalizeText(payload.due_date ?? payload.dueDate),
+    is_completed: payload.is_completed === true || payload.isCompleted === true
   };
 }
 
@@ -838,6 +848,43 @@ app.delete('/api/surveys/:id', async (request, response) => {
   const deleted = await db.deleteSurvey(Number(request.params.id));
   if (!deleted) {
     sendJson(response, 404, { success: false, error: 'Survey not found' });
+    return;
+  }
+  sendJson(response, 200, { success: true });
+});
+
+app.get('/api/reminders', async (request, response) => {
+  const userId = request.user?.userId || 1;
+  const reminders = await db.listReminders(userId);
+  sendJson(response, 200, { reminders });
+});
+
+app.post('/api/reminders', async (request, response) => {
+  try {
+    const userId = request.user?.userId || 1;
+    const body = validateReminderPayload(normalizeReminderPayload(request.body));
+    const record = await db.upsertReminder({ ...body, user_id: userId });
+    sendJson(response, 201, { success: true, reminder: record });
+  } catch (error) {
+    handleRouteError(response, error, 400);
+  }
+});
+
+app.put('/api/reminders/:id', async (request, response) => {
+  try {
+    const userId = request.user?.userId || 1;
+    const body = validateReminderPayload(normalizeReminderPayload(request.body));
+    const record = await db.upsertReminder({ ...body, id: Number(request.params.id), user_id: userId });
+    sendJson(response, 200, { success: true, reminder: record });
+  } catch (error) {
+    handleRouteError(response, error, 400);
+  }
+});
+
+app.delete('/api/reminders/:id', async (request, response) => {
+  const deleted = await db.deleteReminder(Number(request.params.id));
+  if (!deleted) {
+    sendJson(response, 404, { success: false, error: 'Reminder not found' });
     return;
   }
   sendJson(response, 200, { success: true });

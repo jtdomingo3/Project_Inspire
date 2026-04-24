@@ -31,32 +31,41 @@
               <label>
                 <span>Subject Area</span>
                 <select formControlName="subject">
-                  <option value="" disabled>Select subject area (e.g., Mathematics)</option>
-                  @for (subject of subjectOptions; track subject) {
-                    <option [value]="subject">{{ subject }}</option>
+                  <option value="" disabled>Select Subject</option>
+                  @for (opt of subjectOptions; track opt) {
+                    <option [value]="opt">{{ opt }}</option>
                   }
                 </select>
+                @if (form.controls.subject.value === 'Others') {
+                  <input type="text" [ngModel]="otherSubject()" (ngModelChange)="otherSubject.set($event)" [ngModelOptions]="{standalone: true}" placeholder="Enter custom subject" class="mt-2">
+                }
               </label>
               <label>
                 <span>Grade Level</span>
                 <select formControlName="grade">
-                  <option value="" disabled>Select grade level (e.g., Grade 8)</option>
-                  @for (grade of gradeOptions; track grade) {
-                    <option [value]="grade">{{ grade }}</option>
+                  <option value="" disabled>Select Grade</option>
+                  @for (opt of gradeOptions; track opt) {
+                    <option [value]="opt">{{ opt }}</option>
                   }
                 </select>
+                @if (form.controls.grade.value === 'Others') {
+                  <input type="text" [ngModel]="otherGrade()" (ngModelChange)="otherGrade.set($event)" [ngModelOptions]="{standalone: true}" placeholder="Enter custom grade" class="mt-2">
+                }
               </label>
               <label>
                 <span>Quarter</span>
                 <select formControlName="quarter">
-                  <option value="" disabled>Select quarter (e.g., Q1)</option>
-                  @for (quarter of quarterOptions; track quarter) {
-                    <option [value]="quarter">{{ quarter }}</option>
+                  <option value="" disabled>Select Quarter</option>
+                  @for (opt of quarterOptions; track opt) {
+                    <option [value]="opt">{{ opt }}</option>
                   }
                 </select>
+                @if (form.controls.quarter.value === 'Others') {
+                  <input type="text" [ngModel]="otherQuarter()" (ngModelChange)="otherQuarter.set($event)" [ngModelOptions]="{standalone: true}" placeholder="Enter custom quarter" class="mt-2">
+                }
               </label>
-              <label class="full-span">
-                <span>Topic / Lesson Title</span>
+              <label>
+                <span>Lesson Title</span>
                 <input type="text" formControlName="title" placeholder="Fractions and Decimals">
               </label>
               <label class="full-span">
@@ -119,9 +128,13 @@
             <p class="hint">Tick the indicators you observe for: {{ selectedDifficulties()[0] || 'Not specified' }}</p>
 
             <div class="indicator-grid">
-              @for (indicator of indicatorOptions; track indicator) {
+              @for (indicator of indicatorsFromLibrary(); track indicator) {
                 <label class="check-row">
-                  <input type="checkbox" [checked]="selectedIndicators().includes(indicator)" (change)="toggleIndicator(indicator, $any($event.target).checked)">
+                  <input
+                    type="checkbox"
+                    [checked]="selectedIndicators().includes(indicator)"
+                    (change)="toggleIndicator(indicator, $any($event.target).checked)"
+                  >
                   <span>{{ indicator }}</span>
                 </label>
               }
@@ -182,7 +195,11 @@
             <p class="hint">Review the summary below, then let INSPIRE draft an inclusive lesson plan for you.</p>
 
             <div class="review-box">
-              <p><strong>Subject:</strong> {{ form.controls.subject.value }} <strong>Grade:</strong> {{ form.controls.grade.value }} <strong>Quarter:</strong> {{ form.controls.quarter.value }}</p>
+              <p>
+                <strong>Subject:</strong> {{ form.controls.subject.value === 'Others' ? otherSubject() : form.controls.subject.value }}
+                <strong>Grade:</strong> {{ form.controls.grade.value === 'Others' ? otherGrade() : form.controls.grade.value }}
+                <strong>Quarter:</strong> {{ form.controls.quarter.value === 'Others' ? otherQuarter() : form.controls.quarter.value }}
+              </p>
               <p><strong>Topic:</strong> {{ form.controls.title.value }}</p>
               <p><strong>Difficulty:</strong> {{ form.controls.difficulty.value || 'Not specified' }}</p>
               <p><strong>Subcategories:</strong> {{ form.controls.subcategories.value || 'Not specified' }}</p>

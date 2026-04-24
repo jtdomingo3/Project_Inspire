@@ -145,12 +145,17 @@
         <button id="notif-btn" class="icon-btn" type="button" aria-label="Notifications"
           (click)="toggleNotifications()">
           🔔
-          <span class="badge notif-badge">3</span>
+          @if (notifications().length > 0) {
+          <span class="badge notif-badge">{{ notifications().length }}</span>
+          }
         </button>
         @if (notificationsOpen()) {
         <div id="notif-dropdown" class="notif-dropdown">
-          <div class="section-title" style="font-size:0.85rem;">Notifications</div>
-          @for (notification of notifications; track notification) {
+          <div class="notif-header">
+            <div class="section-title" style="font-size:0.85rem; margin: 0;">Notifications</div>
+            <button class="clear-notif-btn" (click)="clearNotifications()">Clear</button>
+          </div>
+          @for (notification of notifications(); track notification) {
           <div class="notif-item">{{ notification }}</div>
           }
         </div>
@@ -215,6 +220,10 @@
         <li>
           <a [routerLink]="'/profile'" routerLinkActive="active" class="nav-item"><span class="icon">👤</span>My
             Profile</a>
+        </li>
+        <li>
+          <a [routerLink]="'/reminders'" routerLinkActive="active" class="nav-item"><span
+              class="icon">⏰</span>Reminders</a>
         </li>
         <li>
           <button type="button" class="nav-item nav-button" (click)="logout()"><span

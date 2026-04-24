@@ -12,6 +12,7 @@ interface DifficultyCategory {
   summary: string;
   indicators: string[];
   tips: string[];
+  subcategories: string[];
 }
 
 @Component({
@@ -39,6 +40,7 @@ export class LearnerDifficultyLibraryComponent implements OnInit {
   draftSummary = '';
   draftIndicators = '';
   draftTips = '';
+  draftSubcategories = '';
 
   ngOnInit(): void {
     this.canManage.set(this.auth.getRole() === 'admin');
@@ -80,6 +82,7 @@ export class LearnerDifficultyLibraryComponent implements OnInit {
     this.draftSummary = category.summary;
     this.draftIndicators = category.indicators.join('\n');
     this.draftTips = category.tips.join('\n');
+    this.draftSubcategories = (category.subcategories || []).join('\n');
     this.addModalOpen.set(true);
   }
 
@@ -95,6 +98,8 @@ export class LearnerDifficultyLibraryComponent implements OnInit {
     const summary = this.draftSummary.trim();
     const indicators = this.parseList(this.draftIndicators);
     const tips = this.parseList(this.draftTips);
+    const subcategories = this.parseList(this.draftSubcategories);
+
     if (!title || !summary || indicators.length === 0 || tips.length === 0) {
       this.error.set('Title, summary, indicators, and tips are required.');
       return;
@@ -106,8 +111,9 @@ export class LearnerDifficultyLibraryComponent implements OnInit {
       name: title,
       description: summary,
       observable_characteristics: indicators,
+      subcategories: subcategories,
       accommodation_tips: tips.join('\n'),
-      has_subcategories: false
+      has_subcategories: subcategories.length > 0
     }).subscribe({
       next: ({ category }) => {
         const mapped = this.toViewModel(category);
@@ -152,7 +158,8 @@ export class LearnerDifficultyLibraryComponent implements OnInit {
       title: record.name,
       summary: record.description || '',
       indicators: record.observable_characteristics ?? [],
-      tips: this.parseList(record.accommodation_tips || '')
+      tips: this.parseList(record.accommodation_tips || ''),
+      subcategories: record.subcategories ?? []
     };
   }
 
@@ -168,5 +175,6 @@ export class LearnerDifficultyLibraryComponent implements OnInit {
     this.draftSummary = '';
     this.draftIndicators = '';
     this.draftTips = '';
+    this.draftSubcategories = '';
   }
 }

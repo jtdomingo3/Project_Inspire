@@ -1,15 +1,16 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
-import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormsModule, NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { forkJoin } from 'rxjs';
 
 import { DifficultyCategoryRecord, LessonRecord, ResourceLibraryItem } from '../../core/models/inspire-api.models';
 import { InspireApiService } from '../../core/services/inspire-api.service';
+import { NotificationService } from '../../core/services/notification.service';
 
 @Component({
   standalone: true,
   selector: 'app-lesson-workbench',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, FormsModule],
   templateUrl: './lesson-workbench.component.html',
   styleUrl: './lesson-workbench.component.scss'
 })
@@ -17,6 +18,7 @@ export class LessonWorkbenchComponent implements OnInit {
   private readonly api = inject(InspireApiService);
   private readonly fb = inject(NonNullableFormBuilder);
   private readonly router = inject(Router);
+  private readonly notificationService = inject(NotificationService);
 
   readonly models = signal<string[]>([]);
   readonly resourceLibrary = signal<ResourceLibraryItem[]>([]);
@@ -37,9 +39,19 @@ export class LessonWorkbenchComponent implements OnInit {
   readonly selectedSubcategories = signal<string[]>([]);
 
   readonly steps = ['Details', 'Difficulty', 'Indicators', 'Support', 'Review'] as const;
-  readonly subjectOptions = ['English', 'Mathematics', 'Science', 'Filipino', 'Araling Panlipunan', 'MAPEH', 'ESP'] as const;
-  readonly gradeOptions = ['ALS', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6', 'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10'] as const;
-  readonly quarterOptions = ['Q1', 'Q2', 'Q3', 'Q4'] as const;
+  readonly subjectOptions = ['English', 'Mathematics', 'Science', 'Filipino', 'Araling Panlipunan', 'MAPEH', 'ESP', 'Others'] as const;
+  readonly gradeOptions = [
+    'ALS', 'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6',
+    'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12',
+    '1st Year High', '2nd Year High', '3rd Year High', '4th Year High',
+    'Others'
+  ] as const;
+  readonly quarterOptions = ['Q1', 'Q2', 'Q3', 'Q4', 'Others'] as const;
+
+  readonly otherSubject = signal('');
+  readonly otherGrade = signal('');
+  readonly otherQuarter = signal('');
+  readonly allDifficultyCategories = signal<DifficultyCategoryRecord[]>([]);
   readonly deliveryModes = ['Face-to-face', 'Online', 'Blended', 'Small Group', 'Pull-out Support'] as const;
   private readonly defaultDifficultyOptions = [
     'Difficulty in Displaying Interpersonal Behaviors',
@@ -57,40 +69,22 @@ export class LessonWorkbenchComponent implements OnInit {
     'Difficulty in Communicating — Tourette Syndrome'
   ] as const;
   readonly difficultyOptions = signal<string[]>([...this.defaultDifficultyOptions]);
-  readonly indicatorOptions = [
-    'Struggles to complete tasks within the allotted time',
-    'Requires repeated instructions before starting tasks',
-    'Needs prompts to stay focused on classroom activities',
-    'Shows inconsistent performance across similar tasks',
-    'Appears anxious or withdrawn during certain activities',
-    'Frequently requests help even for familiar tasks'
-  ] as const;
-  readonly difficultySubcategoryMap: Record<string, string[]> = {
-    'Difficulty in Basic Learning and Applying Knowledge': [
-      '2.1 Difficulty in Reading (Dyslexia)',
-      '2.2 Difficulty in Writing (Dysgraphia)',
-      '2.3 Difficulty in Counting and Calculating (Dyscalculia)',
-      '2.4 Difficulty in Spelling'
-    ],
-    'Difficulty in Communication': [
-      '3.A Speech Sound Errors (Distortions / Substitutions / Omissions / Additions)',
-      '3.B Articulation Disorders',
-      '3.C Phonological Disorder',
-      '3.D Fluency Disorder - Stuttering',
-      '3.E Fluency Disorder - Cluttering'
-    ],
-    'Difficulty in Remembering / Concentrating': [
-      '7.A Physical and Motor Domain',
-      '7.B Personal and Social Domain',
-      '7.C Learning / Cognitive Domain',
-      '7.D Spoken Language Domain'
-    ],
-    'Difficulty in Communicating — ADHD': [
-      '11.A Inattention',
-      '11.B Hyperactivity',
-      '11.C Impulsivity'
-    ]
-  };
+  readonly indicatorsFromLibrary = computed(() => {
+    const selected = this.selectedDifficulties();
+    const all = this.allDifficultyCategories();
+    const result = new Set<string>();
+
+    selected.forEach((name) => {
+      const cat = all.find((c) => c.name === name);
+      if (cat) {
+        cat.observable_characteristics.forEach((i) => result.add(i));
+      }
+    });
+
+    return Array.from(result);
+  });
+  readonly indicatorOptions = []; // Kept for legacy if needed, but we'll use indicatorsFromLibrary
+  readonly difficultySubcategoryMap: Record<string, string[]> = {}; // Legacy, kept for safety or removed if unused
   readonly activeDifficultyForSubcategories = computed(() => {
     const focused = this.focusedDifficulty();
     if (focused && this.selectedDifficulties().includes(focused)) {
@@ -100,12 +94,13 @@ export class LessonWorkbenchComponent implements OnInit {
     return this.selectedDifficulties()[0] ?? null;
   });
   readonly activeSubcategories = computed(() => {
-    const active = this.activeDifficultyForSubcategories();
-    if (!active) {
+    const activeName = this.activeDifficultyForSubcategories();
+    if (!activeName) {
       return [] as string[];
     }
 
-    return this.difficultySubcategoryMap[active] ?? [];
+    const cat = this.allDifficultyCategories().find((c) => c.name === activeName);
+    return cat?.subcategories ?? [];
   });
 
   readonly form = this.fb.group({
@@ -161,6 +156,7 @@ export class LessonWorkbenchComponent implements OnInit {
   }
 
   private setDifficultyOptions(categories: DifficultyCategoryRecord[]): void {
+    this.allDifficultyCategories.set(categories);
     const names = categories.map((item) => String(item.name || '').trim()).filter(Boolean);
     this.difficultyOptions.set(names.length > 0 ? names : [...this.defaultDifficultyOptions]);
   }
@@ -309,7 +305,15 @@ export class LessonWorkbenchComponent implements OnInit {
   isStepValid(step: number): boolean {
     switch (step) {
       case 1:
-        return this.controlsValid(['subject', 'grade', 'quarter', 'title', 'objectives', 'senCount']);
+        const valid = this.controlsValid(['subject', 'grade', 'quarter', 'title', 'objectives', 'senCount']);
+        if (!valid) return false;
+        
+        const raw = this.form.getRawValue();
+        if (raw.subject === 'Others' && !this.otherSubject().trim()) return false;
+        if (raw.grade === 'Others' && !this.otherGrade().trim()) return false;
+        if (raw.quarter === 'Others' && !this.otherQuarter().trim()) return false;
+        
+        return true;
       case 2:
         return this.selectedDifficulties().length > 0;
       case 3:
@@ -365,9 +369,9 @@ export class LessonWorkbenchComponent implements OnInit {
 
     const raw = this.form.getRawValue();
     const lessonData = {
-      subject: raw.subject,
-      grade: raw.grade,
-      quarter: raw.quarter,
+      subject: raw.subject === 'Others' ? this.otherSubject() : raw.subject,
+      grade: raw.grade === 'Others' ? this.otherGrade() : raw.grade,
+      quarter: raw.quarter === 'Others' ? this.otherQuarter() : raw.quarter,
       title: raw.title,
       objectives: raw.objectives,
       difficulty: raw.difficulty,
@@ -394,10 +398,12 @@ export class LessonWorkbenchComponent implements OnInit {
               const next = current.filter((lesson) => lesson.id !== response.lesson?.id);
               return [response.lesson as LessonRecord, ...next];
             });
+            this.notificationService.addNotification(`Lesson plan "${response.lesson?.title || raw.title}" was generated.`);
             this.router.navigate(['/my-lessons'], {
               queryParams: { view: response.lesson.id }
             });
           } else {
+            this.notificationService.addNotification(`Lesson plan "${raw.title}" was generated.`);
             this.reloadLessons();
             this.router.navigate(['/my-lessons']);
           }
@@ -413,10 +419,18 @@ export class LessonWorkbenchComponent implements OnInit {
   }
 
   loadLesson(lesson: LessonRecord): void {
+    const subject = this.subjectOptions.includes(lesson.subject as any) ? lesson.subject : 'Others';
+    const grade = this.gradeOptions.includes(lesson.grade as any) ? lesson.grade : 'Others';
+    const quarter = this.quarterOptions.includes(lesson.quarter as any) ? lesson.quarter : 'Others';
+
+    if (subject === 'Others') this.otherSubject.set(lesson.subject);
+    if (grade === 'Others') this.otherGrade.set(lesson.grade);
+    if (quarter === 'Others') this.otherQuarter.set(lesson.quarter);
+
     this.form.patchValue({
-      subject: lesson.subject,
-      grade: lesson.grade,
-      quarter: lesson.quarter,
+      subject,
+      grade,
+      quarter,
       title: lesson.title,
       objectives: lesson.objectives,
       difficulty: lesson.difficulty,

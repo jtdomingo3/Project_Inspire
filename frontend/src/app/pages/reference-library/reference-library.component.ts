@@ -6,6 +6,7 @@ import { firstValueFrom } from 'rxjs';
 
 import { ResourceLibraryItem } from '../../core/models/inspire-api.models';
 import { InspireApiService } from '../../core/services/inspire-api.service';
+import { NotificationService } from '../../core/services/notification.service';
 
 @Component({
   standalone: true,
@@ -16,6 +17,7 @@ import { InspireApiService } from '../../core/services/inspire-api.service';
 })
 export class ReferenceLibraryComponent implements OnInit, OnDestroy {
   private readonly api = inject(InspireApiService);
+  private readonly notificationService = inject(NotificationService);
   private readonly sanitizer = inject(DomSanitizer);
   @ViewChild('docxPreviewHost') private docxPreviewHost?: ElementRef<HTMLDivElement>;
 
@@ -278,6 +280,7 @@ export class ReferenceLibraryComponent implements OnInit, OnDestroy {
             const withoutExisting = current.filter((existing) => existing.id !== item.id);
             return [item, ...withoutExisting];
           });
+          this.notificationService.addNotification(`Resource "${item.title}" was uploaded.`);
           this.uploading.set(false);
           this.error.set(null);
           this.closeUpload();

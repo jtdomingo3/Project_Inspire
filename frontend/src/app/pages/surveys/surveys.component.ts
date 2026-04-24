@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 
 import { InspireApiService } from '../../core/services/inspire-api.service';
+import { NotificationService } from '../../core/services/notification.service';
 import { SurveyQuestionsResponse, SurveyRecord } from '../../core/models/inspire-api.models';
 
 type SurveyType = 'pre' | 'post';
@@ -21,6 +22,7 @@ interface SurveySection {
 })
 export class SurveysComponent implements OnInit {
   private readonly api = inject(InspireApiService);
+  private readonly notificationService = inject(NotificationService);
 
   readonly loading = signal(true);
   readonly saving = signal(false);
@@ -126,6 +128,7 @@ export class SurveysComponent implements OnInit {
     this.api.saveSurvey(payload).subscribe({
       next: ({ survey }) => {
         this.surveys.update((current) => [survey, ...current]);
+        this.notificationService.addNotification(`${survey.survey_type.toUpperCase()} Survey was submitted.`);
         if (this.activeTab() === 'pre') {
           this.preResponses.set({});
         } else {

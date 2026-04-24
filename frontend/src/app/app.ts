@@ -7,6 +7,7 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { SetupBootstrapPayload } from './core/models/inspire-api.models';
 import { AuthService } from './core/services/auth.service';
 import { InspireApiService } from './core/services/inspire-api.service';
+import { NotificationService } from './core/services/notification.service';
 
 interface NavigationItem {
   label: string;
@@ -27,6 +28,7 @@ export class App {
   private readonly router = inject(Router);
   private readonly api = inject(InspireApiService);
   private readonly auth = inject(AuthService);
+  protected readonly notificationService = inject(NotificationService);
 
   protected readonly theme = signal<'day' | 'night'>('day');
   protected readonly isAuthenticated = signal(false);
@@ -143,11 +145,7 @@ export class App {
       note: 'Survey forms and results'
     }
   ];
-  protected readonly notifications = [
-    'Your lesson plan "Fractions Activity" was saved.',
-    'Reminder: Submit reflection log for April 4 lesson.',
-    'Pre-intervention survey is now available.'
-  ] as const;
+  protected readonly notifications = this.notificationService.notifications;
 
   constructor() {
     const savedTheme = window.localStorage.getItem('inspire-theme');
@@ -234,6 +232,10 @@ export class App {
 
   protected toggleNotifications(): void {
     this.notificationsOpen.update((current) => !current);
+  }
+
+  protected clearNotifications(): void {
+    this.notificationService.clearNotifications();
   }
 
   protected login(): void {

@@ -4,6 +4,7 @@ import { forkJoin } from 'rxjs';
 import { CommonModule } from '@angular/common';
 
 import { InspireApiService } from '../../core/services/inspire-api.service';
+import { NotificationService } from '../../core/services/notification.service';
 import { LessonRecord, ReflectionRecord } from '../../core/models/inspire-api.models';
 
 @Component({
@@ -16,6 +17,7 @@ import { LessonRecord, ReflectionRecord } from '../../core/models/inspire-api.mo
 export class ReflectionsComponent implements OnInit {
   private readonly api = inject(InspireApiService);
   private readonly fb = inject(NonNullableFormBuilder);
+  private readonly notificationService = inject(NotificationService);
 
   readonly lessons = signal<LessonRecord[]>([]);
   readonly reflections = signal<ReflectionRecord[]>([]);
@@ -79,8 +81,10 @@ export class ReflectionsComponent implements OnInit {
       next: ({ reflection }) => {
         if (editingId) {
           this.reflections.update((current) => current.map((item) => item.id === reflection.id ? reflection : item));
+          this.notificationService.addNotification(`Reflection for "${reflection.lesson_plan_linked}" was updated.`);
         } else {
           this.reflections.update((current) => [reflection, ...current]);
+          this.notificationService.addNotification(`Reflection for "${reflection.lesson_plan_linked}" was captured.`);
         }
 
         this.saving.set(false);
