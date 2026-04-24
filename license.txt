@@ -1,0 +1,26 @@
+Project INSPIRE - End User License Agreement (EULA)
+
+Please read these Terms and Conditions carefully before using Project INSPIRE.
+
+1. ACCEPTANCE OF TERMS
+By installing and using Project INSPIRE, you agree to be bound by these terms. If you do not agree, please do not install or use the application.
+
+2. LICENSE GRANT
+Gezyne-Jamir Software Tech grants you a non-exclusive, non-transferable license to use Project INSPIRE for educational and lesson planning purposes.
+
+3. DATA PRIVACY & RESEARCH
+Project INSPIRE is designed to support inclusive education. Users may opt-in to share anonymized data for research purposes to improve inclusive teaching practices. No personally identifiable information (PII) of learners should be entered into the system in a way that violates local privacy laws (e.g., Data Privacy Act of 2012).
+
+4. AI GENERATED CONTENT
+The application uses Artificial Intelligence (OpenRouter/LLM) to assist in generating Differentiated Lesson Plans (DLPs). The user acknowledges that AI-generated content should be reviewed and verified by a qualified professional before implementation in a classroom setting.
+
+5. INTELLECTUAL PROPERTY
+All rights, title, and interest in and to the application (excluding user-generated lesson plans) are and will remain the exclusive property of Gezyne-Jamir Software Tech.
+
+6. LIMITATION OF LIABILITY
+The application is provided "AS IS". Gezyne-Jamir Software Tech shall not be liable for any direct, indirect, or consequential damages arising out of the use or inability to use the application.
+
+7. TERMINATION
+This license is effective until terminated. Your rights under this license will terminate automatically without notice if you fail to comply with any terms.
+
+Copyright (c) 2026 Gezyne-Jamir Software Tech. All rights reserved.

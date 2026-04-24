@@ -28,3 +28,4 @@ nsis:
   allowToChangeInstallationDirectory: true
   installerIcon: frontend/public/icon-taskbar.ico
   uninstallerIcon: frontend/public/icon-taskbar.ico
+  license: license.txt

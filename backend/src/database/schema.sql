@@ -296,3 +296,7 @@ CREATE TABLE IF NOT EXISTS assistant_messages (
 CREATE INDEX IF NOT EXISTS idx_assistant_conversations_user_id ON assistant_conversations(user_id);
 CREATE INDEX IF NOT EXISTS idx_assistant_conversations_updated_at ON assistant_conversations(updated_at);
 CREATE INDEX IF NOT EXISTS idx_assistant_messages_conversation_id ON assistant_messages(conversation_id);
+
+-- Seed default admin account (Password: admin123)
+INSERT OR IGNORE INTO users (id, username, password_hash, display_name, role)
+VALUES (1, 'admin', '$2b$10$XyGuqkMT0lZif26sMcW2lO2xMkE/WSrEJnGDuNTcSQT0a/TnUOx1y', 'System Administrator', 'admin');
