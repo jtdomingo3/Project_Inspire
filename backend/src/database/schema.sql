@@ -111,14 +111,18 @@ CREATE TABLE IF NOT EXISTS reference_documents (
 );
 
 -- Difficulty Categories (static reference data)
+DROP TABLE IF EXISTS difficulty_categories;
 CREATE TABLE IF NOT EXISTS difficulty_categories (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  id INTEGER PRIMARY KEY,
   name TEXT UNIQUE NOT NULL,
-  description TEXT DEFAULT '',
-  observable_characteristics TEXT, -- JSON stored as string
+  description TEXT,
+  observable_characteristics TEXT, -- JSON array
+  subcategories TEXT,              -- JSON array of strings
   accommodation_tips TEXT,
   referral_note TEXT,
-  has_subcategories BOOLEAN DEFAULT 0
+  has_subcategories BOOLEAN DEFAULT 0,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Create indexes for performance
@@ -129,18 +133,6 @@ CREATE INDEX IF NOT EXISTS idx_observations_user_id ON observations(user_id);
 CREATE INDEX IF NOT EXISTS idx_surveys_user_id ON surveys(user_id);
 CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
 
-CREATE TABLE IF NOT EXISTS difficulty_categories (
-  id INTEGER PRIMARY KEY,
-  name TEXT NOT NULL,
-  description TEXT,
-  observable_characteristics TEXT, -- JSON array
-  subcategories TEXT,              -- JSON array of strings
-  accommodation_tips TEXT,
-  referral_note TEXT,
-  has_subcategories BOOLEAN DEFAULT 0,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
 
 -- Seed and backfill difficulty categories (13 categories from prototype)
 INSERT INTO difficulty_categories (
@@ -245,6 +237,21 @@ ON CONFLICT(id) DO UPDATE SET
   accommodation_tips = excluded.accommodation_tips,
   referral_note = excluded.referral_note,
   has_subcategories = excluded.has_subcategories;
+
+-- Seed canonical reference document metadata
+INSERT INTO reference_documents (filename, title, description, category) VALUES
+('assessment-checklist.docx', 'Learner Difficulty Assessment Checklist', 'Comprehensive checklist of learner difficulty categories, indicators, and classroom support strategies.', 'Tips'),
+('DO_s2020_021-transition.pdf', 'DO s.2020 No.021 - Transition Program Guidance', 'Guidance for transition planning and learner progression across educational stages.', 'Strategies'),
+('DO_s2021_044.pdf', 'DO s.2021 No.044 - Inclusive Education Policy Framework', 'Official policy guidance for implementing inclusive education principles and learner support.', 'References'),
+('DSM-5.pdf', 'DSM-5 Reference for Learning and Behavior Needs', 'Diagnostic reference to support interpretation of learner characteristics and intervention planning.', 'References'),
+('LEGAL BASIS.docx', 'Legal Basis for Inclusive Education', 'Policy and legal foundations supporting inclusive education implementation in schools.', 'References'),
+('QUINONES_JANICE_ACTION RESEARCH_PROPOSAL.pdf', 'Action Research Proposal for Inclusive Teaching', 'School-based action research document focused on inclusive teaching practices and outcomes.', 'References'),
+('REVISED K TO 12 DLP.docx', 'Revised K to 12 Daily Lesson Plan Guide', 'Template and guide for writing standards-aligned daily lesson plans in the K to 12 curriculum.', 'Templates')
+ON CONFLICT(filename) DO UPDATE SET
+  title = excluded.title,
+  description = excluded.description,
+  category = excluded.category,
+  updated_at = CURRENT_TIMESTAMP;
 
 -- Reminders table
 CREATE TABLE IF NOT EXISTS reminders (

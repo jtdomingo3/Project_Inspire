@@ -1,7 +1,7 @@
 appId: com.projectinspire.desktop
 productName: Project INSPIRE
 directories:
-  output: dist/installer-output
+  output: dist/build-output
 files:
   - package.json
   - electron/**/*
