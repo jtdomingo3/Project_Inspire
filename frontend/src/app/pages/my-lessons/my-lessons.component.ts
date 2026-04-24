@@ -283,141 +283,255 @@ export class MyLessonsComponent implements OnInit {
 <meta charset="utf-8">
 <title>${e(plan.title || lesson.title || 'Daily Lesson Plan')}</title>
 <style>
-  @page { size: landscape; margin: 8mm 10mm; }
+  @page { 
+    size: landscape; 
+    margin: 5mm 8mm; 
+  }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Times New Roman', Times, serif; font-size: 10pt; color: #000; line-height: 1.3; }
+  body { 
+    font-family: 'Times New Roman', Times, serif; 
+    font-size: 10pt; 
+    color: #000; 
+    line-height: 1.2; 
+    background: #fff;
+    width: 100%;
+  }
 
-  .page-wrapper { width: 100%; }
+  .page-wrapper { 
+    width: 100%; 
+    border-collapse: collapse; 
+    margin: 0; 
+    padding: 0;
+    table-layout: fixed;
+  }
   .page-wrapper > thead { display: table-header-group; }
   .page-wrapper > thead td { border: none; padding: 0; }
   .page-wrapper > tbody { display: table-row-group; }
-  .page-wrapper > tbody > tr > td { border: none; padding: 0; }
+  .page-wrapper > tbody > tr > td { border: none; padding: 0; vertical-align: top; }
 
-  .deped-header { text-align: center; padding-bottom: 4px; }
-  .deped-header img.seal { width: 46px; height: 46px; }
-  .deped-header .republic { font-family: 'Old English Text MT', 'Times New Roman', serif; font-size: 11pt; font-style: italic; }
-  .deped-header .deped-title { font-family: 'Old English Text MT', 'Times New Roman', serif; font-size: 13pt; font-weight: bold; }
-
-  .info-table { width: 100%; border-collapse: collapse; margin-bottom: 4px; font-size: 9pt; }
-  .info-table td { padding: 1px 4px; border: 1px solid #000; }
-  .info-table .highlight { background: #fce4c6; }
-  .info-table .logo-cell { width: 46px; text-align: center; vertical-align: middle; }
-  .info-table .logo-cell img { width: 38px; }
-  .info-table .subject-cell { font-weight: bold; font-size: 10pt; text-align: center; vertical-align: middle; width: 90px; }
-
-  .dlp-table { width: 100%; border-collapse: collapse; font-size: 9.5pt; }
-  .dlp-table td { border: 1px solid #000; padding: 4px 6px; vertical-align: top; }
-  .dlp-table .section-label {
-    width: 46px; min-width: 46px; max-width: 46px;
-    text-align: center; vertical-align: middle;
-    padding: 8px 2px;
-    font-weight: bold; font-size: 7.5pt;
-    line-height: 1.2; text-transform: uppercase;
-    writing-mode: vertical-lr;
-    transform: rotate(180deg);
+  .deped-header { text-align: center; padding: 4px 0; width: 100%; }
+  .deped-header img.seal { width: 44px; height: 44px; margin-bottom: 2px; }
+  .deped-header .republic { 
+    font-family: 'Old English Text MT', 'Times New Roman', serif; 
+    font-size: 11pt; 
+    font-style: italic; 
+    display: block;
+    line-height: 1;
   }
-  .dlp-table .sub-label { width: 120px; font-weight: bold; font-size: 9pt; vertical-align: top; }
+  .deped-header .deped-title { 
+    font-family: 'Old English Text MT', 'Times New Roman', serif; 
+    font-size: 13pt; 
+    font-weight: bold; 
+    display: block;
+    line-height: 1.1;
+  }
+
+  .dlp-content-container { width: 100%; }
+
+  .info-table { 
+    width: 100%; 
+    border-collapse: collapse; 
+    font-size: 9pt; 
+    table-layout: fixed;
+    margin-bottom: 0;
+  }
+  .info-table td { padding: 4px 6px; border: 0.5pt solid #000; overflow: hidden; word-wrap: break-word; }
+  .info-table .highlight { background: #fce4c6 !important; -webkit-print-color-adjust: exact; }
+  .info-table .logo-cell { width: 50px; text-align: center; vertical-align: middle; }
+  .info-table .logo-cell img { width: 42px; }
+  .info-table .subject-cell { 
+    font-weight: bold; 
+    font-size: 10pt; 
+    text-align: center; 
+    vertical-align: middle; 
+    width: 100px; 
+  }
+
+  .dlp-table { 
+    width: 100%; 
+    border-collapse: collapse; 
+    font-size: 9.5pt; 
+    table-layout: fixed; 
+    margin-top: 15px; /* Spacing between tables */
+    break-inside: auto;
+    border: 0.5pt solid #000;
+  }
+  .dlp-table.overlap { margin-top: -1px; } /* For subsequent tables in the same section if split */
+  .dlp-table td { border: 0.5pt solid #000; padding: 5px 8px; vertical-align: top; word-wrap: break-word; }
+  .dlp-table tr { break-inside: auto; }
+  
+  .dlp-table .section-label {
+    width: 50px; min-width: 50px; max-width: 50px;
+    text-align: center; vertical-align: middle;
+    padding: 10px 2px;
+    font-weight: bold; font-size: 8pt;
+    line-height: 1.1; text-transform: uppercase;
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    background: #fff;
+  }
+  
+  /* Continuity for Section Bars */
+  .dlp-table tr:not(.section-end) .section-label { border-bottom: none; }
+  .dlp-table tr:not(.section-start) .section-label { border-top: none; }
+
+  .dlp-table .sub-label { width: 130px; font-weight: bold; font-size: 9pt; vertical-align: top; }
   .dlp-table .content-cell { font-size: 9.5pt; }
 
-  .sig-section { margin-top: 16px; font-size: 10pt; page-break-inside: avoid; }
-  .sig-section p { margin-bottom: 22px; }
+  .sig-table { 
+    width: 100%; 
+    border-collapse: collapse; 
+    margin-top: 15px; 
+    font-family: Arial, sans-serif; 
+    font-size: 10.5px; 
+    break-inside: avoid; 
+  }
+  .sig-table td { border: none; padding: 8px 0; vertical-align: top; }
 
   @media print {
     body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .page-wrapper { width: 100%; border: none; }
+    html, body { height: auto; overflow: visible; }
   }
 </style>
 </head>
 <body>
-<table class="page-wrapper" style="width:100%;border-collapse:collapse;">
+<table class="page-wrapper">
 <thead><tr><td>
   <div class="deped-header">
-    <img class="seal" src="${sealUrl}" alt="DepEd Seal"><br>
-    <span class="republic">Republic of the Philippines</span><br>
+    <img class="seal" src="${sealUrl}" alt="DepEd Seal">
+    <span class="republic">Republic of the Philippines</span>
     <span class="deped-title">Department of Education</span>
   </div>
 </td></tr></thead>
-<tbody><tr><td>
-<div class="dlp-body">
-<table class="info-table">
-  <tr>
-    <td class="logo-cell" rowspan="3"><img src="${sealUrl}" alt=""></td>
-    <td class="subject-cell" rowspan="3">${subject}</td>
-    <td>School</td><td class="highlight">${school}</td>
-    <td>Grade Level</td><td class="highlight">${grade}</td>
-    <td>Quarter</td><td class="highlight">${quarter}</td>
-  </tr>
-  <tr>
-    <td>Teacher</td><td class="highlight">${teacher}</td>
-    <td>Learning Area</td><td class="highlight">${subject}</td>
-    <td colspan="2"></td>
-  </tr>
-  <tr>
-    <td>Teaching Date and Time</td><td class="highlight">${dateStr}</td>
-    <td colspan="4"></td>
-  </tr>
-</table>
-<table class="dlp-table">
-  <tr>
-    <td class="section-label" rowspan="5">I. CURRICULUM CONTENT,<br>STANDARDS AND LESSON<br>COMPETENCIES</td>
-    <td class="sub-label">A. Content Standards</td>
-    <td class="content-cell">${nl2br(plan.content_standards)}</td>
-  </tr>
-  <tr><td class="sub-label">B. Performance Standards</td><td class="content-cell">${nl2br(plan.performance_standards)}</td></tr>
-  <tr><td class="sub-label">C. Learning Competencies and Objectives</td><td class="content-cell">${objectivesHtml}</td></tr>
-  <tr><td class="sub-label">D. Content</td><td class="content-cell"><strong>Topic:</strong> ${e(plan.content || plan.title)}<br><strong>Lesson:</strong> ${e(plan.title)}</td></tr>
-  <tr><td class="sub-label">E. Integration</td><td class="content-cell"><strong>Inclusive Education Focus:</strong> ${e(plan.difficulty)}<br>${nl2br(plan.integration)}${supportHtml}</td></tr>
-</table>
-<table class="dlp-table">
-  <tr>
-    <td class="section-label">II. LEARNING<br>RESOURCES</td>
-    <td class="sub-label">Learning Resources</td>
-    <td class="content-cell">
-      <ul style="margin-left: 16px; margin-top: 0; margin-bottom: 0;">
-        ${this.resourceLines(plan.resources).map(r => `<li>${e(r)}</li>`).join('')}
-      </ul>
-    </td>
-  </tr>
-</table>
-<table class="dlp-table">
-  <tr>
-    <td class="section-label" rowspan="7" style="vertical-align: top; padding-bottom: 20px;">III. TEACHING AND<br>LEARNING PROCEDURE</td>
-    <td class="sub-label">A. Activating Prior Knowledge</td>
-    <td class="content-cell">${nl2br(plan.prior_knowledge)}</td>
-  </tr>
-  <tr><td class="sub-label">B. Establishing Lesson Purpose</td><td class="content-cell">${nl2br(plan.lesson_purpose)}</td></tr>
-  <tr><td class="sub-label">C. Developing and Deepening Understanding</td><td class="content-cell">${nl2br(plan.developing)}</td></tr>
-  <tr><td class="sub-label">D. Making Generalization</td><td class="content-cell">${nl2br(plan.generalization)}</td></tr>
-  <tr><td class="sub-label">E. Evaluating Learning</td><td class="content-cell">${nl2br(plan.evaluation)}</td></tr>
-  <tr><td class="sub-label">F. Teacher&rsquo;s Remarks</td><td class="content-cell">${nl2br(plan.remarks)}</td></tr>
-  <tr><td class="sub-label">G. Reflection</td><td class="content-cell">${nl2br(plan.reflection)}</td></tr>
-</table>
-<table style="width: 100%; border: none; margin-top: 40px; text-align: left; font-family: Arial, sans-serif; font-size: 11px;">
-  <tr>
-    <td style="width: 33%; vertical-align: top; border: none; padding: 0;">
-      <div>PREPARED BY:</div>
-      <div style="margin-top: 40px;">
-        <strong>${e(plan.prepared_by || teacher)}</strong><br>
-        ${e(plan.prepared_by_designation || 'Teacher')}
-      </div>
-    </td>
-    <td style="width: 33%; vertical-align: top; border: none; padding: 0;">
-      <div>REVIEWED BY:</div>
-      <div style="margin-top: 40px;">
-        <strong>${e(plan.reviewed_by) || '___________________________'}</strong><br>
-        ${e(plan.reviewed_by_designation) || 'Master Teacher / Head Teacher'}
-      </div>
-    </td>
-    <td style="width: 33%; vertical-align: top; border: none; padding: 0;">
-      <div>NOTED BY:</div>
-      <div style="margin-top: 40px;">
-        <strong>${e(plan.noted_by) || '___________________________'}</strong><br>
-        ${e(plan.noted_by_designation) || 'School Principal'}
-      </div>
-    </td>
-  </tr>
-</table>
-</div>
-</td></tr></tbody>
+<tbody>
+  <tr><td>
+    <div class="dlp-content-container">
+      <table class="info-table">
+        <tr>
+          <td class="logo-cell" rowspan="3"><img src="${sealUrl}" alt=""></td>
+          <td class="subject-cell" rowspan="3">${subject}</td>
+          <td style="width: 70px;">School</td><td class="highlight">${school}</td>
+          <td style="width: 80px;">Grade Level</td><td class="highlight">${grade}</td>
+          <td style="width: 50px;">Quarter</td><td class="highlight">${quarter}</td>
+        </tr>
+        <tr>
+          <td>Teacher</td><td class="highlight">${teacher}</td>
+          <td>Learning Area</td><td class="highlight">${subject}</td>
+          <td colspan="2"></td>
+        </tr>
+        <tr>
+          <td>Teaching Date and Time</td><td class="highlight">${dateStr}</td>
+          <td colspan="4"></td>
+        </tr>
+      </table>
+
+      <table class="dlp-table">
+        <tr class="section-start">
+          <td class="section-label"></td>
+          <td class="sub-label">A. Content Standards</td>
+          <td class="content-cell">${nl2br(plan.content_standards)}</td>
+        </tr>
+        <tr>
+          <td class="section-label"></td>
+          <td class="sub-label">B. Performance Standards</td>
+          <td class="content-cell">${nl2br(plan.performance_standards)}</td>
+        </tr>
+        <tr>
+          <td class="section-label">I. CURRICULUM CONTENT,<br>STANDARDS AND LESSON<br>COMPETENCIES</td>
+          <td class="sub-label">C. Learning Competencies and Objectives</td>
+          <td class="content-cell">${objectivesHtml}</td>
+        </tr>
+        <tr>
+          <td class="section-label"></td>
+          <td class="sub-label">D. Content</td>
+          <td class="content-cell"><strong>Topic:</strong> ${e(plan.content || plan.title)}<br><strong>Lesson:</strong> ${e(plan.title)}</td>
+        </tr>
+        <tr class="section-end">
+          <td class="section-label"></td>
+          <td class="sub-label">E. Integration</td>
+          <td class="content-cell"><strong>Inclusive Education Focus:</strong> ${e(plan.difficulty)}<br>${nl2br(plan.integration)}${supportHtml}</td>
+        </tr>
+      </table>
+
+      <table class="dlp-table overlap">
+        <tr class="section-start section-end">
+          <td class="section-label">II. LEARNING<br>RESOURCES</td>
+          <td class="sub-label">Learning Resources</td>
+          <td class="content-cell">
+            <ul style="margin-left: 14px; margin-top: 0; margin-bottom: 0;">
+              ${this.resourceLines(plan.resources).map(r => `<li>${e(r)}</li>`).join('')}
+            </ul>
+          </td>
+        </tr>
+      </table>
+
+      <table class="dlp-table overlap">
+        <tr class="section-start">
+          <td class="section-label"></td>
+          <td class="sub-label">A. Activating Prior Knowledge</td>
+          <td class="content-cell">${nl2br(plan.prior_knowledge)}</td>
+        </tr>
+        <tr>
+          <td class="section-label"></td>
+          <td class="sub-label">B. Establishing Lesson Purpose</td>
+          <td class="content-cell">${nl2br(plan.lesson_purpose)}</td>
+        </tr>
+        <tr>
+          <td class="section-label"></td>
+          <td class="sub-label">C. Developing and Deepening Understanding</td>
+          <td class="content-cell">${nl2br(plan.developing)}</td>
+        </tr>
+        <tr>
+          <td class="section-label">III. TEACHING AND<br>LEARNING PROCEDURE</td>
+          <td class="sub-label">D. Making Generalization</td>
+          <td class="content-cell">${nl2br(plan.generalization)}</td>
+        </tr>
+        <tr>
+          <td class="section-label"></td>
+          <td class="sub-label">E. Evaluating Learning</td>
+          <td class="content-cell">${nl2br(plan.evaluation)}</td>
+        </tr>
+        <tr>
+          <td class="section-label"></td>
+          <td class="sub-label">F. Teacher&rsquo;s Remarks</td>
+          <td class="content-cell">${nl2br(plan.remarks)}</td>
+        </tr>
+        <tr class="section-end">
+          <td class="section-label"></td>
+          <td class="sub-label">G. Reflection</td>
+          <td class="content-cell">${nl2br(plan.reflection)}</td>
+        </tr>
+      </table>
+
+      <table class="sig-table">
+        <tr>
+          <td style="width: 33%;">
+            <div>PREPARED BY:</div>
+            <div style="margin-top: 35px;">
+              <strong>${e(plan.prepared_by || teacher)}</strong><br>
+              ${e(plan.prepared_by_designation || 'Teacher')}
+            </div>
+          </td>
+          <td style="width: 33%;">
+            <div>REVIEWED BY:</div>
+            <div style="margin-top: 35px;">
+              <strong>${e(plan.reviewed_by) || '___________________________'}</strong><br>
+              ${e(plan.reviewed_by_designation) || 'Master Teacher / Head Teacher'}
+            </div>
+          </td>
+          <td style="width: 33%;">
+            <div>NOTED BY:</div>
+            <div style="margin-top: 35px;">
+              <strong>${e(plan.noted_by) || '___________________________'}</strong><br>
+              ${e(plan.noted_by_designation) || 'School Principal'}
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>
+  </td></tr>
+</tbody>
 </table>
 </body>
 </html>`;
