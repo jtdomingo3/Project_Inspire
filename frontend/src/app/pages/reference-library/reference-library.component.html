@@ -138,7 +138,11 @@
         <p class="preview-title">{{ previewTitle() }}</p>
 
         @if (previewMode() === 'pdf') {
-          <iframe class="preview-frame" [src]="previewUrl()" title="PDF preview"></iframe>
+          @if (previewLoading()) {
+            <p class="preview-placeholder">Preparing PDF preview...</p>
+          } @else {
+            <iframe class="preview-frame" [src]="previewUrl()" title="PDF preview"></iframe>
+          }
         } @else if (previewMode() === 'docx') {
           <div #docxPreviewHost class="preview-docx" [class.hidden]="previewRenderFailed()"></div>
           @if (previewLoading()) {

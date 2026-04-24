@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, ElementRef, OnInit, ViewChild, computed, inject, signal } from '@angular/core';
+import { Component, ElementRef, OnDestroy, OnInit, ViewChild, computed, inject, signal } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
@@ -14,7 +14,7 @@ import { InspireApiService } from '../../core/services/inspire-api.service';
   templateUrl: './reference-library.component.html',
   styleUrl: './reference-library.component.scss'
 })
-export class ReferenceLibraryComponent implements OnInit {
+export class ReferenceLibraryComponent implements OnInit, OnDestroy {
   private readonly api = inject(InspireApiService);
   private readonly sanitizer = inject(DomSanitizer);
   @ViewChild('docxPreviewHost') private docxPreviewHost?: ElementRef<HTMLDivElement>;
@@ -57,6 +57,8 @@ export class ReferenceLibraryComponent implements OnInit {
   readonly previewText = signal('');
   readonly previewRenderFailed = signal(false);
   readonly selectedItem = signal<ResourceLibraryItem | null>(null);
+  private activeObjectUrl: string | null = null;
+
 
   editTitle = '';
   editDescription = '';
@@ -179,8 +181,23 @@ export class ReferenceLibraryComponent implements OnInit {
 
     if (lower.endsWith('.pdf')) {
       this.previewMode.set('pdf');
-      this.previewUrl.set(this.sanitizer.bypassSecurityTrustResourceUrl(this.api.getReferenceFileUrl(fileName)));
+      this.previewLoading.set(true);
       this.previewModalOpen.set(true);
+      
+      this.api.getReferenceFileBuffer(fileName).subscribe({
+        next: (buffer) => {
+          const blob = new Blob([buffer], { type: 'application/pdf' });
+          const url = URL.createObjectURL(blob);
+          this.activeObjectUrl = url;
+          this.previewUrl.set(this.sanitizer.bypassSecurityTrustResourceUrl(url));
+          this.previewLoading.set(false);
+        },
+        error: (error) => {
+          this.error.set(this.api.describeError(error));
+          this.previewLoading.set(false);
+          this.previewRenderFailed.set(true);
+        }
+      });
       return;
     }
 
@@ -207,9 +224,21 @@ export class ReferenceLibraryComponent implements OnInit {
     this.previewText.set('');
     this.previewRenderFailed.set(false);
 
+    if (this.activeObjectUrl) {
+      URL.revokeObjectURL(this.activeObjectUrl);
+      this.activeObjectUrl = null;
+    }
+
     const host = this.docxPreviewHost?.nativeElement;
     if (host) {
       host.innerHTML = '';
+    }
+  }
+
+  ngOnDestroy(): void {
+    if (this.activeObjectUrl) {
+      URL.revokeObjectURL(this.activeObjectUrl);
+      this.activeObjectUrl = null;
     }
   }
 
