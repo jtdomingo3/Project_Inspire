@@ -65,11 +65,13 @@
           <div class="lesson-view-actions">
             <button type="button" class="action-button" (click)="closeView()">Close View</button>
             <button type="button" class="action-button" (click)="openEditContent()">Edit Content</button>
+            <button type="button" class="action-button" (click)="exportToWord()">Save to Word</button>
+            <button type="button" class="action-button" (click)="exportToPDF()">Save to PDF</button>
             <button type="button" class="action-button" (click)="printLesson()">Print</button>
           </div>
         </div>
 
-        <div class="lesson-content">
+        <div class="lesson-content" id="lesson-draft-content">
           <div class="dlp-grid">
             <div><strong>School:</strong> {{ currentSchool() }}</div>
             <div><strong>Grade Level:</strong> {{ viewingPlan().grade || 'N/A' }}</div>

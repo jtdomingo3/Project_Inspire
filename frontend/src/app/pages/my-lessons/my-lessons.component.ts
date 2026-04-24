@@ -2,6 +2,8 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { jsPDF } from 'jspdf';
+import html2canvas from 'html2canvas-pro';
 
 import { LessonRecord } from '../../core/models/inspire-api.models';
 import { InspireApiService } from '../../core/services/inspire-api.service';
@@ -238,6 +240,188 @@ export class MyLessonsComponent implements OnInit {
     printWindow.document.close();
     printWindow.focus();
     setTimeout(() => printWindow.print(), 400);
+  }
+
+  async exportToPDF(): Promise<void> {
+    const element = document.getElementById('lesson-draft-content');
+    if (!element) {
+      return;
+    }
+
+    try {
+      this.saving.set(true);
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        logging: true,
+        backgroundColor: '#ffffff'
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+
+      const pdf = new jsPDF('p', 'mm', 'a4');
+
+      const imgProps = pdf.getImageProperties(imgData);
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+
+      const filename = `${this.viewingLesson()?.title || 'lesson'}-draft.pdf`;
+      
+      const blob = pdf.output('blob');
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+
+      setTimeout(() => {
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      }, 100);
+    } catch (err) {
+      console.error('exportToPDF: Error caught', err);
+      window.alert('Failed to generate PDF. Please try again.');
+    } finally {
+      this.saving.set(false);
+    }
+  }
+
+  exportToWord(): void {
+    const element = document.getElementById('lesson-draft-content');
+    if (!element) {
+      return;
+    }
+
+    const title = this.viewingLesson()?.title || 'Lesson Plan Draft';
+    const content = element.innerHTML;
+    
+    // Use a clone to manipulate the DOM for Word compatibility
+    const clone = element.cloneNode(true) as HTMLElement;
+
+    // 1. Transform dlp-grid to Table
+    const grids = clone.querySelectorAll('.dlp-grid');
+    grids.forEach((grid) => {
+      const table = document.createElement('table');
+      table.setAttribute('border', '1');
+      table.style.borderCollapse = 'collapse';
+      table.style.width = '100%';
+      table.style.borderColor = '#d3e1d7';
+      table.style.marginBottom = '16px';
+
+      const divs = Array.from(grid.querySelectorAll(':scope > div'));
+      let row: HTMLTableRowElement | null = null;
+
+      divs.forEach((div, i) => {
+        if (i % 3 === 0) {
+          row = table.insertRow();
+        }
+        if (row) {
+          const cell = row.insertCell();
+          cell.style.padding = '10px';
+          cell.style.border = '1px solid #d3e1d7';
+          cell.style.fontSize = '10pt';
+          cell.style.width = '33.33%';
+          cell.innerHTML = div.innerHTML;
+        }
+      });
+      grid.parentNode?.replaceChild(table, grid);
+    });
+
+    // 2. Transform support-grid to Table
+    const supportGrids = clone.querySelectorAll('.support-grid');
+    supportGrids.forEach((sGrid) => {
+      const table = document.createElement('table');
+      table.style.width = '100%';
+      table.style.marginTop = '10px';
+      table.style.borderCollapse = 'separate';
+      table.style.borderSpacing = '10px 0';
+
+      const boxes = Array.from(sGrid.querySelectorAll('.support-box'));
+      const row = table.insertRow();
+
+      boxes.forEach((box) => {
+        const isAlt = box.classList.contains('alt');
+        const cell = row.insertCell();
+        cell.style.border = `1px solid ${isAlt ? '#e8d8a8' : '#a9d8d4'}`;
+        cell.style.backgroundColor = isAlt ? '#fff8e8' : '#ecf8f7';
+        cell.style.padding = '10px';
+        cell.style.borderRadius = '10px';
+        cell.style.width = '50%';
+        cell.style.verticalAlign = 'top';
+        cell.innerHTML = box.innerHTML;
+      });
+      sGrid.parentNode?.replaceChild(table, sGrid);
+    });
+
+    // 3. Transform signature-grid to Table
+    const sigGrids = clone.querySelectorAll('.signature-grid');
+    sigGrids.forEach((sigGrid) => {
+      const table = document.createElement('table');
+      table.style.width = '100%';
+      table.style.marginTop = '20px';
+      table.style.borderTop = '1px solid #d3e1d7';
+      table.style.paddingTop = '12px';
+
+      const divs = Array.from(sigGrid.querySelectorAll(':scope > div'));
+      const row = table.insertRow();
+
+      divs.forEach((div) => {
+        const cell = row.insertCell();
+        cell.style.width = '33.33%';
+        cell.style.verticalAlign = 'top';
+        cell.style.paddingRight = '10px';
+        cell.innerHTML = div.innerHTML;
+      });
+      sigGrid.parentNode?.replaceChild(table, sigGrid);
+    });
+
+    const wordContent = clone.innerHTML;
+
+    const styles = `
+      <style>
+        body { font-family: 'Arial', sans-serif; line-height: 1.5; color: #333; }
+        .section-title { color: #154e2d; border-bottom: 2px solid #1f6a3b; font-size: 14pt; font-weight: bold; margin: 20px 0 10px; padding-bottom: 5px; }
+        .section-block { margin-bottom: 10px; border-bottom: 1px dashed #d6e2d9; padding-bottom: 10px; }
+        h4 { text-transform: uppercase; }
+        h5 { color: #1f6a3b; margin: 0 0 5px; font-size: 11pt; }
+        h6 { margin: 0 0 5px; font-size: 10pt; }
+        p { margin: 0 0 5px; padding-left: 15pt; }
+        .pre-wrap { white-space: pre-wrap; }
+        ul, ol { margin-bottom: 10px; }
+        li { margin-bottom: 3px; }
+      </style>
+    `;
+
+    const html = `
+      <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+        <head>
+          <meta charset='utf-8'>
+          <title>${title}</title>
+          ${styles}
+        </head>
+        <body>
+          <h2 style="color: #1f6a3b; margin-bottom: 5px;">${title}</h2>
+          <p style="color: #666; margin-bottom: 20px; font-style: italic;">Draft Lesson Plan Export</p>
+          ${wordContent}
+        </body>
+      </html>
+    `;
+
+    const blob = new Blob(['\ufeff', html], { type: 'application/msword' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}-draft.doc`;
+    document.body.appendChild(link);
+    link.click();
+
+    setTimeout(() => {
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }, 100);
   }
 
 
