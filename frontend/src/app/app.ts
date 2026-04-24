@@ -344,6 +344,12 @@ export class App {
     });
   }
 
+  protected skipSetup(): void {
+    this.setupRequired.set(false);
+    this.loginUsername = 'admin';
+    this.loginPassword = 'admin123';
+  }
+
   protected logout(): void {
     this.isAuthenticated.set(false);
     this.currentRole.set('teacher');
