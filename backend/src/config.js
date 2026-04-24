@@ -16,11 +16,17 @@ export const referencesDir = process.env.INSPIRE_REFERENCE_DIR
   : path.join(runtimeRoot, 'reference');
 
 export const supportedModels = [
+  'nvidia/nemotron-3-super-120b-a12b:free',
+  'inclusionai/ling-2.6-flash:free',
+  'z-ai/glm-4.5-air:free',
+  'tencent/hy3-preview:free',
   'openai/gpt-oss-20b:free',
+  'minimax/minimax-m2.5:free',
+  'nvidia/nemotron-3-nano-30b-a3b:free',
   'qwen/qwen3.6-plus',
   'stepfun/step-3.5-flash',
   'qwen/qwen3.6-plus-preview',
-  'nvidia/nemotron-3-super-120b-a12b:free'
+  'google/gemma-4-31b-it:free'
 ];
 
 export const surveyQuestions = {
