@@ -215,15 +215,22 @@
 
 .message-content-rich .message-table th,
 .message-content-rich .message-table td {
-  border: 1px solid rgba(30, 77, 43, 0.2);
+  border: 1px solid rgba(30, 77, 43, 0.12);
   text-align: left;
   padding: 7px 8px;
   vertical-align: top;
 }
 
 .message-content-rich .message-table th {
-  background: rgba(30, 77, 43, 0.12);
+  background: rgba(30, 77, 43, 0.07);
   font-weight: 700;
+}
+
+.message-content-rich .message-table .message-table-num {
+  width: 48px;
+  text-align: center;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 
 .message-sources {

@@ -332,6 +332,11 @@ export class InspireAssistantComponent implements OnInit {
         return table;
       }
 
+      const numericTable = this.tryRenderNumericRowsTable(lines);
+      if (numericTable) {
+        return numericTable;
+      }
+
       const bulletLines = lines.filter((line) => /^[-*•]\s+/.test(line));
       const numberedLines = lines.filter((line) => /^\d+[.)]\s+/.test(line));
 
@@ -416,6 +421,48 @@ export class InspireAssistantComponent implements OnInit {
       result.push('');
     }
     return result;
+  }
+
+  private tryRenderNumericRowsTable(lines: string[]): string {
+    const normalizedLines = this.normalizeBrokenNumericLines(lines);
+    const rows: Array<{ number: string; text: string }> = [];
+
+    for (const line of normalizedLines) {
+      const match = line.match(/^(\d{1,3})(?:[.)]|\s+)?\s*(.+)$/);
+      if (match) {
+        rows.push({ number: match[1], text: match[2].trim() });
+        continue;
+      }
+
+      if (rows.length > 0) {
+        rows[rows.length - 1].text = `${rows[rows.length - 1].text} ${line}`.trim();
+      }
+    }
+
+    if (rows.length < 3) {
+      return '';
+    }
+
+    const rowsHtml = rows
+      .map((row) => `<tr><td class="message-table-num">${row.number}</td><td>${this.applyInlineFormatting(row.text)}</td></tr>`)
+      .join('');
+
+    return `<div class="message-table-wrap"><table class="message-table"><thead><tr><th>No.</th><th>Item</th></tr></thead><tbody>${rowsHtml}</tbody></table></div>`;
+  }
+
+  private normalizeBrokenNumericLines(lines: string[]): string[] {
+    const merged: string[] = [];
+    for (let index = 0; index < lines.length; index += 1) {
+      const current = lines[index];
+      const next = lines[index + 1];
+      if (/^\d+$/.test(current) && next && /^\d+\s+.+/.test(next)) {
+        merged.push(`${current}${next}`);
+        index += 1;
+        continue;
+      }
+      merged.push(current);
+    }
+    return merged;
   }
 
   private applyInlineFormatting(text: string): string {
