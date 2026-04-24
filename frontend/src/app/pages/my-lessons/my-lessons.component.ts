@@ -285,7 +285,7 @@ export class MyLessonsComponent implements OnInit {
 <style>
   @page { 
     size: landscape; 
-    margin: 5mm 8mm; 
+    margin: 10mm 20mm; 
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { 
@@ -335,7 +335,7 @@ export class MyLessonsComponent implements OnInit {
     table-layout: fixed;
     margin-bottom: 0;
   }
-  .info-table td { padding: 4px 6px; border: 0.5pt solid #000; overflow: hidden; word-wrap: break-word; }
+  .info-table td { padding: 4px 6px; border: 0.75pt solid #000; overflow: hidden; word-wrap: break-word; }
   .info-table .highlight { background: #fce4c6 !important; -webkit-print-color-adjust: exact; }
   .info-table .logo-cell { width: 50px; text-align: center; vertical-align: middle; }
   .info-table .logo-cell img { width: 42px; }
@@ -354,10 +354,10 @@ export class MyLessonsComponent implements OnInit {
     table-layout: fixed; 
     margin-top: 15px; /* Spacing between tables */
     break-inside: auto;
-    border: 0.5pt solid #000;
+    border: 0.75pt solid #000;
   }
   .dlp-table.overlap { margin-top: -1px; } /* For subsequent tables in the same section if split */
-  .dlp-table td { border: 0.5pt solid #000; padding: 5px 8px; vertical-align: top; word-wrap: break-word; }
+  .dlp-table td { border: 0.75pt solid #000; padding: 5px 8px; vertical-align: top; word-wrap: break-word; }
   .dlp-table tr { break-inside: auto; }
   
   .dlp-table .section-label {
@@ -372,8 +372,12 @@ export class MyLessonsComponent implements OnInit {
   }
   
   /* Continuity for Section Bars */
-  .dlp-table tr:not(.section-end) .section-label { border-bottom: none; }
-  .dlp-table tr:not(.section-start) .section-label { border-top: none; }
+  .dlp-table .section-label { border: 0.75pt solid #000; }
+  .dlp-table tr:not(.section-end) .section-label { border-bottom: none !important; }
+  .dlp-table tr:not(.section-start) .section-label { border-top: none !important; }
+  /* Ensure start/end rows ALWAYS have their outer borders */
+  .dlp-table tr.section-start .section-label { border-top: 0.75pt solid #000 !important; }
+  .dlp-table tr.section-end .section-label { border-bottom: 0.75pt solid #000 !important; }
 
   .dlp-table .sub-label { width: 130px; font-weight: bold; font-size: 9pt; vertical-align: top; }
   .dlp-table .content-cell { font-size: 9.5pt; }
@@ -411,17 +415,17 @@ export class MyLessonsComponent implements OnInit {
         <tr>
           <td class="logo-cell" rowspan="3"><img src="${sealUrl}" alt=""></td>
           <td class="subject-cell" rowspan="3">${subject}</td>
-          <td style="width: 70px;">School</td><td class="highlight">${school}</td>
-          <td style="width: 80px;">Grade Level</td><td class="highlight">${grade}</td>
-          <td style="width: 50px;">Quarter</td><td class="highlight">${quarter}</td>
+          <td style="width: 140px; white-space: nowrap;">School</td><td class="highlight">${school}</td>
+          <td style="width: 100px; white-space: nowrap;">Grade Level</td><td class="highlight">${grade}</td>
+          <td style="width: 60px; white-space: nowrap;">Quarter</td><td class="highlight">${quarter}</td>
         </tr>
         <tr>
-          <td>Teacher</td><td class="highlight">${teacher}</td>
-          <td>Learning Area</td><td class="highlight">${subject}</td>
+          <td style="white-space: nowrap;">Teacher</td><td class="highlight">${teacher}</td>
+          <td style="white-space: nowrap;">Learning Area</td><td class="highlight">${subject}</td>
           <td colspan="2"></td>
         </tr>
         <tr>
-          <td>Teaching Date and Time</td><td class="highlight">${dateStr}</td>
+          <td style="white-space: nowrap;">Teaching Date and Time</td><td class="highlight">${dateStr}</td>
           <td colspan="4"></td>
         </tr>
       </table>
