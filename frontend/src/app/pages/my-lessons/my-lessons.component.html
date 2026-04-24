@@ -63,6 +63,7 @@
           </div>
           <div class="lesson-view-actions">
             <button type="button" class="action-button" (click)="closeView()">Close View</button>
+            <button type="button" class="action-button" (click)="openEditContent()">Edit Content</button>
             <button type="button" class="action-button" (click)="exportToWord()">Save Draft to Word</button>
             <button type="button" class="action-button" (click)="printLesson()">Print Final</button>
           </div>
@@ -75,7 +76,7 @@
             <div><strong>Quarter:</strong> {{ viewingPlan().quarter || 'N/A' }}</div>
             <div><strong>Teacher:</strong> {{ currentTeacher() }}</div>
             <div><strong>Learning Area:</strong> {{ viewingPlan().subject || 'N/A' }}</div>
-            <div><strong>Teaching Date:</strong> {{ lessonDateTime(viewingLesson()) }}</div>
+            <div><strong>Teaching Date:</strong> {{ viewingPlan().teaching_date || lessonDateTime(viewingLesson()) }}</div>
           </div>
 
           <h4 class="section-title">I. CURRICULUM CONTENT, STANDARDS AND LESSON COMPETENCIES</h4>
@@ -253,6 +254,8 @@
       <section class="modal-panel large" (click)="$event.stopPropagation()" style="width: 90vw; max-width: 1200px; max-height: 90vh; overflow-y: auto;">
         <h3>Edit AI Content</h3>
         <form [formGroup]="editContentForm" (ngSubmit)="saveEditContent()" class="edit-form">
+          <label><span>Title</span><input type="text" formControlName="title" style="font-weight: bold; font-size: 1.1rem; border-color: var(--primary);"></label>
+          <label><span>Teaching Date</span><input type="text" formControlName="teaching_date" placeholder="e.g. June 15, 2026"></label>
           <label><span>Content Standards</span><textarea rows="3" formControlName="content_standards"></textarea></label>
           <label><span>Performance Standards</span><textarea rows="3" formControlName="performance_standards"></textarea></label>
           <label><span>Competencies</span><textarea rows="3" formControlName="competencies"></textarea></label>

@@ -41,6 +41,7 @@ type ViewPlan = {
   reviewed_by_designation: string;
   noted_by: string;
   noted_by_designation: string;
+  teaching_date: string;
 };
 
 const emptyViewPlan = (): ViewPlan => ({
@@ -75,7 +76,8 @@ const emptyViewPlan = (): ViewPlan => ({
   reviewed_by: '',
   reviewed_by_designation: '',
   noted_by: '',
-  noted_by_designation: ''
+  noted_by_designation: '',
+  teaching_date: ''
 });
 
 @Component({
@@ -113,6 +115,7 @@ export class MyLessonsComponent implements OnInit {
   });
 
   readonly editContentForm = this.fb.group({
+    title: [''],
     content_standards: [''],
     performance_standards: [''],
     competencies: [''],
@@ -133,7 +136,8 @@ export class MyLessonsComponent implements OnInit {
     reviewed_by: [''],
     reviewed_by_designation: [''],
     noted_by: [''],
-    noted_by_designation: ['']
+    noted_by_designation: [''],
+    teaching_date: ['']
   });
 
   ngOnInit(): void {
@@ -203,7 +207,9 @@ export class MyLessonsComponent implements OnInit {
       reviewed_by: plan.reviewed_by,
       reviewed_by_designation: plan.reviewed_by_designation,
       noted_by: plan.noted_by,
-      noted_by_designation: plan.noted_by_designation
+      noted_by_designation: plan.noted_by_designation,
+      teaching_date: plan.teaching_date || this.lessonDateTime(lesson),
+      title: plan.title || lesson.title
     });
   }
 
@@ -896,7 +902,8 @@ export class MyLessonsComponent implements OnInit {
       reviewed_by: this.readPlanField(parsed, 'reviewed_by', parsedText.reviewed_by || ''),
       reviewed_by_designation: this.readPlanField(parsed, 'reviewed_by_designation', parsedText.reviewed_by_designation || ''),
       noted_by: this.readPlanField(parsed, 'noted_by', parsedText.noted_by || ''),
-      noted_by_designation: this.readPlanField(parsed, 'noted_by_designation', parsedText.noted_by_designation || '')
+      noted_by_designation: this.readPlanField(parsed, 'noted_by_designation', parsedText.noted_by_designation || ''),
+      teaching_date: this.readPlanField(parsed, 'teaching_date', parsedText.teaching_date || '')
     };
   }
 
