@@ -11,7 +11,6 @@ export const runtimeRoot = process.env.INSPIRE_RUNTIME_ROOT
 export const dataRootDir = process.env.INSPIRE_DATA_DIR
   ? path.resolve(process.env.INSPIRE_DATA_DIR)
   : path.join(backendRoot, 'data');
-export const dataFilePath = path.join(dataRootDir, 'store.json');
 export const referencesDir = process.env.INSPIRE_REFERENCE_DIR
   ? path.resolve(process.env.INSPIRE_REFERENCE_DIR)
   : path.join(runtimeRoot, 'reference');
