@@ -220,6 +220,48 @@ textarea:focus {
   margin-top: 3px;
 }
 
+.difficulty-preview-box {
+  margin-top: 12px;
+  border: 1px solid #c4d5ca;
+  border-radius: 12px;
+  padding: 12px;
+  background: #f8faf9;
+  display: grid;
+  gap: 8px;
+}
+
+.preview-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #1f5f34;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0;
+}
+
+.preview-sub {
+  font-size: 0.9rem;
+  font-weight: 700;
+  margin: 8px 0 2px;
+  color: #2c4a38;
+}
+
+.difficulty-preview-box ul {
+  margin: 0;
+  padding-left: 20px;
+  font-size: 0.9rem;
+  color: #4f6b5d;
+  line-height: 1.4;
+}
+
+.preview-text {
+  font-size: 0.9rem;
+  color: #4f6b5d;
+  line-height: 1.5;
+  margin: 0;
+  white-space: pre-wrap;
+}
+
 .subcategory-box {
   margin-top: 10px;
   border: 1px dashed #cfdad3;

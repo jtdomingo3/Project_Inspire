@@ -102,6 +102,13 @@ export class LessonWorkbenchComponent implements OnInit {
     const cat = this.allDifficultyCategories().find((c) => c.name === activeName);
     return cat?.subcategories ?? [];
   });
+  readonly activeDifficultyRecord = computed(() => {
+    const activeName = this.activeDifficultyForSubcategories();
+    if (!activeName) {
+      return null;
+    }
+    return this.allDifficultyCategories().find((c) => c.name === activeName) ?? null;
+  });
 
   readonly form = this.fb.group({
     subject: ['', Validators.required],

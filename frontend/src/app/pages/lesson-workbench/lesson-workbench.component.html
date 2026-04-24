@@ -119,6 +119,26 @@
                 }
               </div>
             }
+
+            @if (activeDifficultyRecord(); as record) {
+              <div class="difficulty-preview-box">
+                <p class="preview-label">Reference Details (from Library):</p>
+                
+                @if (record.observable_characteristics.length) {
+                  <p class="preview-sub">Observable Characteristics:</p>
+                  <ul>
+                    @for (char of record.observable_characteristics; track char) {
+                      <li>{{ char }}</li>
+                    }
+                  </ul>
+                }
+
+                @if (record.accommodation_tips) {
+                  <p class="preview-sub">Accommodation Tips:</p>
+                  <p class="preview-text">{{ record.accommodation_tips }}</p>
+                }
+              </div>
+            }
           </section>
         }
 
