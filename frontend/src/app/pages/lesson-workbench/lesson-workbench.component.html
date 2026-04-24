@@ -322,4 +322,14 @@
       </aside>
     </div>
   }
+
+  @if (generating()) {
+    <div class="generating-overlay">
+      <div class="loader-content">
+        <div class="spinner"></div>
+        <h2>Drafting your Lesson Plan...</h2>
+        <p>Please wait while INSPIRE connects to the AI model to generate your differentiated lesson plan.</p>
+      </div>
+    </div>
+  }
 </section>
