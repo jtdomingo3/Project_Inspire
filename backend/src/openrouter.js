@@ -99,8 +99,9 @@ function splitSupportTypes(raw) {
 
 function buildSupportRecommendations(lessonData) {
   const supportTypes = splitSupportTypes(lessonData.support_types ?? lessonData.supportTypes);
-  const wantsAccommodations = supportTypes.length === 0 || supportTypes.some((item) => /accommod/i.test(item));
-  const wantsModifications = supportTypes.length === 0 || supportTypes.some((item) => /modif/i.test(item));
+  // Always provide both if nothing specific is selected, or if any inclusive support is mentioned
+  const wantsAccommodations = supportTypes.length === 0 || supportTypes.some((item) => /accommod|time|cue|visual|format|pause/i.test(item));
+  const wantsModifications = supportTypes.length === 0 || supportTypes.some((item) => /modif|reduce|break|segment|scaffold|level/i.test(item));
 
   const accommodations = wantsAccommodations
     ? [
@@ -153,11 +154,14 @@ function buildLessonPlanPrompt(lessonData, selectedRefs) {
     'Generate a complete, classroom-ready Daily Lesson Plan aligned to the provided learner profile, objectives, supports, and selected references.',
     'Use only the loaded reference documents if they are relevant, and do not invent policies or references that are not present.',
     'Return ONLY a single valid JSON object with the exact keys below. Do not add any text before or after the JSON object.',
-    'Every required field must contain substantive content. Avoid placeholders such as "N/A", "TBD", or "None".',
-    'For "developing", provide a clear sequence (introduction, guided practice, independent practice, and feedback).',
-    'For "accommodations" and "modifications", provide concrete classroom actions with at least four distinct items each when those supports are requested.',
+    'For "content_standards" and "performance_standards", provide a comprehensive, professional paragraph for each (at least 3-4 sentences).',
+    'For "developing" and all sub-sections of Section III (A to G), provide 1-2 detailed paragraphs per item that explain both the teacher actions and expected student responses.',
+    'For "accommodations" and "modifications", provide concrete classroom actions with at least 4-6 distinct, detailed bullet points each. These must be specifically tailored to the learner difficulty.',
+    'For "resources", list the titles of the reference documents used, separated by bullets or newlines.',
+    'LANGUAGE REQUIREMENT: Match the language of the provided "Subject" and "Lesson title". If they are in Tagalog, the entire lesson plan content must be in Tagalog.',
+    'PROFESSIONAL DEPTH: Avoid short, generic phrases. Every section must be substantive and show expert pedagogical knowledge.',
     '',
-    'Required JSON keys: content_standards, performance_standards, competencies, content, integration, resources, prior_knowledge, lesson_purpose, developing, generalization, evaluation, accommodations, modifications, remarks, reflection, custom_support, observations.',
+    'Required JSON keys: content_standards, performance_standards, competencies, content, integration, resources, prior_knowledge, lesson_purpose, developing, generalization, evaluation, accommodations, modifications, remarks, reflection, custom_support, observations, reviewed_by, noted_by.',
     'Also include these optional metadata keys if available: subject, grade, quarter, title, difficulty, subcategories, indicators, support_types, delivery_mode.',
     '',
     'Example output format:',
@@ -217,7 +221,9 @@ function createFallbackPlan(lessonData, selectedRefs, source) {
     indicators: lessonData.indicators || '',
     support_types: lessonData.support_types || lessonData.supportTypes || '',
     subcategories: lessonData.subcategories || '',
-    delivery_mode: lessonData.delivery_mode || lessonData.deliveryMode || ''
+    delivery_mode: lessonData.delivery_mode || lessonData.deliveryMode || '',
+    reviewed_by: lessonData.reviewed_by || lessonData.reviewedBy || 'Department Head',
+    noted_by: lessonData.noted_by || lessonData.notedBy || 'School Principal'
   };
 }
 
@@ -235,12 +241,11 @@ function normalizeGeneratedPlan(rawPlan, lessonData, selectedRefs) {
     || fallbackPlan.modifications
     || supports.modifications;
 
-  const supportNotes = readGeneratedField(parsed, ['custom_support', 'customSupport', 'support_plan', 'support_notes', 'observed_manifestations'])
-    || normalizeGeneratedText(lessonData.custom_support)
-    || [
-      accommodations ? `Accommodations:\n${accommodations}` : '',
-      modifications ? `Modifications:\n${modifications}` : ''
-    ].filter(Boolean).join('\n\n');
+  const rawCustom = readGeneratedField(parsed, ['custom_support', 'customSupport', 'support_plan', 'support_notes', 'observed_manifestations']);
+  
+  // If we have distinct accommodations/modifications, and rawCustom is empty or just repeats them, 
+  // we should use a clean version of custom_support.
+  const supportNotes = rawCustom || normalizeGeneratedText(lessonData.custom_support) || '';
 
   return {
     content_standards: readGeneratedField(parsed, ['content_standards', 'contentStandards']) || fallbackPlan.content_standards,
@@ -268,7 +273,9 @@ function normalizeGeneratedPlan(rawPlan, lessonData, selectedRefs) {
     indicators: readGeneratedField(parsed, ['indicators']) || normalizeGeneratedText(lessonData.indicators) || fallbackPlan.indicators,
     support_types: readGeneratedField(parsed, ['support_types', 'supportTypes']) || normalizeGeneratedText(lessonData.support_types) || fallbackPlan.support_types,
     subcategories: readGeneratedField(parsed, ['subcategories']) || normalizeGeneratedText(lessonData.subcategories) || fallbackPlan.subcategories,
-    delivery_mode: readGeneratedField(parsed, ['delivery_mode', 'deliveryMode']) || normalizeGeneratedText(lessonData.delivery_mode) || fallbackPlan.delivery_mode
+    delivery_mode: readGeneratedField(parsed, ['delivery_mode', 'deliveryMode']) || normalizeGeneratedText(lessonData.delivery_mode) || fallbackPlan.delivery_mode,
+    reviewed_by: readGeneratedField(parsed, ['reviewed_by', 'reviewedBy']) || normalizeGeneratedText(lessonData.reviewedBy) || fallbackPlan.reviewed_by,
+    noted_by: readGeneratedField(parsed, ['noted_by', 'notedBy']) || normalizeGeneratedText(lessonData.notedBy) || fallbackPlan.noted_by
   };
 }
 

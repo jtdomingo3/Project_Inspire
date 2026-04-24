@@ -371,7 +371,11 @@ export class MyLessonsComponent implements OnInit {
   <tr>
     <td class="section-label">II. LEARNING<br>RESOURCES</td>
     <td class="sub-label">Learning Resources</td>
-    <td class="content-cell">${nl2br(plan.resources)}</td>
+    <td class="content-cell">
+      <ul style="margin-left: 16px; margin-top: 0; margin-bottom: 0;">
+        ${this.resourceLines(plan.resources).map(r => `<li>${e(r)}</li>`).join('')}
+      </ul>
+    </td>
   </tr>
 </table>
 <table class="dlp-table">
@@ -521,6 +525,10 @@ export class MyLessonsComponent implements OnInit {
 
   detailLines(text: string): string[] {
     return this.toItems(text, /\r?\n|•|;|\|/g);
+  }
+
+  resourceLines(text: string): string[] {
+    return this.toItems(text, /\r?\n|•|;|\||,/g);
   }
 
   competencyItems(): string[] {
@@ -812,10 +820,11 @@ export class MyLessonsComponent implements OnInit {
     if (numberedItems && numberedItems.length > 0) {
       return numberedItems
         .map((item) => item.trim())
-        .filter(Boolean);
+        .filter((item) => item && !/^(accommodations|modifications|observed manifestations):?$/i.test(item));
     }
 
-    return this.toItems(normalized, /\r?\n|;|\|/g);
+    return this.toItems(normalized, /\r?\n|;|\|/g)
+      .filter((item) => !/^(accommodations|modifications|observed manifestations):?$/i.test(item));
   }
 
   private formatObjective(text: string): string {

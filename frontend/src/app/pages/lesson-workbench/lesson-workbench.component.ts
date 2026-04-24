@@ -386,7 +386,9 @@ export class LessonWorkbenchComponent implements OnInit {
       supportTypes: raw.supportTypes,
       subcategories: raw.subcategories,
       customSupport: raw.customSupport,
-      deliveryMode: raw.deliveryMode
+      deliveryMode: raw.deliveryMode,
+      reviewedBy: raw.reviewedBy,
+      notedBy: raw.notedBy
     };
 
     this.api.generateLessonPlan({
