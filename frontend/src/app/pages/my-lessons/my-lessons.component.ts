@@ -782,18 +782,33 @@ export class MyLessonsComponent implements OnInit {
 
   private readPlanField(source: Record<string, unknown> | null, key: string, fallback: string): string {
     const value = source?.[key];
-    return typeof value === 'string' ? value : fallback;
+    const raw = typeof value === 'string' ? value : fallback;
+    return this.cleanLiteralNewlines(raw);
   }
 
   private readPlanFieldAny(source: Record<string, unknown> | null, keys: string[], fallback: string): string {
     for (const key of keys) {
       const value = source?.[key];
       if (typeof value === 'string' && value.trim()) {
-        return value;
+        return this.cleanLiteralNewlines(value);
       }
     }
 
-    return fallback;
+    return this.cleanLiteralNewlines(fallback);
+  }
+
+  /**
+   * Convert literal backslash-n sequences ("\n") to real newline characters.
+   * LLMs return JSON strings with escaped newlines — after JSON.parse, these
+   * become the two-character string "\n" instead of an actual newline.
+   * Also handles double-escaped variants ("\\n") from over-escaping.
+   */
+  private cleanLiteralNewlines(text: string): string {
+    if (!text) return text;
+    // Replace literal \\n (double-escaped) first, then literal \n
+    return text
+      .replace(/\\\\n/g, '\n')
+      .replace(/\\n/g, '\n');
   }
 
   private toItems(text: string, splitter: RegExp): string[] {

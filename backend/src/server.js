@@ -723,7 +723,15 @@ app.post('/api/generate', async (request, response) => {
     const references = normalizeArray(payload.references ?? payload.selected_refs);
     const model = normalizeText(payload.model);
 
-    const generation = await generateLessonPlan(lessonData, { model, selectedRefs: references });
+    // Resolve filenames to human-friendly titles
+    const referenceMetadata = await db.getReferenceMetadata();
+    const referenceTitles = references.map(ref => referenceMetadata[ref]?.title || ref);
+
+    const generation = await generateLessonPlan(lessonData, { 
+      model, 
+      selectedRefs: references,
+      selectedRefTitles: referenceTitles
+    });
     const lesson = await db.upsertLesson({
       ...validateLessonPayload(normalizeLessonPayload(request.body)),
       user_id: userId,
