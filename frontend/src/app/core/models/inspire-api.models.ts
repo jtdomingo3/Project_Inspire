@@ -70,6 +70,32 @@ export interface ChatbotQueryResponse {
   error?: string;
 }
 
+export interface AssistantConversationMessage {
+  id: number;
+  conversation_id: number;
+  user_id: number;
+  role: 'assistant' | 'user';
+  content: string;
+  sources: ChatbotSourceChunk[];
+  created_at: string;
+}
+
+export interface AssistantConversationSummary {
+  id: number;
+  user_id: number;
+  title: string;
+  last_model?: string;
+  references: string[];
+  created_at: string;
+  updated_at: string;
+  last_message?: string;
+  message_count?: number;
+}
+
+export interface AssistantConversationDetail extends AssistantConversationSummary {
+  messages: AssistantConversationMessage[];
+}
+
 export interface LessonRecord {
   id: number;
   subject: string;

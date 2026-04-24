@@ -682,6 +682,163 @@ export async function listReminders(userId) {
   return rows.map(row => ({ ...row, is_completed: row.is_completed === 1 }));
 }
 
+function formatAssistantConversationRow(row) {
+  if (!row) return null;
+  return {
+    id: Number(row.id),
+    user_id: Number(row.user_id),
+    title: row.title || 'New Conversation',
+    last_model: row.last_model || '',
+    references: deserializeJson(row.reference_docs) || [],
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+    last_message: row.last_message || '',
+    message_count: Number(row.message_count || 0)
+  };
+}
+
+function formatAssistantMessageRow(row) {
+  return {
+    id: Number(row.id),
+    conversation_id: Number(row.conversation_id),
+    user_id: Number(row.user_id),
+    role: row.role,
+    content: row.content,
+    sources: deserializeJson(row.sources) || [],
+    created_at: row.created_at
+  };
+}
+
+export async function createAssistantConversation(record) {
+  const db = getDatabase();
+  const pDb = promisifyDb(db);
+
+  const now = new Date().toISOString();
+  const userId = Number(record.user_id || 1);
+  const title = (record.title && String(record.title).trim()) || 'New Conversation';
+  const lastModel = record.last_model || '';
+  const referenceDocs = serializeJson(Array.isArray(record.references) ? record.references : []);
+
+  await pDb.run(
+    `INSERT INTO assistant_conversations (user_id, title, last_model, reference_docs, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?)` ,
+    [userId, title, lastModel, referenceDocs, now, now]
+  );
+
+  const inserted = await pDb.get('SELECT * FROM assistant_conversations WHERE id = last_insert_rowid()');
+  return formatAssistantConversationRow(inserted);
+}
+
+export async function listAssistantConversations(userId) {
+  const db = getDatabase();
+  const pDb = promisifyDb(db);
+  const uid = Number(userId || 1);
+
+  const rows = await pDb.all(
+    `SELECT c.*,
+      (SELECT m.content FROM assistant_messages m WHERE m.conversation_id = c.id ORDER BY m.id DESC LIMIT 1) AS last_message,
+      (SELECT COUNT(*) FROM assistant_messages m WHERE m.conversation_id = c.id) AS message_count
+     FROM assistant_conversations c
+     WHERE c.user_id = ?
+     ORDER BY c.updated_at DESC`,
+    [uid]
+  );
+
+  return rows.map(formatAssistantConversationRow);
+}
+
+export async function getAssistantConversation(conversationId, userId) {
+  const db = getDatabase();
+  const pDb = promisifyDb(db);
+
+  const row = await pDb.get(
+    `SELECT c.*,
+      (SELECT m.content FROM assistant_messages m WHERE m.conversation_id = c.id ORDER BY m.id DESC LIMIT 1) AS last_message,
+      (SELECT COUNT(*) FROM assistant_messages m WHERE m.conversation_id = c.id) AS message_count
+     FROM assistant_conversations c
+     WHERE c.id = ? AND c.user_id = ?`,
+    [Number(conversationId), Number(userId || 1)]
+  );
+
+  if (!row) return null;
+
+  const messages = await pDb.all(
+    'SELECT * FROM assistant_messages WHERE conversation_id = ? ORDER BY id ASC',
+    [Number(conversationId)]
+  );
+
+  return {
+    ...formatAssistantConversationRow(row),
+    messages: messages.map(formatAssistantMessageRow)
+  };
+}
+
+export async function updateAssistantConversation(conversationId, userId, patch) {
+  const db = getDatabase();
+  const pDb = promisifyDb(db);
+
+  const current = await pDb.get(
+    'SELECT * FROM assistant_conversations WHERE id = ? AND user_id = ?',
+    [Number(conversationId), Number(userId || 1)]
+  );
+
+  if (!current) {
+    return null;
+  }
+
+  const nextTitle = patch.title !== undefined ? (String(patch.title || '').trim() || current.title) : current.title;
+  const nextModel = patch.last_model !== undefined ? String(patch.last_model || '') : current.last_model;
+  const nextReferenceDocs = patch.references !== undefined
+    ? serializeJson(Array.isArray(patch.references) ? patch.references : [])
+    : current.reference_docs;
+  const now = new Date().toISOString();
+
+  await pDb.run(
+    `UPDATE assistant_conversations
+     SET title = ?, last_model = ?, reference_docs = ?, updated_at = ?
+     WHERE id = ? AND user_id = ?`,
+    [nextTitle, nextModel, nextReferenceDocs, now, Number(conversationId), Number(userId || 1)]
+  );
+
+  return getAssistantConversation(conversationId, userId);
+}
+
+export async function addAssistantMessage(record) {
+  const db = getDatabase();
+  const pDb = promisifyDb(db);
+
+  await pDb.run(
+    `INSERT INTO assistant_messages (conversation_id, user_id, role, content, sources, created_at)
+     VALUES (?, ?, ?, ?, ?, ?)`,
+    [
+      Number(record.conversation_id),
+      Number(record.user_id || 1),
+      record.role,
+      String(record.content || ''),
+      serializeJson(Array.isArray(record.sources) ? record.sources : []),
+      new Date().toISOString()
+    ]
+  );
+
+  await pDb.run(
+    'UPDATE assistant_conversations SET updated_at = ? WHERE id = ? AND user_id = ?',
+    [new Date().toISOString(), Number(record.conversation_id), Number(record.user_id || 1)]
+  );
+
+  const inserted = await pDb.get('SELECT * FROM assistant_messages WHERE id = last_insert_rowid()');
+  return formatAssistantMessageRow(inserted);
+}
+
+export async function deleteAssistantConversation(conversationId, userId) {
+  const db = getDatabase();
+  const pDb = promisifyDb(db);
+  await pDb.run(
+    'DELETE FROM assistant_conversations WHERE id = ? AND user_id = ?',
+    [Number(conversationId), Number(userId || 1)]
+  );
+  return true;
+}
+
 export async function getStats() {
   const db = getDatabase();
   const pDb = promisifyDb(db);
@@ -738,5 +895,11 @@ export default {
   upsertReminder,
   deleteReminder,
   listReminders,
+  createAssistantConversation,
+  listAssistantConversations,
+  getAssistantConversation,
+  updateAssistantConversation,
+  addAssistantMessage,
+  deleteAssistantConversation,
   getStats,
 };

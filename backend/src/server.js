@@ -213,6 +213,14 @@ function normalizeReminderPayload(body) {
   };
 }
 
+function buildConversationTitleFromQuestion(question) {
+  const clean = normalizeText(question).replace(/\s+/g, ' ').trim();
+  if (!clean) {
+    return 'New Conversation';
+  }
+  return clean.length > 70 ? `${clean.slice(0, 67)}...` : clean;
+}
+
 function sanitizeReferenceFileName(fileName) {
   const normalized = normalizeText(fileName).replace(/[\\/]/g, '');
   if (!normalized) {
@@ -786,6 +794,136 @@ app.post('/api/chatbot/query', async (request, response) => {
       warning: chat.warning,
       answer: chat.answer,
       model: chat.model,
+      selected_refs: chat.selected_refs,
+      selected_ref_titles: chat.selected_ref_titles,
+      sources: chat.sources ?? []
+    });
+  } catch (error) {
+    handleRouteError(response, error, 500);
+  }
+});
+
+app.get('/api/assistant/conversations', async (request, response) => {
+  try {
+    const userId = request.user?.userId || 1;
+    const conversations = await db.listAssistantConversations(userId);
+    sendJson(response, 200, { success: true, conversations });
+  } catch (error) {
+    handleRouteError(response, error, 500);
+  }
+});
+
+app.post('/api/assistant/conversations', async (request, response) => {
+  try {
+    const userId = request.user?.userId || 1;
+    const payload = ensureObject(request.body, 'Request body');
+    const title = normalizeText(payload.title, 'New Conversation');
+    const model = normalizeText(payload.model);
+    const references = normalizeArray(payload.references);
+
+    const conversation = await db.createAssistantConversation({
+      user_id: userId,
+      title,
+      last_model: model,
+      references
+    });
+
+    sendJson(response, 201, { success: true, conversation });
+  } catch (error) {
+    handleRouteError(response, error, 400);
+  }
+});
+
+app.get('/api/assistant/conversations/:id', async (request, response) => {
+  try {
+    const userId = request.user?.userId || 1;
+    const conversation = await db.getAssistantConversation(Number(request.params.id), userId);
+    if (!conversation) {
+      sendJson(response, 404, { success: false, error: 'Conversation not found' });
+      return;
+    }
+
+    sendJson(response, 200, { success: true, conversation });
+  } catch (error) {
+    handleRouteError(response, error, 500);
+  }
+});
+
+app.delete('/api/assistant/conversations/:id', async (request, response) => {
+  try {
+    const userId = request.user?.userId || 1;
+    await db.deleteAssistantConversation(Number(request.params.id), userId);
+    sendJson(response, 200, { success: true });
+  } catch (error) {
+    handleRouteError(response, error, 500);
+  }
+});
+
+app.post('/api/assistant/conversations/:id/query', async (request, response) => {
+  try {
+    const userId = request.user?.userId || 1;
+    const conversationId = Number(request.params.id);
+    const payload = ensureObject(request.body, 'Request body');
+    const question = normalizeText(payload.question);
+
+    if (!question) {
+      sendJson(response, 400, { success: false, error: 'question is required' });
+      return;
+    }
+
+    const existing = await db.getAssistantConversation(conversationId, userId);
+    if (!existing) {
+      sendJson(response, 404, { success: false, error: 'Conversation not found' });
+      return;
+    }
+
+    const references = normalizeArray(payload.references).length > 0
+      ? normalizeArray(payload.references)
+      : (existing.references || []);
+    const model = normalizeText(payload.model) || normalizeText(existing.last_model);
+
+    const referenceMetadata = await db.getReferenceMetadata();
+    const referenceTitles = references.map((ref) => referenceMetadata[ref]?.title || ref);
+
+    await db.addAssistantMessage({
+      conversation_id: conversationId,
+      user_id: userId,
+      role: 'user',
+      content: question,
+      sources: []
+    });
+
+    const chat = await generateChatResponse(question, {
+      model,
+      selectedRefs: references,
+      selectedRefTitles: referenceTitles,
+      username: request.user?.username,
+      role: request.user?.role
+    });
+
+    await db.addAssistantMessage({
+      conversation_id: conversationId,
+      user_id: userId,
+      role: 'assistant',
+      content: chat.answer,
+      sources: chat.sources ?? []
+    });
+
+    const shouldRetitle = normalizeText(existing.title, 'New Conversation') === 'New Conversation'
+      && (existing.message_count || 0) === 0;
+
+    await db.updateAssistantConversation(conversationId, userId, {
+      title: shouldRetitle ? buildConversationTitleFromQuestion(question) : existing.title,
+      last_model: chat.model,
+      references
+    });
+
+    sendJson(response, 200, {
+      success: true,
+      answer: chat.answer,
+      model: chat.model,
+      source: chat.source,
+      warning: chat.warning,
       selected_refs: chat.selected_refs,
       selected_ref_titles: chat.selected_ref_titles,
       sources: chat.sources ?? []

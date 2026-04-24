@@ -3,6 +3,8 @@ import { inject, Injectable } from '@angular/core';
 import { map, Observable } from 'rxjs';
 
 import {
+  AssistantConversationDetail,
+  AssistantConversationSummary,
   AdminStats,
   ApiListResponse,
   ChatbotQueryRequest,
@@ -50,6 +52,32 @@ export class InspireApiService {
 
   queryChatbot(payload: ChatbotQueryRequest): Observable<ChatbotQueryResponse> {
     return this.http.post<ChatbotQueryResponse>('/api/chatbot/query', payload);
+  }
+
+  listAssistantConversations(): Observable<AssistantConversationSummary[]> {
+    return this.http.get<{ success?: boolean; conversations?: AssistantConversationSummary[] }>('/api/assistant/conversations').pipe(
+      map((response) => response.conversations ?? [])
+    );
+  }
+
+  createAssistantConversation(payload: { title?: string; model?: string; references?: string[] }): Observable<AssistantConversationSummary> {
+    return this.http.post<{ success?: boolean; conversation: AssistantConversationSummary }>('/api/assistant/conversations', payload).pipe(
+      map((response) => response.conversation)
+    );
+  }
+
+  getAssistantConversation(id: number): Observable<AssistantConversationDetail> {
+    return this.http.get<{ success?: boolean; conversation: AssistantConversationDetail }>(`/api/assistant/conversations/${id}`).pipe(
+      map((response) => response.conversation)
+    );
+  }
+
+  deleteAssistantConversation(id: number): Observable<{ success: boolean }> {
+    return this.http.delete<{ success: boolean }>(`/api/assistant/conversations/${id}`);
+  }
+
+  queryAssistantConversation(id: number, payload: ChatbotQueryRequest): Observable<ChatbotQueryResponse> {
+    return this.http.post<ChatbotQueryResponse>(`/api/assistant/conversations/${id}/query`, payload);
   }
 
   getReferences(): Observable<string[]> {

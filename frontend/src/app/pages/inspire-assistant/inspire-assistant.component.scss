@@ -4,8 +4,8 @@
 
 .assistant-page {
   min-height: calc(100vh - 240px);
-  display: grid;
-  grid-template-rows: auto auto 1fr auto;
+  display: flex;
+  flex-direction: column;
   gap: 10px;
   padding: 14px;
 }
@@ -15,6 +15,90 @@
   justify-content: space-between;
   align-items: flex-start;
   gap: 10px;
+}
+
+.assistant-header-actions {
+  display: inline-flex;
+  gap: 8px;
+}
+
+.assistant-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 12px;
+  min-height: 560px;
+}
+
+.assistant-main {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: 10px;
+}
+
+.conversation-list {
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: calc(100vh - 300px);
+  overflow-y: auto;
+}
+
+.conversation-list-title {
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  font-weight: 700;
+}
+
+.conversation-item {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface);
+  text-align: left;
+  padding: 8px;
+}
+
+.conversation-item.active {
+  border-color: var(--color-primary-light);
+  background: rgba(30, 77, 43, 0.08);
+}
+
+.conversation-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.conversation-title {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.conversation-delete {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+
+.conversation-delete:hover {
+  background: rgba(224, 92, 58, 0.12);
+  color: var(--color-accent-red);
+}
+
+.conversation-subtitle {
+  margin-top: 4px;
+  font-size: 0.74rem;
+  color: var(--color-text-muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .assistant-header .section-title {
@@ -57,7 +141,7 @@
 
 .assistant-messages {
   min-height: 360px;
-  max-height: calc(100vh - 430px);
+  max-height: calc(100vh - 390px);
   overflow-y: auto;
   border: 1px solid var(--color-border);
   border-radius: 10px;
@@ -188,6 +272,14 @@
 }
 
 @media (max-width: 900px) {
+  .assistant-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .conversation-list {
+    max-height: 220px;
+  }
+
   .assistant-messages {
     max-height: none;
     min-height: 320px;
@@ -202,6 +294,5 @@
 
   .assistant-page {
     min-height: auto;
-    grid-template-rows: auto auto minmax(260px, 1fr) auto;
   }
 }

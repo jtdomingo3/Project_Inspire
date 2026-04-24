@@ -2,7 +2,12 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 
-import { ChatbotQueryResponse, ResourceLibraryItem } from '../../core/models/inspire-api.models';
+import {
+  AssistantConversationDetail,
+  AssistantConversationSummary,
+  ChatbotQueryResponse,
+  ResourceLibraryItem
+} from '../../core/models/inspire-api.models';
 import { InspireApiService } from '../../core/services/inspire-api.service';
 
 interface AssistantMessage {
@@ -26,8 +31,11 @@ export class InspireAssistantComponent implements OnInit {
 
   protected readonly sending = signal(false);
   protected readonly loadError = signal('');
+  protected readonly initializing = signal(true);
   protected readonly availableModels = signal<string[]>([]);
   protected readonly references = signal<ResourceLibraryItem[]>([]);
+  protected readonly conversations = signal<AssistantConversationSummary[]>([]);
+  protected readonly activeConversationId = signal<number | null>(null);
   protected readonly selectedModel = signal('');
   protected readonly selectedReferences = signal<string[]>([]);
   protected readonly messages = signal<AssistantMessage[]>([
@@ -44,18 +52,36 @@ export class InspireAssistantComponent implements OnInit {
   ngOnInit(): void {
     forkJoin({
       models: this.api.getModels(),
-      references: this.api.getResourceLibrary()
+      references: this.api.getResourceLibrary(),
+      conversations: this.api.listAssistantConversations()
     }).subscribe({
-      next: ({ models, references }) => {
+      next: ({ models, references, conversations }) => {
         const freeModels = models.filter((model) => model.includes(':free'));
         const finalModels = freeModels.length > 0 ? freeModels : models;
         this.availableModels.set(finalModels);
         this.references.set(references);
         this.selectedModel.set(finalModels[0] || '');
+        this.conversations.set(conversations);
         this.loadError.set('');
+        this.initializing.set(false);
+
+        const firstConversation = conversations[0];
+        if (firstConversation?.id) {
+          this.openConversation(firstConversation.id);
+        } else {
+          this.messages.set([
+            {
+              id: 'welcome-assistant-page',
+              role: 'assistant',
+              content: 'No saved conversation yet. Click New Topic to start and it will be saved automatically.',
+              timestamp: Date.now()
+            }
+          ]);
+        }
       },
       error: (error) => {
         this.loadError.set(this.api.describeError(error));
+        this.initializing.set(false);
       }
     });
   }
@@ -84,10 +110,79 @@ export class InspireAssistantComponent implements OnInit {
       {
         id: `welcome-assistant-page-${Date.now()}`,
         role: 'assistant',
-        content: 'Chat cleared. Ask a new question when ready.',
+        content: 'Messages are hidden in this view. Your saved conversation remains in history.',
         timestamp: Date.now()
       }
     ]);
+  }
+
+  protected createNewConversation(): void {
+    this.api.createAssistantConversation({
+      title: 'New Conversation',
+      model: this.selectedModel() || undefined,
+      references: this.selectedReferences()
+    }).subscribe({
+      next: (conversation) => {
+        this.conversations.update((current) => [conversation, ...current]);
+        this.activeConversationId.set(conversation.id);
+        this.messages.set([
+          {
+            id: `welcome-new-conversation-${Date.now()}`,
+            role: 'assistant',
+            content: 'New topic created. Ask your question and this conversation will be saved for continuation.',
+            timestamp: Date.now()
+          }
+        ]);
+      },
+      error: (error) => {
+        this.loadError.set(this.api.describeError(error));
+      }
+    });
+  }
+
+  protected openConversation(conversationId: number): void {
+    this.api.getAssistantConversation(conversationId).subscribe({
+      next: (conversation) => {
+        this.applyConversation(conversation);
+        this.loadError.set('');
+      },
+      error: (error) => {
+        this.loadError.set(this.api.describeError(error));
+      }
+    });
+  }
+
+  protected deleteConversation(conversationId: number, event?: Event): void {
+    if (event) {
+      event.stopPropagation();
+    }
+
+    this.api.deleteAssistantConversation(conversationId).subscribe({
+      next: () => {
+        const remaining = this.conversations().filter((item) => item.id !== conversationId);
+        this.conversations.set(remaining);
+
+        if (this.activeConversationId() === conversationId) {
+          const next = remaining[0];
+          if (next?.id) {
+            this.openConversation(next.id);
+          } else {
+            this.activeConversationId.set(null);
+            this.messages.set([
+              {
+                id: `welcome-after-delete-${Date.now()}`,
+                role: 'assistant',
+                content: 'No saved conversation selected. Start a new topic to continue.',
+                timestamp: Date.now()
+              }
+            ]);
+          }
+        }
+      },
+      error: (error) => {
+        this.loadError.set(this.api.describeError(error));
+      }
+    });
   }
 
   protected send(): void {
@@ -96,6 +191,29 @@ export class InspireAssistantComponent implements OnInit {
       return;
     }
 
+    const activeId = this.activeConversationId();
+    if (!activeId) {
+      this.api.createAssistantConversation({
+        title: 'New Conversation',
+        model: this.selectedModel() || undefined,
+        references: this.selectedReferences()
+      }).subscribe({
+        next: (conversation) => {
+          this.conversations.update((current) => [conversation, ...current]);
+          this.activeConversationId.set(conversation.id);
+          this.sendToConversation(conversation.id, question);
+        },
+        error: (error) => {
+          this.loadError.set(this.api.describeError(error));
+        }
+      });
+      return;
+    }
+
+    this.sendToConversation(activeId, question);
+  }
+
+  private sendToConversation(conversationId: number, question: string): void {
     const userMessage: AssistantMessage = {
       id: `u-${Date.now()}`,
       role: 'user',
@@ -108,7 +226,7 @@ export class InspireAssistantComponent implements OnInit {
     this.sending.set(true);
     this.loadError.set('');
 
-    this.api.queryChatbot({
+    this.api.queryAssistantConversation(conversationId, {
       question,
       model: this.selectedModel() || undefined,
       references: this.selectedReferences()
@@ -116,6 +234,7 @@ export class InspireAssistantComponent implements OnInit {
       next: (result) => {
         this.messages.update((current) => [...current, this.toAssistantMessage(result)]);
         this.sending.set(false);
+        this.refreshConversationList();
       },
       error: (error) => {
         this.sending.set(false);
@@ -132,6 +251,52 @@ export class InspireAssistantComponent implements OnInit {
         ]);
       }
     });
+  }
+
+  private refreshConversationList(): void {
+    this.api.listAssistantConversations().subscribe({
+      next: (conversations) => {
+        this.conversations.set(conversations);
+      },
+      error: () => {
+        // Keep current list if refresh fails.
+      }
+    });
+  }
+
+  private applyConversation(conversation: AssistantConversationDetail): void {
+    this.activeConversationId.set(conversation.id);
+    this.selectedModel.set(conversation.last_model || this.selectedModel());
+    this.selectedReferences.set(conversation.references || []);
+
+    const mapped = (conversation.messages || []).map((message) => {
+      const dedupedSources = Array.from(new Set((message.sources || []).map((item) => item.source)));
+      return {
+        id: `db-${message.id}`,
+        role: message.role,
+        content: message.content,
+        htmlContent: message.role === 'assistant' ? this.formatAssistantMessage(message.content) : undefined,
+        sources: dedupedSources,
+        timestamp: Date.parse(message.created_at || '') || Date.now()
+      } as AssistantMessage;
+    });
+
+    this.messages.set(mapped.length > 0 ? mapped : [
+      {
+        id: `welcome-empty-conversation-${Date.now()}`,
+        role: 'assistant',
+        content: 'This topic is ready. Continue by asking your next question.',
+        timestamp: Date.now()
+      }
+    ]);
+  }
+
+  protected conversationSubtitle(conversation: AssistantConversationSummary): string {
+    const last = (conversation.last_message || '').trim();
+    if (last) {
+      return last.length > 60 ? `${last.slice(0, 57)}...` : last;
+    }
+    return `${conversation.message_count || 0} messages`;
   }
 
   protected sourceLabel(source: string): string {
