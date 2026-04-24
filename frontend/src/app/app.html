@@ -1,264 +1,246 @@
 @if (setupLoading()) {
-  <div id="login" class="login-screen">
-    <div class="login-card">
-      <div class="login-title">
-        <span class="login-badge">⏳</span>
-        Starting Project INSPIRE
-      </div>
-      <div class="login-subtitle">
-        Preparing local services and checking first-run setup status.
-      </div>
+<div id="login" class="login-screen">
+  <div class="login-card">
+    <div class="login-title">
+      <span class="login-badge">⏳</span>
+      Starting Project INSPIRE
+    </div>
+    <div class="login-subtitle">
+      Preparing local services and checking first-run setup status.
     </div>
   </div>
+</div>
 } @else if (setupRequired()) {
-  <div id="setup" class="login-screen">
-    <div class="login-card setup-card">
-      <div class="login-title">
-        <span class="login-badge">🛠️</span>
-        First-Time Setup
-      </div>
-      <div class="login-subtitle">
-        Create your initial accounts before using the desktop app.
-      </div>
-
-      <div class="mode-toggle">
-        <button type="button" class="btn" [class.btn-primary]="setupMode() === 'single-admin'" [class.btn-outline]="setupMode() !== 'single-admin'" (click)="setSetupMode('single-admin')">
-          Admin only
-        </button>
-        <button type="button" class="btn" [class.btn-primary]="setupMode() === 'admin-plus-user'" [class.btn-outline]="setupMode() !== 'admin-plus-user'" (click)="setSetupMode('admin-plus-user')">
-          Admin + user
-        </button>
-      </div>
-
-      <div class="section-title">Admin account</div>
-      <div class="form-group">
-        <label for="setup-admin-username">Username</label>
-        <input id="setup-admin-username" type="text" [(ngModel)]="setupAdminUsername" placeholder="admin">
-      </div>
-      <div class="form-group">
-        <label for="setup-admin-password">Password</label>
-        <input id="setup-admin-password" type="password" [(ngModel)]="setupAdminPassword" placeholder="password123">
-      </div>
-      <div class="form-group">
-        <label for="setup-admin-name">Display name</label>
-        <input id="setup-admin-name" type="text" [(ngModel)]="setupAdminName" placeholder="System Administrator">
-      </div>
-      <div class="form-group">
-        <label for="setup-admin-school">School</label>
-        <input id="setup-admin-school" type="text" [(ngModel)]="setupAdminSchool">
-      </div>
-
-      @if (setupMode() === 'admin-plus-user') {
-        <div class="section-title">User account</div>
-        <div class="form-group">
-          <label for="setup-user-username">Username</label>
-          <input id="setup-user-username" type="text" [(ngModel)]="setupUserUsername" placeholder="teacher">
-        </div>
-        <div class="form-group">
-          <label for="setup-user-password">Password</label>
-          <input id="setup-user-password" type="password" [(ngModel)]="setupUserPassword" placeholder="password123">
-        </div>
-        <div class="form-group">
-          <label for="setup-user-name">Display name</label>
-          <input id="setup-user-name" type="text" [(ngModel)]="setupUserName" placeholder="Teacher User">
-        </div>
-        <div class="form-group">
-          <label for="setup-user-school">School</label>
-          <input id="setup-user-school" type="text" [(ngModel)]="setupUserSchool">
-        </div>
-      }
-
-      <div class="login-actions">
-        <button class="btn btn-primary" type="button" (click)="completeSetup()" [disabled]="setupSaving()">
-          {{ setupSaving() ? 'Saving setup...' : 'Finish setup' }}
-        </button>
-      </div>
-
-      @if (setupError()) {
-        <div class="login-error">{{ setupError() }}</div>
-      }
+<div id="setup" class="login-screen">
+  <div class="login-card setup-card">
+    <div class="login-title">
+      <span class="login-badge">🛠️</span>
+      First-Time Setup
     </div>
+    <div class="login-subtitle">
+      Create your initial accounts before using the desktop app.
+    </div>
+
+    <div class="mode-toggle">
+      <button type="button" class="btn" [class.btn-primary]="setupMode() === 'single-admin'"
+        [class.btn-outline]="setupMode() !== 'single-admin'" (click)="setSetupMode('single-admin')">
+        Admin only
+      </button>
+      <button type="button" class="btn" [class.btn-primary]="setupMode() === 'admin-plus-user'"
+        [class.btn-outline]="setupMode() !== 'admin-plus-user'" (click)="setSetupMode('admin-plus-user')">
+        Admin + user
+      </button>
+    </div>
+
+    <div class="section-title">Admin account</div>
+    <div class="form-group">
+      <label for="setup-admin-username">Username</label>
+      <input id="setup-admin-username" type="text" [(ngModel)]="setupAdminUsername" placeholder="admin">
+    </div>
+    <div class="form-group">
+      <label for="setup-admin-password">Password</label>
+      <input id="setup-admin-password" type="password" [(ngModel)]="setupAdminPassword" placeholder="password123">
+    </div>
+    <div class="form-group">
+      <label for="setup-admin-name">Display name</label>
+      <input id="setup-admin-name" type="text" [(ngModel)]="setupAdminName" placeholder="System Administrator">
+    </div>
+    <div class="form-group">
+      <label for="setup-admin-school">School</label>
+      <input id="setup-admin-school" type="text" [(ngModel)]="setupAdminSchool">
+    </div>
+
+    @if (setupMode() === 'admin-plus-user') {
+    <div class="section-title">User account</div>
+    <div class="form-group">
+      <label for="setup-user-username">Username</label>
+      <input id="setup-user-username" type="text" [(ngModel)]="setupUserUsername" placeholder="teacher">
+    </div>
+    <div class="form-group">
+      <label for="setup-user-password">Password</label>
+      <input id="setup-user-password" type="password" [(ngModel)]="setupUserPassword" placeholder="password123">
+    </div>
+    <div class="form-group">
+      <label for="setup-user-name">Display name</label>
+      <input id="setup-user-name" type="text" [(ngModel)]="setupUserName" placeholder="Teacher User">
+    </div>
+    <div class="form-group">
+      <label for="setup-user-school">School</label>
+      <input id="setup-user-school" type="text" [(ngModel)]="setupUserSchool">
+    </div>
+    }
+
+    <div class="login-actions">
+      <button class="btn btn-primary" type="button" (click)="completeSetup()" [disabled]="setupSaving()">
+        {{ setupSaving() ? 'Saving setup...' : 'Finish setup' }}
+      </button>
+    </div>
+
+    @if (setupError()) {
+    <div class="login-error">{{ setupError() }}</div>
+    }
   </div>
+</div>
 } @else if (!isAuthenticated()) {
-  <div id="login" class="login-screen">
-    <div class="login-card">
-      <img src="image.jpg" alt="No Learners Left Behind header" class="login-image" onerror="this.onerror=null; this.src='https://drive.google.com/uc?export=view&id=1s2G3oXBVkyBntHpkA9iqtULdVDpzXM1E';">
-      <div class="login-title">
-        <span class="login-badge">💡</span>
-        INSPIRE
-      </div>
-      <div class="login-subtitle">
-        Welcome to Project INSPIRE — an AI-supported planning companion for teachers of learners with special needs.
-      </div>
-
-      <div class="form-group">
-        <label for="login-username">Username</label>
-        <input id="login-username" type="text" [(ngModel)]="loginUsername" placeholder="admin">
-      </div>
-      <div class="form-group">
-        <label for="login-password">Password</label>
-        <input id="login-password" type="password" [(ngModel)]="loginPassword" placeholder="password123">
-      </div>
-
-      <div class="login-actions">
-        <button class="btn btn-primary" type="button" (click)="login()" [disabled]="loginLoading()">
-          {{ loginLoading() ? 'Signing in...' : 'Login' }}
-        </button>
-      </div>
-
-      @if (loginError()) {
-        <div class="login-error">{{ loginError() }}</div>
-      }
-
-      @if (setupError()) {
-        <div class="login-error">{{ setupError() }}</div>
-      }
-
-      <div class="demo-notice">
-        Demo credentials: <strong>admin / password123</strong>, <strong>researcher / password123</strong>, or <strong>teacher / password123</strong>.
-      </div>
+<div id="login" class="login-screen">
+  <div class="login-card">
+    <img src="image.jpg" alt="No Learners Left Behind header" class="login-image"
+      onerror="this.onerror=null; this.src='https://drive.google.com/uc?export=view&id=1s2G3oXBVkyBntHpkA9iqtULdVDpzXM1E';">
+    <div class="login-title">
+      <span class="login-badge">💡</span>
+      INSPIRE
     </div>
+    <div class="login-subtitle">
+      Welcome to Project INSPIRE — an AI-supported planning companion for teachers of learners with special needs.
+    </div>
+
+    <div class="form-group">
+      <label for="login-username">Username</label>
+      <input id="login-username" type="text" [(ngModel)]="loginUsername" placeholder="admin">
+    </div>
+    <div class="form-group">
+      <label for="login-password">Password</label>
+      <input id="login-password" type="password" [(ngModel)]="loginPassword" placeholder="password123">
+    </div>
+
+    <div class="login-actions">
+      <button class="btn btn-primary" type="button" (click)="login()" [disabled]="loginLoading()">
+        {{ loginLoading() ? 'Signing in...' : 'Login' }}
+      </button>
+    </div>
+
+    @if (loginError()) {
+    <div class="login-error">{{ loginError() }}</div>
+    }
+
+    @if (setupError()) {
+    <div class="login-error">{{ setupError() }}</div>
+    }
   </div>
+</div>
 } @else {
-  <div id="app-shell" class="app-shell">
-    <header class="topbar">
-      <div class="topbar-left">
-        <button id="sidebar-toggle" class="icon-btn" type="button" aria-label="Toggle navigation" (click)="toggleSidebar()">☰</button>
-        <div class="logo">
-          <svg class="logo-icon" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M9 21h6v-1.5H9V21zm3-19C7.93 2 5 4.92 5 8.5c0 2.17 1.08 4.09 2.77 5.26L8 15.5c0 .83.67 1.5 1.5 1.5h5c.83 0 1.5-.67 1.5-1.5l.23-1.74C17.92 12.59 19 10.67 19 8.5 19 4.92 16.07 2 12 2z"></path>
-          </svg>
-          <span>INSPIRE</span>
-        </div>
-        <div class="logo-tagline">Inclusive Teaching Platform</div>
+<div id="app-shell" class="app-shell">
+  <header class="topbar">
+    <div class="topbar-left">
+      <button id="sidebar-toggle" class="icon-btn" type="button" aria-label="Toggle navigation"
+        (click)="toggleSidebar()">☰</button>
+      <div class="logo">
+        <svg class="logo-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path
+            d="M9 21h6v-1.5H9V21zm3-19C7.93 2 5 4.92 5 8.5c0 2.17 1.08 4.09 2.77 5.26L8 15.5c0 .83.67 1.5 1.5 1.5h5c.83 0 1.5-.67 1.5-1.5l.23-1.74C17.92 12.59 19 10.67 19 8.5 19 4.92 16.07 2 12 2z">
+          </path>
+        </svg>
+        <span>INSPIRE</span>
       </div>
-      <div class="topbar-center">
-        <img src="image.jpg" alt="No Learners Left Behind header" class="topbar-image" onerror="this.onerror=null; this.src='https://drive.google.com/uc?export=view&id=1s2G3oXBVkyBntHpkA9iqtULdVDpzXM1E';">
-      </div>
-      <div class="topbar-right">
-        <button id="theme-toggle" class="icon-btn" type="button" aria-label="Toggle dark mode" (click)="toggleTheme()">{{ theme() === 'day' ? '🌙' : '☀️' }}</button>
-        <div class="notifications">
-          <button id="notif-btn" class="icon-btn" type="button" aria-label="Notifications" (click)="toggleNotifications()">
-            🔔
-            <span class="badge notif-badge">3</span>
-          </button>
-          @if (notificationsOpen()) {
-            <div id="notif-dropdown" class="notif-dropdown">
-              <div class="section-title" style="font-size:0.85rem;">Notifications</div>
-              @for (notification of notifications; track notification) {
-                <div class="notif-item">{{ notification }}</div>
-              }
-            </div>
-          }
-        </div>
-        <div class="user-info">
-          <div class="user-name">{{ currentUserName() }}</div>
-          <div class="user-role">{{ currentUserRoleLabel() }}</div>
-        </div>
-      </div>
-    </header>
-
-    <div class="app-body">
-      <aside id="sidebar" class="sidebar" [class.open]="sidebarOpen()">
-        <div class="sidebar-section-title">Main</div>
-        <ul class="nav-list">
-          @for (item of mainNavigation; track item.path) {
-            <li>
-              <a
-                [routerLink]="item.path"
-                routerLinkActive="active"
-                class="nav-item"
-                [class.disabled]="item.adminOnly && !canAccessAdmin()"
-                (click)="handleNavigationClick($event, item)"
-              >
-                <span class="icon">{{ item.icon }}</span>
-                <span>{{ item.label }}</span>
-              </a>
-            </li>
-          }
-        </ul>
-
-        <div class="sidebar-section-title" style="margin-top:10px;">Lesson Plans</div>
-        <ul class="nav-list">
-          @for (item of lessonNavigation; track item.label + item.path) {
-            <li>
-              <a
-                [routerLink]="item.path"
-                routerLinkActive="active"
-                class="nav-item"
-                [class.disabled]="item.adminOnly && !canAccessAdmin()"
-                (click)="handleNavigationClick($event, item)"
-              >
-                <span class="icon">{{ item.icon }}</span>
-                <span>{{ item.label }}</span>
-              </a>
-            </li>
-          }
-          @for (item of resourceNavigation; track item.label) {
-            <li>
-              <a
-                [routerLink]="item.path"
-                routerLinkActive="active"
-                class="nav-item"
-                [class.disabled]="item.adminOnly && !canAccessAdmin()"
-                (click)="handleNavigationClick($event, item)"
-              >
-                <span class="icon">{{ item.icon }}</span>
-                <span>{{ item.label }}</span>
-              </a>
-            </li>
-          }
-          @for (item of surveyNavigation; track item.label) {
-            <li>
-              <a
-                [routerLink]="item.path"
-                routerLinkActive="active"
-                class="nav-item"
-                [class.disabled]="item.adminOnly && !canAccessAdmin()"
-                (click)="handleNavigationClick($event, item)"
-              >
-                <span class="icon">{{ item.icon }}</span>
-                <span>{{ item.label }}</span>
-              </a>
-            </li>
-          }
-        </ul>
-
-        <hr class="nav-divider">
-
-        <ul class="nav-list">
-          <li>
-            <a [routerLink]="'/profile'" routerLinkActive="active" class="nav-item"><span class="icon">👤</span>My Profile</a>
-          </li>
-          <li>
-            <button type="button" class="nav-item nav-button" (click)="logout()"><span class="icon">🚪</span>Logout</button>
-          </li>
-        </ul>
-
-        <div class="sidebar-section-title">Admin only</div>
-        <ul class="nav-list">
-          @for (item of adminNavigation; track item.label) {
-            @if (item.path !== '/account-management' || canManageAccounts()) {
-            <li>
-              <a
-                [routerLink]="item.path"
-                routerLinkActive="active"
-                class="nav-item"
-                [class.disabled]="item.adminOnly && !canAccessAdmin()"
-                (click)="handleNavigationClick($event, item)"
-              >
-                <span class="icon">{{ item.icon }}</span>
-                <span>{{ item.label }}</span>
-              </a>
-            </li>
-            }
-          }
-        </ul>
-      </aside>
-
-      <main class="main">
-        <router-outlet></router-outlet>
-      </main>
+      <div class="logo-tagline">Inclusive Teaching Platform</div>
     </div>
+    <div class="topbar-center">
+      <img src="image.jpg" alt="No Learners Left Behind header" class="topbar-image"
+        onerror="this.onerror=null; this.src='https://drive.google.com/uc?export=view&id=1s2G3oXBVkyBntHpkA9iqtULdVDpzXM1E';">
+    </div>
+    <div class="topbar-right">
+      <button id="theme-toggle" class="icon-btn" type="button" aria-label="Toggle dark mode" (click)="toggleTheme()">{{
+        theme() === 'day' ? '🌙' : '☀️' }}</button>
+      <div class="notifications">
+        <button id="notif-btn" class="icon-btn" type="button" aria-label="Notifications"
+          (click)="toggleNotifications()">
+          🔔
+          <span class="badge notif-badge">3</span>
+        </button>
+        @if (notificationsOpen()) {
+        <div id="notif-dropdown" class="notif-dropdown">
+          <div class="section-title" style="font-size:0.85rem;">Notifications</div>
+          @for (notification of notifications; track notification) {
+          <div class="notif-item">{{ notification }}</div>
+          }
+        </div>
+        }
+      </div>
+      <div class="user-info">
+        <div class="user-name">{{ currentUserName() }}</div>
+        <div class="user-role">{{ currentUserRoleLabel() }}</div>
+      </div>
+    </div>
+  </header>
+
+  <div class="app-body">
+    <aside id="sidebar" class="sidebar" [class.open]="sidebarOpen()">
+      <div class="sidebar-section-title">Main</div>
+      <ul class="nav-list">
+        @for (item of mainNavigation; track item.path) {
+        <li>
+          <a [routerLink]="item.path" routerLinkActive="active" class="nav-item"
+            [class.disabled]="item.adminOnly && !canAccessAdmin()" (click)="handleNavigationClick($event, item)">
+            <span class="icon">{{ item.icon }}</span>
+            <span>{{ item.label }}</span>
+          </a>
+        </li>
+        }
+      </ul>
+
+      <div class="sidebar-section-title" style="margin-top:10px;">Lesson Plans</div>
+      <ul class="nav-list">
+        @for (item of lessonNavigation; track item.label + item.path) {
+        <li>
+          <a [routerLink]="item.path" routerLinkActive="active" class="nav-item"
+            [class.disabled]="item.adminOnly && !canAccessAdmin()" (click)="handleNavigationClick($event, item)">
+            <span class="icon">{{ item.icon }}</span>
+            <span>{{ item.label }}</span>
+          </a>
+        </li>
+        }
+        @for (item of resourceNavigation; track item.label) {
+        <li>
+          <a [routerLink]="item.path" routerLinkActive="active" class="nav-item"
+            [class.disabled]="item.adminOnly && !canAccessAdmin()" (click)="handleNavigationClick($event, item)">
+            <span class="icon">{{ item.icon }}</span>
+            <span>{{ item.label }}</span>
+          </a>
+        </li>
+        }
+        @for (item of surveyNavigation; track item.label) {
+        <li>
+          <a [routerLink]="item.path" routerLinkActive="active" class="nav-item"
+            [class.disabled]="item.adminOnly && !canAccessAdmin()" (click)="handleNavigationClick($event, item)">
+            <span class="icon">{{ item.icon }}</span>
+            <span>{{ item.label }}</span>
+          </a>
+        </li>
+        }
+      </ul>
+
+      <hr class="nav-divider">
+
+      <ul class="nav-list">
+        <li>
+          <a [routerLink]="'/profile'" routerLinkActive="active" class="nav-item"><span class="icon">👤</span>My
+            Profile</a>
+        </li>
+        <li>
+          <button type="button" class="nav-item nav-button" (click)="logout()"><span
+              class="icon">🚪</span>Logout</button>
+        </li>
+      </ul>
+
+      <div class="sidebar-section-title">Admin only</div>
+      <ul class="nav-list">
+        @for (item of adminNavigation; track item.label) {
+        @if (item.path !== '/account-management' || canManageAccounts()) {
+        <li>
+          <a [routerLink]="item.path" routerLinkActive="active" class="nav-item"
+            [class.disabled]="item.adminOnly && !canAccessAdmin()" (click)="handleNavigationClick($event, item)">
+            <span class="icon">{{ item.icon }}</span>
+            <span>{{ item.label }}</span>
+          </a>
+        </li>
+        }
+        }
+      </ul>
+    </aside>
+
+    <main class="main">
+      <router-outlet></router-outlet>
+    </main>
   </div>
+</div>
 }
