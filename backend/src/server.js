@@ -519,9 +519,7 @@ app.put('/api/profile/password', async (request, response) => {
 
 app.get('/api/setup/status', async (_request, response) => {
   try {
-    const users = await db.listUsers();
-    // Requires setup if no users exist, OR if only the emergency 'admin' account exists
-    const requiresSetup = users.length === 0 || (users.length === 1 && users[0].username === 'admin');
+    const requiresSetup = false; // Initial setup wizard disabled as requested
     sendJson(response, 200, {
       requires_setup: requiresSetup,
       supported_modes: ['single-admin', 'admin-plus-user']

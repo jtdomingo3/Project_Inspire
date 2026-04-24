@@ -38,11 +38,7 @@ export class App {
   protected readonly currentUserRoleLabel = signal('Teacher');
   protected readonly loginError = signal('');
   protected readonly loginLoading = signal(false);
-  protected readonly setupLoading = signal(true);
-  protected readonly setupRequired = signal(false);
-  protected readonly setupSaving = signal(false);
-  protected readonly setupError = signal('');
-  protected readonly setupMode = signal<'single-admin' | 'admin-plus-user'>('single-admin');
+  protected readonly loginLoading = signal(false);
   protected readonly notificationsOpen = signal(false);
   protected readonly sidebarOpen = signal(true);
   protected loginUsername = 'admin';
@@ -194,20 +190,8 @@ export class App {
   }
 
   private loadSetupStatus(): void {
-    this.setupLoading.set(true);
-    this.setupError.set('');
     this.api.getSetupStatus().subscribe({
-      next: (status) => {
-        this.setupLoading.set(false);
-        this.setupRequired.set(status.requires_setup);
-
-        if (status.requires_setup) {
-          this.auth.clearSession();
-          this.isAuthenticated.set(false);
-          this.loginError.set('');
-          return;
-        }
-
+      next: () => {
         if (this.auth.isAuthenticated()) {
           this.auth.refreshAuthSession().subscribe({
             next: (refreshed) => {
@@ -220,11 +204,6 @@ export class App {
             }
           });
         }
-      },
-      error: (error) => {
-        this.setupLoading.set(false);
-        this.setupRequired.set(false);
-        this.setupError.set(this.api.describeError(error));
       }
     });
   }
@@ -282,72 +261,9 @@ export class App {
     });
   }
 
-  protected setSetupMode(mode: 'single-admin' | 'admin-plus-user'): void {
-    this.setupMode.set(mode);
-    this.setupError.set('');
-  }
-
-  protected completeSetup(): void {
-    const adminUsername = this.setupAdminUsername.trim().toLowerCase();
-    const adminPassword = this.setupAdminPassword.trim();
-    const adminName = this.setupAdminName.trim() || 'System Administrator';
-    const adminSchool = this.setupAdminSchool.trim() || 'San Felipe National High School · Basud, Camarines Norte';
-
-    if (!adminUsername || !adminPassword) {
-      this.setupError.set('Enter admin username and password.');
-      return;
-    }
-
-    const payload: SetupBootstrapPayload = {
-      mode: this.setupMode(),
-      admin: {
-        username: adminUsername,
-        password: adminPassword,
-        display_name: adminName,
-        affiliated_school: adminSchool
-      }
-    };
-
-    if (payload.mode === 'admin-plus-user') {
-      const userUsername = this.setupUserUsername.trim().toLowerCase();
-      const userPassword = this.setupUserPassword.trim();
-      const userName = this.setupUserName.trim() || 'Teacher User';
-      const userSchool = this.setupUserSchool.trim() || adminSchool;
-
-      if (!userUsername || !userPassword) {
-        this.setupError.set('Enter user username and password.');
-        return;
-      }
-
-      payload.user = {
-        username: userUsername,
-        password: userPassword,
-        display_name: userName,
-        affiliated_school: userSchool
-      };
-    }
-
-    this.setupSaving.set(true);
-    this.setupError.set('');
-    this.api.bootstrapSetup(payload).subscribe({
-      next: () => {
-        this.setupSaving.set(false);
-        this.setupRequired.set(false);
-        this.loginUsername = adminUsername;
-        this.loginPassword = adminPassword;
-        this.login();
-      },
-      error: (error) => {
-        this.setupSaving.set(false);
-        this.setupError.set(this.api.describeError(error));
-      }
-    });
-  }
 
   protected skipSetup(): void {
-    this.setupRequired.set(false);
-    this.loginUsername = 'admin';
-    this.loginPassword = 'admin123';
+    // No-op - setup removed
   }
 
   protected logout(): void {
