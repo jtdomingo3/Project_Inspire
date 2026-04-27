@@ -44,7 +44,45 @@ export interface LessonGenerationResponse {
 
 export interface ApiListResponse {
   models?: string[];
+  provider?: string;
   references?: string[];
+}
+
+export type LlmProvider = 'openrouter' | 'openai' | 'anthropic' | 'google' | 'xai';
+
+export interface LlmProviderOption {
+  id: LlmProvider;
+  label: string;
+}
+
+export interface UserLlmSettings {
+  provider: LlmProvider;
+  provider_label?: string;
+  preferred_model?: string;
+  has_openrouter_api_key: boolean;
+  has_openai_api_key: boolean;
+  has_anthropic_api_key: boolean;
+  has_google_api_key: boolean;
+  has_xai_api_key: boolean;
+  openrouter_api_key_masked?: string;
+  openai_api_key_masked?: string;
+  anthropic_api_key_masked?: string;
+  google_api_key_masked?: string;
+  xai_api_key_masked?: string;
+  using_managed_openrouter_key?: boolean;
+  available_providers?: LlmProviderOption[];
+  model_options?: string[];
+}
+
+export interface UpdateUserLlmSettingsPayload {
+  provider?: LlmProvider;
+  preferred_model?: string;
+  openrouter_api_key?: string;
+  openai_api_key?: string;
+  anthropic_api_key?: string;
+  google_api_key?: string;
+  xai_api_key?: string;
+  clear_keys?: string[];
 }
 
 export interface ChatbotQueryRequest {

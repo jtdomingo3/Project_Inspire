@@ -45,8 +45,15 @@
           </select>
         </div>
 
-        <details class="refs-picker">
-          <summary>Reference filters (optional)</summary>
+        <div class="form-group checkbox-group">
+          <label class="checkbox-label">
+            <input type="checkbox" [ngModel]="useReferences()" (ngModelChange)="useReferences.set($event)">
+            <span>Use Resource Library</span>
+          </label>
+        </div>
+
+        <details class="refs-picker" [class.disabled]="!useReferences()">
+          <summary>Reference filters ({{ selectedReferences().length }} selected)</summary>
           <div class="refs-list">
             @for (item of references(); track item.file_name) {
             <label class="ref-item">

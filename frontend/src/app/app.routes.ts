@@ -60,6 +60,11 @@ export const routes: Routes = [
 		loadComponent: () => import('./pages/profile/profile.component').then((component) => component.ProfileComponent)
 	},
 	{
+		path: 'settings',
+		canActivate: [authGuard],
+		loadComponent: () => import('./pages/settings/settings.component').then((component) => component.SettingsComponent)
+	},
+	{
 		path: 'references',
 		canActivate: [authGuard],
 		loadComponent: () => import('./pages/reference-library/reference-library.component').then((component) => component.ReferenceLibraryComponent)

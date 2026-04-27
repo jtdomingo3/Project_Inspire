@@ -1,0 +1,37 @@
+.settings-panel {
+  padding: 1.2rem;
+}
+
+.llm-keys-grid {
+  margin-top: 0.75rem;
+}
+
+.hint-text {
+  color: var(--color-text-muted);
+  font-size: 0.82rem;
+  margin-top: 0.45rem;
+}
+
+.inline-checkbox {
+  margin-top: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.warning-note {
+  background: rgba(var(--color-primary-rgb, 30, 77, 43), 0.06);
+  border-left: 3px solid var(--color-primary);
+  border-radius: 8px;
+  padding: 0.75rem 0.85rem;
+  margin-top: 0.85rem;
+}
+
+.actions {
+  margin-top: 1rem;
+  display: flex;
+  gap: 0.6rem;
+  justify-content: flex-end;
+}

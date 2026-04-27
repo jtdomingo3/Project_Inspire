@@ -38,6 +38,7 @@ export class InspireAssistantComponent implements OnInit {
   protected readonly activeConversationId = signal<number | null>(null);
   protected readonly selectedModel = signal('');
   protected readonly selectedReferences = signal<string[]>([]);
+  protected readonly useReferences = signal(true);
   protected readonly messages = signal<AssistantMessage[]>([
     {
       id: 'welcome-assistant-page',
@@ -50,37 +51,57 @@ export class InspireAssistantComponent implements OnInit {
   protected draftQuestion = '';
 
   ngOnInit(): void {
-    forkJoin({
-      models: this.api.getModels(),
-      references: this.api.getResourceLibrary(),
-      conversations: this.api.listAssistantConversations()
-    }).subscribe({
-      next: ({ models, references, conversations }) => {
-        const freeModels = models.filter((model) => model.includes(':free'));
-        const finalModels = freeModels.length > 0 ? freeModels : models;
-        this.availableModels.set(finalModels);
-        this.references.set(references);
-        this.selectedModel.set(finalModels[0] || '');
-        this.conversations.set(conversations);
-        this.loadError.set('');
-        this.initializing.set(false);
-
-        const firstConversation = conversations[0];
-        if (firstConversation?.id) {
-          this.openConversation(firstConversation.id);
-        } else {
-          this.messages.set([
-            {
-              id: 'welcome-assistant-page',
-              role: 'assistant',
-              content: 'No saved conversation yet. Click New Topic to start and it will be saved automatically.',
-              timestamp: Date.now()
+    this.api.getLlmSettings().subscribe({
+      next: (settings) => {
+        const provider = settings.provider || 'openrouter';
+        
+        forkJoin({
+          models: this.api.getLlmModels(provider),
+          references: this.api.getResourceLibrary(),
+          conversations: this.api.listAssistantConversations()
+        }).subscribe({
+          next: ({ models, references, conversations }) => {
+            // Filter for free models ONLY if using OpenRouter without a personal API key
+            const isManagedOpenRouter = provider === 'openrouter' && !settings.has_openrouter_api_key;
+            const filteredModels = isManagedOpenRouter 
+              ? models.filter((m) => m.includes(':free'))
+              : models;
+            
+            const finalModels = filteredModels.length > 0 ? filteredModels : models;
+            
+            this.availableModels.set(finalModels);
+            this.references.set(references);
+            
+            // Priority: 1. Conversation's last model, 2. Global preferred model, 3. First from list
+            const defaultModel = settings.preferred_model || finalModels[0] || '';
+            this.selectedModel.set(defaultModel);
+            
+            this.conversations.set(conversations);
+            this.loadError.set('');
+            this.initializing.set(false);
+ 
+            const firstConversation = conversations[0];
+            if (firstConversation?.id) {
+              this.openConversation(firstConversation.id);
+            } else {
+              this.messages.set([
+                {
+                  id: 'welcome-assistant-page',
+                  role: 'assistant',
+                  content: 'No saved conversation yet. Click New Topic to start and it will be saved automatically.',
+                  timestamp: Date.now()
+                }
+              ]);
             }
-          ]);
-        }
+          },
+          error: (error) => {
+            this.loadError.set(this.api.describeError(error));
+            this.initializing.set(false);
+          }
+        });
       },
       error: (error) => {
-        this.loadError.set(this.api.describeError(error));
+        this.loadError.set('Failed to load LLM settings: ' + this.api.describeError(error));
         this.initializing.set(false);
       }
     });
@@ -196,7 +217,7 @@ export class InspireAssistantComponent implements OnInit {
       this.api.createAssistantConversation({
         title: 'New Conversation',
         model: this.selectedModel() || undefined,
-        references: this.selectedReferences()
+        references: this.useReferences() ? this.selectedReferences() : []
       }).subscribe({
         next: (conversation) => {
           this.conversations.update((current) => [conversation, ...current]);
@@ -229,7 +250,7 @@ export class InspireAssistantComponent implements OnInit {
     this.api.queryAssistantConversation(conversationId, {
       question,
       model: this.selectedModel() || undefined,
-      references: this.selectedReferences()
+      references: this.useReferences() ? this.selectedReferences() : []
     }).subscribe({
       next: (result) => {
         this.messages.update((current) => [...current, this.toAssistantMessage(result)]);

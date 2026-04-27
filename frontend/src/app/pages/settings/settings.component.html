@@ -1,0 +1,114 @@
+<section class="page-shell">
+  <div class="card page-header">
+    <p class="eyebrow">Configuration</p>
+    <h2>Settings</h2>
+    <p>Manage your LLM provider, preferred model, and API keys.</p>
+  </div>
+
+  @if (loading()) {
+    <section class="card status-panel">Loading settings...</section>
+  } @else {
+    <section class="card settings-panel">
+      <form [formGroup]="llmForm" (ngSubmit)="saveLlmSettings()">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Active Provider</label>
+            <select formControlName="provider" autocomplete="off">
+              @for (option of llmProviderOptions(); track option.id) {
+                <option [value]="option.id">{{ option.label }}</option>
+              }
+            </select>
+          </div>
+ 
+          <div class="form-group">
+            <label>Preferred Model ID</label>
+            <select formControlName="preferred_model" autocomplete="off">
+              <option value="">Default (Provider Choice)</option>
+              @for (model of availableModels(); track model) {
+                <option [value]="model">{{ model }}</option>
+              }
+              <option value="custom">Custom ID...</option>
+            </select>
+            @if (llmForm.get('preferred_model')?.value === 'custom') {
+              <input type="text" formControlName="custom_model" placeholder="Enter custom model ID" class="mt-2" autocomplete="off">
+            }
+            <p class="hint-text">Select your preferred model for the active provider.</p>
+          </div>
+        </div>
+ 
+        @if (llmSettings(); as settings) {
+          <div class="form-grid llm-keys-grid">
+            <div class="form-group">
+              <label>OpenRouter API Key (Override)</label>
+              <input type="password" formControlName="openrouter_api_key" placeholder="sk-or-v1-..." autocomplete="new-password">
+              <p class="hint-text">
+                @if (settings.openrouter_api_key_masked) {
+                  Saved: {{ settings.openrouter_api_key_masked }}
+                } @else if (settings.using_managed_openrouter_key) {
+                  Using app-managed OpenRouter key
+                } @else {
+                  No saved OpenRouter key
+                }
+              </p>
+              <label class="inline-checkbox">
+                <input type="checkbox" formControlName="clear_openrouter_api_key">
+                Remove saved OpenRouter key
+              </label>
+            </div>
+ 
+            <div class="form-group">
+              <label>OpenAI API Key</label>
+              <input type="password" formControlName="openai_api_key" placeholder="sk-..." autocomplete="new-password">
+              <p class="hint-text">{{ settings.openai_api_key_masked ? 'Saved: ' + settings.openai_api_key_masked : 'No saved OpenAI key' }}</p>
+              <label class="inline-checkbox">
+                <input type="checkbox" formControlName="clear_openai_api_key">
+                Remove saved OpenAI key
+              </label>
+            </div>
+ 
+            <div class="form-group">
+              <label>Claude (Anthropic) API Key</label>
+              <input type="password" formControlName="anthropic_api_key" placeholder="sk-ant-..." autocomplete="new-password">
+              <p class="hint-text">{{ settings.anthropic_api_key_masked ? 'Saved: ' + settings.anthropic_api_key_masked : 'No saved Claude key' }}</p>
+              <label class="inline-checkbox">
+                <input type="checkbox" formControlName="clear_anthropic_api_key">
+                Remove saved Claude key
+              </label>
+            </div>
+ 
+            <div class="form-group">
+              <label>Gemini (Google) API Key</label>
+              <input type="password" formControlName="google_api_key" placeholder="AIza..." autocomplete="new-password">
+              <p class="hint-text">{{ settings.google_api_key_masked ? 'Saved: ' + settings.google_api_key_masked : 'No saved Gemini key' }}</p>
+              <label class="inline-checkbox">
+                <input type="checkbox" formControlName="clear_google_api_key">
+                Remove saved Gemini key
+              </label>
+            </div>
+ 
+            <div class="form-group">
+              <label>Grok (xAI) API Key</label>
+              <input type="password" formControlName="xai_api_key" placeholder="xai-..." autocomplete="new-password">
+              <p class="hint-text">{{ settings.xai_api_key_masked ? 'Saved: ' + settings.xai_api_key_masked : 'No saved Grok key' }}</p>
+              <label class="inline-checkbox">
+                <input type="checkbox" formControlName="clear_xai_api_key">
+                Remove saved Grok key
+              </label>
+            </div>
+          </div>
+        }
+
+        <p class="hint-text warning-note">
+          OpenAI, Claude, Gemini, and Grok always require your own API key. OpenRouter can use either your key or the app-managed default key.
+        </p>
+
+        <div class="actions">
+          <button type="submit" class="btn btn-primary" [disabled]="isSaving() || llmForm.invalid">
+            {{ isSaving() ? 'Saving Settings...' : 'Save LLM Settings' }}
+          </button>
+          <button type="button" class="btn btn-secondary" (click)="loadLlmSettings()" [disabled]="isSaving()">Reload</button>
+        </div>
+      </form>
+    </section>
+  }
+</section>

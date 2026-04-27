@@ -1,5 +1,12 @@
 import { getDatabase } from './database/init.js';
 import { promisify } from 'util';
+import {
+  getDefaultUserLlmSettings,
+  llmProviderApiKeyFields,
+  normalizeLlmProvider,
+  sanitizeStoredLlmSettings,
+  trimOptional
+} from './llm-provider.js';
 
 function promisifyDb(db) {
   return {
@@ -529,6 +536,127 @@ export async function listUsers() {
   return rows.map(sanitizeUser);
 }
 
+function normalizeUserId(userId) {
+  const parsed = Number(userId || 1);
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    return 1;
+  }
+  return Math.trunc(parsed);
+}
+
+function normalizeStoredLlmSettingsRow(row, userId) {
+  const defaults = getDefaultUserLlmSettings(userId);
+  if (!row) {
+    return defaults;
+  }
+
+  return {
+    ...defaults,
+    user_id: normalizeUserId(row.user_id ?? userId),
+    provider: normalizeLlmProvider(row.provider),
+    preferred_model: trimOptional(row.preferred_model),
+    openrouter_api_key: trimOptional(row.openrouter_api_key),
+    openai_api_key: trimOptional(row.openai_api_key),
+    anthropic_api_key: trimOptional(row.anthropic_api_key),
+    google_api_key: trimOptional(row.google_api_key),
+    xai_api_key: trimOptional(row.xai_api_key)
+  };
+}
+
+function applyApiKeyPatch(currentValue, incomingValue, clearRequested) {
+  if (clearRequested) {
+    return '';
+  }
+
+  if (incomingValue === undefined || incomingValue === null) {
+    return trimOptional(currentValue);
+  }
+
+  const nextValue = trimOptional(incomingValue);
+  if (!nextValue) {
+    return trimOptional(currentValue);
+  }
+
+  return nextValue;
+}
+
+export async function getUserLlmSettingsWithSecrets(userId) {
+  const db = getDatabase();
+  const pDb = promisifyDb(db);
+  const normalizedUserId = normalizeUserId(userId);
+
+  const row = await pDb.get('SELECT * FROM user_llm_settings WHERE user_id = ?', [normalizedUserId]);
+  return normalizeStoredLlmSettingsRow(row, normalizedUserId);
+}
+
+export async function getUserLlmSettings(userId) {
+  const settings = await getUserLlmSettingsWithSecrets(userId);
+  return sanitizeStoredLlmSettings(settings);
+}
+
+export async function upsertUserLlmSettings(userId, patch = {}) {
+  const db = getDatabase();
+  const pDb = promisifyDb(db);
+  const normalizedUserId = normalizeUserId(userId);
+  const current = await getUserLlmSettingsWithSecrets(normalizedUserId);
+  const allowedClearFields = new Set(Object.values(llmProviderApiKeyFields));
+  const clearKeys = new Set(
+    Array.isArray(patch.clear_keys)
+      ? patch.clear_keys
+        .map((value) => trimOptional(value))
+        .filter((value) => allowedClearFields.has(value))
+      : []
+  );
+
+  const next = {
+    ...current,
+    user_id: normalizedUserId,
+    provider: patch.provider !== undefined
+      ? normalizeLlmProvider(patch.provider)
+      : current.provider,
+    preferred_model: patch.preferred_model !== undefined
+      ? trimOptional(patch.preferred_model)
+      : trimOptional(current.preferred_model),
+    openrouter_api_key: applyApiKeyPatch(current.openrouter_api_key, patch.openrouter_api_key, clearKeys.has('openrouter_api_key')),
+    openai_api_key: applyApiKeyPatch(current.openai_api_key, patch.openai_api_key, clearKeys.has('openai_api_key')),
+    anthropic_api_key: applyApiKeyPatch(current.anthropic_api_key, patch.anthropic_api_key, clearKeys.has('anthropic_api_key')),
+    google_api_key: applyApiKeyPatch(current.google_api_key, patch.google_api_key, clearKeys.has('google_api_key')),
+    xai_api_key: applyApiKeyPatch(current.xai_api_key, patch.xai_api_key, clearKeys.has('xai_api_key'))
+  };
+
+  const now = new Date().toISOString();
+  await pDb.run(
+    `INSERT INTO user_llm_settings (
+      user_id, provider, preferred_model,
+      openrouter_api_key, openai_api_key, anthropic_api_key, google_api_key, xai_api_key,
+      created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(user_id) DO UPDATE SET
+      provider = excluded.provider,
+      preferred_model = excluded.preferred_model,
+      openrouter_api_key = excluded.openrouter_api_key,
+      openai_api_key = excluded.openai_api_key,
+      anthropic_api_key = excluded.anthropic_api_key,
+      google_api_key = excluded.google_api_key,
+      xai_api_key = excluded.xai_api_key,
+      updated_at = excluded.updated_at`,
+    [
+      next.user_id,
+      next.provider,
+      next.preferred_model,
+      next.openrouter_api_key,
+      next.openai_api_key,
+      next.anthropic_api_key,
+      next.google_api_key,
+      next.xai_api_key,
+      now,
+      now
+    ]
+  );
+
+  return getUserLlmSettings(normalizedUserId);
+}
+
 export async function upsertReferenceMetadata(fileName, metadata) {
   const db = getDatabase();
   const pDb = promisifyDb(db);
@@ -941,6 +1069,9 @@ export default {
   upsertUser,
   deleteUser,
   findUserByUsername,
+  getUserLlmSettings,
+  getUserLlmSettingsWithSecrets,
+  upsertUserLlmSettings,
   listUsers,
   upsertReferenceMetadata,
   deleteReferenceMetadata,

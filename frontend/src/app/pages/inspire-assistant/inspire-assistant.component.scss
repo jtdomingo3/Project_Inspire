@@ -120,6 +120,31 @@
 .refs-picker {
   font-size: 0.8rem;
   color: var(--color-text-muted);
+  transition: opacity 0.2s ease;
+
+  &.disabled {
+    opacity: 0.45;
+    pointer-events: none;
+    filter: grayscale(1);
+  }
+}
+
+.checkbox-group {
+  .checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.84rem;
+    cursor: pointer;
+    user-select: none;
+    color: var(--color-text);
+
+    input[type="checkbox"] {
+      width: 15px;
+      height: 15px;
+      cursor: pointer;
+    }
+  }
 }
 
 .refs-list {

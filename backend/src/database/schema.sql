@@ -26,6 +26,23 @@ CREATE TABLE IF NOT EXISTS users (
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Per-user LLM settings (provider selection + bring-your-own API keys)
+CREATE TABLE IF NOT EXISTS user_llm_settings (
+  user_id INTEGER PRIMARY KEY,
+  provider TEXT NOT NULL DEFAULT 'openrouter' CHECK(provider IN ('openrouter', 'openai', 'anthropic', 'google', 'xai')),
+  preferred_model TEXT DEFAULT '',
+  openrouter_api_key TEXT,
+  openai_api_key TEXT,
+  anthropic_api_key TEXT,
+  google_api_key TEXT,
+  xai_api_key TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_llm_settings_provider ON user_llm_settings(provider);
+
 -- Lessons table
 CREATE TABLE IF NOT EXISTS lessons (
   id INTEGER PRIMARY KEY AUTOINCREMENT,

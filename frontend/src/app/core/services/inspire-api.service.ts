@@ -12,7 +12,9 @@ import {
   BackendLessonDraft,
   DifficultyCategoryRecord,
   LessonRecord,
+  UpdateUserLlmSettingsPayload,
   LoginResponse,
+  UserLlmSettings,
   LessonDraft,
   LessonGenerationRequest,
   LessonGenerationResponse,
@@ -398,5 +400,21 @@ export class InspireApiService {
 
   changePassword(current_password: string, new_password: string): Observable<{ success: boolean; error?: string }> {
     return this.http.put<{ success: boolean; error?: string }>('/api/profile/password', { current_password, new_password });
+  }
+
+  getLlmSettings(): Observable<UserLlmSettings> {
+    return this.http.get<{ success: boolean; settings: UserLlmSettings }>('/api/llm/settings').pipe(
+      map((response) => response.settings)
+    );
+  }
+
+  updateLlmSettings(payload: UpdateUserLlmSettingsPayload): Observable<{ success: boolean; settings: UserLlmSettings }> {
+    return this.http.put<{ success: boolean; settings: UserLlmSettings }>('/api/llm/settings', payload);
+  }
+
+  getLlmModels(provider: string): Observable<string[]> {
+    return this.http.get<{ success: boolean; provider: string; models: string[] }>(`/api/llm/models/${provider}`).pipe(
+      map((response) => response.models || [])
+    );
   }
 }

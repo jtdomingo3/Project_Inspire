@@ -1,15 +1,5 @@
-import { supportedModels } from './config.js';
+import { generateProviderText, resolveLlmRuntimeConfig } from './llm-provider.js';
 import { buildReferenceContext, findRelevantChunks, loadReferenceChunks } from './reference-loader.js';
-
-const freeChatModels = supportedModels.filter((model) => typeof model === 'string' && model.includes(':free'));
-
-function pickChatModel(requestedModel) {
-  if (requestedModel && freeChatModels.includes(requestedModel)) {
-    return requestedModel;
-  }
-
-  return freeChatModels[0] || supportedModels[0];
-}
 
 function extractJsonObject(text) {
   let start = null;
@@ -410,33 +400,29 @@ function buildOpenRouterMessages(lessonData, promptContent, referenceChunks) {
     ? Math.min(4, Math.max(1, Math.trunc(configuredReferenceChunks)))
     : 3;
 
-  const systemMessages = [
-    {
-      role: 'system',
-      content: 'You are an expert inclusive education planner. Generate a Daily Lesson Plan that aligns with the learner difficulty profile, observed indicators, supports, and curriculum guidance. Use the loaded reference excerpts only when they directly support the plan.'
-    }
-  ];
+  let systemInstruction = 'You are an expert inclusive education planner. Generate a Daily Lesson Plan that aligns with the learner difficulty profile, observed indicators, supports, and curriculum guidance. Use the loaded reference excerpts only when they directly support the plan.';
+  const messages = [];
 
   if (referenceChunks.length > 0) {
     const relevant = findRelevantChunks(JSON.stringify(lessonData), referenceChunks, maxReferenceChunks);
     if (relevant.length > 0) {
-      systemMessages.push({
-        role: 'system',
-        content: 'Use the following reference excerpts to inform the response only when relevant. Do not invent details from them.'
-      });
-      systemMessages.push({
+      systemInstruction += '\n\nUse the following reference excerpts to inform the response only when relevant. Do not invent details from them.';
+      messages.push({
         role: 'user',
         content: buildReferenceContext(relevant)
       });
     }
   }
 
-  systemMessages.push({
+  messages.push({
     role: 'user',
     content: promptContent
   });
 
-  return systemMessages;
+  return [
+    { role: 'system', content: systemInstruction },
+    ...messages
+  ];
 }
 
 function formatLessonPlanOutput(data) {
@@ -586,8 +572,11 @@ function formatLessonPlanOutput(data) {
   return lines.join('\n');
 }
 
-async function callOpenRouter(messages, apiKey, model, maxTokens = 3000) {
-  console.log(`\n[OpenRouter] Requesting model: ${model}, max_tokens: ${maxTokens}`);
+async function callLlmModel(messages, runtimeConfig, maxTokens = 3000) {
+  const provider = runtimeConfig?.provider || 'openrouter';
+  const model = runtimeConfig?.model || '';
+  const apiKey = runtimeConfig?.apiKey || '';
+
   // Log the final prompt sent (the last message in the conversation)
   if (messages.length > 0) {
     const lastContent = messages[messages.length - 1].content;
@@ -596,33 +585,14 @@ async function callOpenRouter(messages, apiKey, model, maxTokens = 3000) {
     console.log('--- PROMPT END ---\n');
   }
 
-  const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-      Accept: 'application/json'
-    },
-    body: JSON.stringify({
-      model,
-      messages,
-      max_tokens: maxTokens,
-      temperature: 0.4
-    })
+  const text = await generateProviderText({
+    provider,
+    model,
+    apiKey,
+    messages,
+    maxTokens,
+    temperature: 0.4
   });
-
-  const contentType = response.headers.get('content-type') || '';
-  const body = contentType.includes('application/json') ? await response.json() : await response.text();
-
-  if (!response.ok) {
-    const message = typeof body === 'string' ? body : JSON.stringify(body, null, 2);
-    console.error(`[OpenRouter] Error Response: ${message}`);
-    throw new Error(`OpenRouter error: error code: ${response.status}`);
-  }
-
-  const text = typeof body === 'string'
-    ? body
-    : body?.choices?.[0]?.message?.content || body?.choices?.[0]?.message?.reasoning_details || '';
 
   console.log(`--- RESPONSE (${text.length} chars) ---`);
   console.log(text.length > 500 ? text.substring(0, 500) + '... [truncated]' : text);
@@ -642,10 +612,10 @@ function isPhaseContentTooShort(extracted, requiredKeys, minCharsPerField = 80) 
   return false;
 }
 
-async function callPhaseWithRetry(buildPromptFn, lessonData, selectedRefs, referenceChunks, apiKey, model, maxTokens, phaseLabel, requiredKeys, prevContext) {
+async function callPhaseWithRetry(buildPromptFn, lessonData, selectedRefs, referenceChunks, runtimeConfig, maxTokens, phaseLabel, requiredKeys, prevContext) {
   const prompt = buildPromptFn(lessonData, selectedRefs, prevContext);
   const messages = buildOpenRouterMessages(lessonData, prompt, referenceChunks);
-  const content = await callOpenRouter(messages, apiKey, model, maxTokens);
+  const content = await callLlmModel(messages, runtimeConfig, maxTokens);
   let extracted = extractJsonObject(content);
 
   if (!extracted) {
@@ -660,7 +630,7 @@ async function callPhaseWithRetry(buildPromptFn, lessonData, selectedRefs, refer
     const retryNudge = `\n\nIMPORTANT: Your previous response was too short or could not be parsed. You MUST write detailed, substantive content for EVERY field. Each field needs at least 3-5 full sentences. Do NOT use brief one-liners. Return ONLY a valid JSON object.`;
     const retryPrompt = buildPromptFn(lessonData, selectedRefs, prevContext) + retryNudge;
     const retryMessages = buildOpenRouterMessages(lessonData, retryPrompt, referenceChunks);
-    const retryContent = await callOpenRouter(retryMessages, apiKey, model, maxTokens);
+    const retryContent = await callLlmModel(retryMessages, runtimeConfig, maxTokens);
     extracted = extractJsonObject(retryContent);
     if (!extracted) {
       console.warn(`[${phaseLabel}] Retry also failed to extract JSON`);
@@ -696,20 +666,18 @@ function buildChatMessages(question, referenceContext, userContext) {
   const userLabel = userContext?.username ? `Current user: ${userContext.username}` : 'Current user: authenticated user';
   const roleLabel = userContext?.role ? `User role: ${userContext.role}` : 'User role: unknown';
 
+  const systemInstruction = [
+    'You are the universal assistant for Project INSPIRE. Provide accurate, concise, actionable answers for app help and inclusive teaching support. Use only provided context and reference excerpts when making claims. If references are missing for a factual claim, clearly say so.',
+    `${buildAppKnowledgeContext()}\n${userLabel}\n${roleLabel}`,
+    referenceContext
+      ? `Reference excerpts that may be relevant:\n\n${referenceContext}`
+      : 'No reference excerpts were matched for this question.'
+  ].join('\n\n');
+
   return [
     {
       role: 'system',
-      content: 'You are the universal assistant for Project INSPIRE. Provide accurate, concise, actionable answers for app help and inclusive teaching support. Use only provided context and reference excerpts when making claims. If references are missing for a factual claim, clearly say so.'
-    },
-    {
-      role: 'system',
-      content: `${buildAppKnowledgeContext()}\n${userLabel}\n${roleLabel}`
-    },
-    {
-      role: 'system',
-      content: referenceContext
-        ? `Reference excerpts that may be relevant:\n\n${referenceContext}`
-        : 'No reference excerpts were matched for this question.'
+      content: systemInstruction
     },
     {
       role: 'user',
@@ -724,7 +692,11 @@ export async function generateChatResponse(question, options = {}) {
     throw new Error('Question is required.');
   }
 
-  const model = pickChatModel(options.model);
+  const runtimeConfig = resolveLlmRuntimeConfig({
+    settings: options.llmSettings,
+    requestedModel: options.model
+  });
+  const model = runtimeConfig.model;
   const selectedRefs = Array.isArray(options.selectedRefs) ? options.selectedRefs.filter(Boolean) : [];
   const selectedRefTitles = Array.isArray(options.selectedRefTitles) ? options.selectedRefTitles.filter(Boolean) : [];
   const referenceChunks = await loadReferenceChunks(selectedRefs);
@@ -733,14 +705,13 @@ export async function generateChatResponse(question, options = {}) {
     : [];
   const referenceContext = relevant.length > 0 ? buildReferenceContext(relevant) : '';
 
-  const apiKey = process.env.OPENROUTER_API_KEY;
-  if (!apiKey) {
+  if (!runtimeConfig.hasApiKey) {
     return {
       success: true,
       model,
       selected_refs: selectedRefs,
       selected_ref_titles: selectedRefTitles,
-      answer: 'Chat assistant is available, but OpenRouter API key is not configured in the backend environment. Please set OPENROUTER_API_KEY to enable live responses.',
+      answer: runtimeConfig.missingKeyMessage,
       sources: relevant.map((chunk) => ({ source: chunk.source, index: chunk.index })),
       source: 'fallback'
     };
@@ -757,7 +728,7 @@ export async function generateChatResponse(question, options = {}) {
   });
 
   try {
-    const raw = await callOpenRouter(messages, apiKey, model, maxTokens);
+    const raw = await callLlmModel(messages, runtimeConfig, maxTokens);
     const answer = String(raw || '').trim();
     return {
       success: true,
@@ -766,7 +737,7 @@ export async function generateChatResponse(question, options = {}) {
       selected_ref_titles: selectedRefTitles,
       answer: answer || 'No response was generated. Please try asking again with more detail.',
       sources: relevant.map((chunk) => ({ source: chunk.source, index: chunk.index })),
-      source: 'openrouter'
+      source: runtimeConfig.provider
     };
   } catch (error) {
     return {
@@ -774,7 +745,7 @@ export async function generateChatResponse(question, options = {}) {
       model,
       selected_refs: selectedRefs,
       selected_ref_titles: selectedRefTitles,
-      answer: 'I could not complete the request from the language model right now. Please try again in a moment or use a different free model.',
+      answer: `I could not complete the request from ${runtimeConfig.provider_label} right now. Please try again in a moment or change model/provider settings.`,
       sources: relevant.map((chunk) => ({ source: chunk.source, index: chunk.index })),
       source: 'fallback',
       warning: String(error?.message || error)
@@ -783,14 +754,15 @@ export async function generateChatResponse(question, options = {}) {
 }
 
 export async function generateLessonPlan(lessonData, options = {}) {
-  const model = options.model && supportedModels.includes(options.model)
-    ? options.model
-    : supportedModels[0];
+  const runtimeConfig = resolveLlmRuntimeConfig({
+    settings: options.llmSettings,
+    requestedModel: options.model
+  });
+  const model = runtimeConfig.model;
 
   const selectedRefs = Array.isArray(options.selectedRefs) ? options.selectedRefs.filter(Boolean) : [];
   const referenceChunks = await loadReferenceChunks(selectedRefs);
-  const apiKey = process.env.OPENROUTER_API_KEY;
-  const configuredMaxTokens = Number(options.maxTokens ?? process.env.OPENROUTER_MAX_TOKENS ?? 3000);
+  const configuredMaxTokens = Number(options.maxTokens ?? process.env.LLM_MAX_TOKENS ?? process.env.OPENROUTER_MAX_TOKENS ?? 3000);
   const maxTokens = Number.isFinite(configuredMaxTokens)
     ? Math.min(4096, Math.max(1500, Math.trunc(configuredMaxTokens)))
     : 3000;
@@ -802,12 +774,13 @@ export async function generateLessonPlan(lessonData, options = {}) {
 
   console.log(`[Generation] Token allocation: P1=${phase1Tokens}, P2=${phase2Tokens}, P3=${phase3Tokens}`);
 
-  if (!apiKey) {
+  if (!runtimeConfig.hasApiKey) {
     const fallbackPlan = createFallbackPlan(lessonData, selectedRefs, 'no-api-key');
     const formatted = formatLessonPlanOutput(fallbackPlan);
     return {
       success: true,
       source: 'fallback',
+      warning: runtimeConfig.missingKeyMessage,
       output: formatted,
       parsed: fallbackPlan,
       selected_refs: selectedRefs,
@@ -820,7 +793,7 @@ export async function generateLessonPlan(lessonData, options = {}) {
     // PHASE 1: Curriculum & Content
     const extracted1 = await callPhaseWithRetry(
       buildPhase1Prompt, lessonData, selectedRefs, referenceChunks,
-      apiKey, model, phase1Tokens, 'Phase 1',
+      runtimeConfig, phase1Tokens, 'Phase 1',
       ['content_standards', 'performance_standards', 'competencies']
     );
     Object.assign(combinedParsed, extracted1);
@@ -828,7 +801,7 @@ export async function generateLessonPlan(lessonData, options = {}) {
     // PHASE 2: Procedure (most important — gets extra tokens)
     const extracted2 = await callPhaseWithRetry(
       buildPhase2Prompt, lessonData, selectedRefs, referenceChunks,
-      apiKey, model, phase2Tokens, 'Phase 2',
+      runtimeConfig, phase2Tokens, 'Phase 2',
       ['prior_knowledge', 'lesson_purpose', 'developing', 'generalization', 'evaluation'],
       combinedParsed
     );
@@ -837,7 +810,7 @@ export async function generateLessonPlan(lessonData, options = {}) {
     // PHASE 3: Supports & Reflection
     const extracted3 = await callPhaseWithRetry(
       buildPhase3Prompt, lessonData, selectedRefs, referenceChunks,
-      apiKey, model, phase3Tokens, 'Phase 3',
+      runtimeConfig, phase3Tokens, 'Phase 3',
       ['accommodations', 'modifications', 'remarks', 'reflection'],
       combinedParsed
     );
@@ -850,7 +823,7 @@ export async function generateLessonPlan(lessonData, options = {}) {
     
     return {
       success: true,
-      source: 'openrouter',
+      source: runtimeConfig.provider,
       output: formatted,
       parsed,
       selected_refs: selectedRefs,

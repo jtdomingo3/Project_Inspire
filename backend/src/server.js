@@ -7,6 +7,13 @@ import express from 'express';
 import multer from 'multer';
 
 import { projectRoot, referencesDir, supportedModels, surveyQuestions } from './config.js';
+import {
+  buildModelListForProvider,
+  getLlmProviderOptions,
+  llmProviderApiKeyFields,
+  normalizeLlmProvider,
+  sanitizeStoredLlmSettings
+} from './llm-provider.js';
 import { generateChatResponse, generateLessonPlan } from './openrouter.js';
 import { loadReferenceTextByFileName } from './reference-loader.js';
 import { initializeDatabase, closeDatabase } from './database/init.js';
@@ -215,6 +222,39 @@ function normalizeReminderPayload(body) {
     content: normalizeText(payload.content),
     due_date: normalizeText(payload.due_date ?? payload.dueDate),
     is_completed: payload.is_completed === true || payload.isCompleted === true
+  };
+}
+
+function normalizeLlmSettingsPayload(body) {
+  const payload = ensureObject(body, 'Request body');
+  const allowedClearFields = new Set(Object.values(llmProviderApiKeyFields));
+  const clearKeys = Array.isArray(payload.clear_keys)
+    ? payload.clear_keys
+      .map((value) => normalizeText(value))
+      .filter((value) => allowedClearFields.has(value))
+    : [];
+
+  return {
+    provider: payload.provider !== undefined ? normalizeLlmProvider(payload.provider) : undefined,
+    preferred_model: payload.preferred_model !== undefined ? normalizeText(payload.preferred_model) : undefined,
+    openrouter_api_key: payload.openrouter_api_key !== undefined ? normalizeText(payload.openrouter_api_key) : undefined,
+    openai_api_key: payload.openai_api_key !== undefined ? normalizeText(payload.openai_api_key) : undefined,
+    anthropic_api_key: payload.anthropic_api_key !== undefined ? normalizeText(payload.anthropic_api_key) : undefined,
+    google_api_key: payload.google_api_key !== undefined ? normalizeText(payload.google_api_key) : undefined,
+    xai_api_key: payload.xai_api_key !== undefined ? normalizeText(payload.xai_api_key) : undefined,
+    clear_keys: clearKeys
+  };
+}
+
+async function buildLlmSettingsResponse(userId) {
+  const settingsWithSecrets = await db.getUserLlmSettingsWithSecrets(userId);
+  const settings = sanitizeStoredLlmSettings(settingsWithSecrets);
+  const provider = normalizeLlmProvider(settings.provider);
+
+  return {
+    ...settings,
+    available_providers: getLlmProviderOptions(),
+    model_options: buildModelListForProvider(provider, settingsWithSecrets)
   };
 }
 
@@ -468,8 +508,20 @@ app.get('/api/health', async (_request, response) => {
   });
 });
 
-app.get('/api/models', async (_request, response) => {
-  sendJson(response, 200, { models: supportedModels });
+app.get('/api/models', async (request, response) => {
+  try {
+    const userId = request.user?.userId || 1;
+    const llmSettings = await db.getUserLlmSettingsWithSecrets(userId);
+    const provider = normalizeLlmProvider(llmSettings.provider);
+    const models = buildModelListForProvider(provider, llmSettings);
+
+    sendJson(response, 200, {
+      models,
+      provider
+    });
+  } catch (error) {
+    handleRouteError(response, error, 500);
+  }
 });
 
 app.post('/api/auth/login', async (request, response) => {
@@ -616,6 +668,45 @@ app.put('/api/profile/password', async (request, response) => {
     sendJson(response, 200, { success: true });
   } catch (error) {
     handleRouteError(response, error, 500);
+  }
+});
+
+app.get('/api/llm/settings', async (request, response) => {
+  try {
+    const userId = request.user?.userId || 1;
+    const settings = await buildLlmSettingsResponse(userId);
+    sendJson(response, 200, { success: true, settings });
+  } catch (error) {
+    handleRouteError(response, error, 500);
+  }
+});
+
+app.get('/api/llm/models/:provider', async (request, response) => {
+  try {
+    const userId = request.user?.userId || 1;
+    const provider = normalizeLlmProvider(request.params.provider);
+    const settings = await db.getUserLlmSettingsWithSecrets(userId);
+    const models = buildModelListForProvider(provider, settings);
+
+    sendJson(response, 200, {
+      success: true,
+      provider,
+      models
+    });
+  } catch (error) {
+    handleRouteError(response, error, 500);
+  }
+});
+
+app.put('/api/llm/settings', async (request, response) => {
+  try {
+    const userId = request.user?.userId || 1;
+    const payload = normalizeLlmSettingsPayload(request.body);
+    await db.upsertUserLlmSettings(userId, payload);
+    const settings = await buildLlmSettingsResponse(userId);
+    sendJson(response, 200, { success: true, settings });
+  } catch (error) {
+    handleRouteError(response, error, 400);
   }
 });
 
@@ -933,6 +1024,7 @@ app.delete('/api/lessons/:id', async (request, response) => {
 app.post('/api/generate', async (request, response) => {
   try {
     const userId = request.user?.userId || 1;
+    const llmSettings = await db.getUserLlmSettingsWithSecrets(userId);
     const payload = ensureObject(request.body, 'Request body');
     const lessonData = ensureObject(payload.lesson_data ?? payload.lessonData, 'lesson_data');
     const references = normalizeArray(payload.references ?? payload.selected_refs);
@@ -945,7 +1037,8 @@ app.post('/api/generate', async (request, response) => {
     const generation = await generateLessonPlan(lessonData, { 
       model, 
       selectedRefs: references,
-      selectedRefTitles: referenceTitles
+      selectedRefTitles: referenceTitles,
+      llmSettings
     });
     const lesson = await db.upsertLesson({
       ...validateLessonPayload(normalizeLessonPayload(request.body)),
@@ -974,6 +1067,8 @@ app.post('/api/generate', async (request, response) => {
 
 app.post('/api/chatbot/query', async (request, response) => {
   try {
+    const userId = request.user?.userId || 1;
+    const llmSettings = await db.getUserLlmSettingsWithSecrets(userId);
     const payload = ensureObject(request.body, 'Request body');
     const question = normalizeText(payload.question);
     const model = normalizeText(payload.model);
@@ -991,6 +1086,7 @@ app.post('/api/chatbot/query', async (request, response) => {
       model,
       selectedRefs: references,
       selectedRefTitles: referenceTitles,
+      llmSettings,
       username: request.user?.username,
       role: request.user?.role
     });
@@ -1069,9 +1165,11 @@ app.delete('/api/assistant/conversations/:id', async (request, response) => {
 app.post('/api/assistant/conversations/:id/query', async (request, response) => {
   try {
     const userId = request.user?.userId || 1;
+    const llmSettings = await db.getUserLlmSettingsWithSecrets(userId);
     const conversationId = Number(request.params.id);
     const payload = ensureObject(request.body, 'Request body');
     const question = normalizeText(payload.question);
+    const requestedModel = normalizeText(payload.model);
 
     if (!question) {
       sendJson(response, 400, { success: false, error: 'question is required' });
@@ -1084,8 +1182,8 @@ app.post('/api/assistant/conversations/:id/query', async (request, response) => 
       return;
     }
 
-    const references = normalizeArray(payload.references).length > 0
-      ? normalizeArray(payload.references)
+    const references = Array.isArray(payload.references)
+      ? payload.references
       : (existing.references || []);
     const model = normalizeText(payload.model) || normalizeText(existing.last_model);
 
@@ -1104,6 +1202,7 @@ app.post('/api/assistant/conversations/:id/query', async (request, response) => 
       model,
       selectedRefs: references,
       selectedRefTitles: referenceTitles,
+      llmSettings,
       username: request.user?.username,
       role: request.user?.role
     });
