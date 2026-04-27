@@ -1,7 +1,113 @@
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, Menu, shell } from 'electron';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
+
+function setAppMenu() {
+  const isMac = process.platform === 'darwin';
+
+  const template = [
+    ...(isMac ? [{
+      label: app.name,
+      submenu: [
+        { role: 'about' },
+        { type: 'separator' },
+        { role: 'services' },
+        { type: 'separator' },
+        { role: 'hide' },
+        { role: 'hideOthers' },
+        { role: 'unhide' },
+        { type: 'separator' },
+        { role: 'quit' }
+      ]
+    }] : []),
+    {
+      label: 'File',
+      submenu: [
+        isMac ? { role: 'close' } : { role: 'quit' }
+      ]
+    },
+    {
+      label: 'Edit',
+      submenu: [
+        { role: 'undo' },
+        { role: 'redo' },
+        { type: 'separator' },
+        { role: 'cut' },
+        { role: 'copy' },
+        { role: 'paste' },
+        ...(isMac ? [
+          { role: 'pasteAndMatchStyle' },
+          { role: 'delete' },
+          { role: 'selectAll' },
+          { type: 'separator' },
+          {
+            label: 'Speech',
+            submenu: [
+              { role: 'startSpeaking' },
+              { role: 'stopSpeaking' }
+            ]
+          }
+        ] : [
+          { role: 'delete' },
+          { type: 'separator' },
+          { role: 'selectAll' }
+        ])
+      ]
+    },
+    {
+      label: 'View',
+      submenu: [
+        { role: 'reload' },
+        { role: 'forceReload' },
+        { role: 'toggleDevTools' },
+        { type: 'separator' },
+        { role: 'resetZoom' },
+        { role: 'zoomIn' },
+        { role: 'zoomOut' },
+        { type: 'separator' },
+        { role: 'togglefullscreen' }
+      ]
+    },
+    {
+      label: 'Window',
+      submenu: [
+        { role: 'minimize' },
+        { role: 'zoom' },
+        ...(isMac ? [
+          { type: 'separator' },
+          { role: 'front' },
+          { type: 'separator' },
+          { role: 'window' }
+        ] : [
+          { role: 'close' }
+        ])
+      ]
+    },
+    {
+      role: 'help',
+      submenu: [
+        {
+          label: 'User Manual',
+          accelerator: 'F1',
+          click: async () => {
+            await shell.openExternal('https://github.com/jtdomingo3/Project_Inspire/blob/main/docs/USER_MANUAL.md');
+          }
+        },
+        { type: 'separator' },
+        {
+          label: 'Project INSPIRE GitHub',
+          click: async () => {
+            await shell.openExternal('https://github.com/jtdomingo3/Project_Inspire');
+          }
+        }
+      ]
+    }
+  ];
+
+  const menu = Menu.buildFromTemplate(template);
+  Menu.setApplicationMenu(menu);
+}
 
 let mainWindow = null;
 let backendStop = async () => {};
@@ -204,6 +310,7 @@ app.on('activate', async () => {
 
 if (singleInstanceLock) {
   app.whenReady().then(async () => {
+    setAppMenu();
     await startEmbeddedBackend();
     await createMainWindow();
   }).catch(async (error) => {
