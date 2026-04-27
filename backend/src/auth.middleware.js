@@ -1,13 +1,20 @@
 import { decodeToken, extractToken, verifyToken } from './utils/jwt.js';
 
 export function authMiddleware(req, res, next) {
+  // Allow CORS preflight requests to pass through without authentication
+  if (req.method === 'OPTIONS') {
+    return next();
+  }
+
   const publicPaths = [
     '/api/auth/login',
     '/api/health',
     '/api/setup/status',
     '/api/setup/bootstrap'
   ];
-  if (publicPaths.includes(req.path)) {
+
+  // Allow exact matches or subpaths (e.g. trailing slash) for public endpoints
+  if (publicPaths.some((p) => req.path === p || req.path.startsWith(p + '/'))) {
     return next();
   }
 
