@@ -62,7 +62,7 @@ export class InspireApiService {
     );
   }
 
-  createAssistantConversation(payload: { title?: string; model?: string; references?: string[] }): Observable<AssistantConversationSummary> {
+  createAssistantConversation(payload: { title?: string; model?: string; references?: string[] | null }): Observable<AssistantConversationSummary> {
     return this.http.post<{ success?: boolean; conversation: AssistantConversationSummary }>('/api/assistant/conversations', payload).pipe(
       map((response) => response.conversation)
     );

@@ -83,12 +83,12 @@
 
           <div class="section-block">
             <h5>A. Content Standards</h5>
-            <p>{{ viewingPlan().content_standards || 'No content standards provided.' }}</p>
+            <div [innerHTML]="viewingPlan().content_standards | markdown"></div>
           </div>
 
           <div class="section-block">
             <h5>B. Performance Standards</h5>
-            <p>{{ viewingPlan().performance_standards || 'No performance standards provided.' }}</p>
+            <div [innerHTML]="viewingPlan().performance_standards | markdown"></div>
           </div>
 
           <div class="section-block">
@@ -111,7 +111,7 @@
           <div class="section-block">
             <h5>E. Integration</h5>
             <p><strong>Inclusive Education Focus:</strong> {{ viewingPlan().difficulty || 'N/A' }}</p>
-            <p>{{ viewingPlan().integration || 'No integration notes provided.' }}</p>
+            <div [innerHTML]="viewingPlan().integration | markdown"></div>
           </div>
 
           <div class="support-grid">
@@ -150,37 +150,37 @@
 
           <div class="section-block">
             <h5>A. Activating Prior Knowledge</h5>
-            <p class="pre-wrap">{{ viewingPlan().prior_knowledge || 'No prior-knowledge notes provided.' }}</p>
+            <div [innerHTML]="viewingPlan().prior_knowledge | markdown"></div>
           </div>
 
           <div class="section-block">
             <h5>B. Establishing Lesson Purpose</h5>
-            <p class="pre-wrap">{{ viewingPlan().lesson_purpose || 'No lesson purpose provided.' }}</p>
+            <div [innerHTML]="viewingPlan().lesson_purpose | markdown"></div>
           </div>
 
           <div class="section-block">
             <h5>C. Developing and Deepening Understanding</h5>
-            <p class="pre-wrap">{{ viewingPlan().developing || 'No developing activities provided.' }}</p>
+            <div [innerHTML]="viewingPlan().developing | markdown"></div>
           </div>
 
           <div class="section-block">
             <h5>D. Making Generalization</h5>
-            <p class="pre-wrap">{{ viewingPlan().generalization || 'No generalization notes provided.' }}</p>
+            <div [innerHTML]="viewingPlan().generalization | markdown"></div>
           </div>
 
           <div class="section-block">
             <h5>E. Evaluating Learning</h5>
-            <p class="pre-wrap">{{ viewingPlan().evaluation || 'No evaluation methods provided.' }}</p>
+            <div [innerHTML]="viewingPlan().evaluation | markdown"></div>
           </div>
 
           <div class="section-block">
             <h5>F. Teacher's Remarks</h5>
-            <p class="pre-wrap">{{ viewingPlan().remarks || 'No remarks provided.' }}</p>
+            <div [innerHTML]="viewingPlan().remarks | markdown"></div>
           </div>
 
           <div class="section-block">
             <h5>G. Reflection</h5>
-            <p class="pre-wrap">{{ viewingPlan().reflection || 'No reflection notes provided.' }}</p>
+            <div [innerHTML]="viewingPlan().reflection | markdown"></div>
           </div>
 
           <div class="signature-grid">

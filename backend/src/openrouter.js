@@ -697,7 +697,7 @@ export async function generateChatResponse(question, options = {}) {
     requestedModel: options.model
   });
   const model = runtimeConfig.model;
-  const selectedRefs = Array.isArray(options.selectedRefs) ? options.selectedRefs.filter(Boolean) : [];
+  const selectedRefs = Array.isArray(options.selectedRefs) ? options.selectedRefs.filter(Boolean) : options.selectedRefs;
   const selectedRefTitles = Array.isArray(options.selectedRefTitles) ? options.selectedRefTitles.filter(Boolean) : [];
   const referenceChunks = await loadReferenceChunks(selectedRefs);
   const relevant = referenceChunks.length > 0

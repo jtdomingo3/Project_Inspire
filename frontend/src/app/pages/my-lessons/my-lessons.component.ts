@@ -7,6 +7,8 @@ import html2canvas from 'html2canvas-pro';
 
 import { LessonRecord } from '../../core/models/inspire-api.models';
 import { InspireApiService } from '../../core/services/inspire-api.service';
+import { MarkdownPipe } from '../../core/pipes/markdown.pipe';
+import { marked } from 'marked';
 
 type ViewPlan = {
   content_standards: string;
@@ -83,7 +85,7 @@ const emptyViewPlan = (): ViewPlan => ({
 @Component({
   standalone: true,
   selector: 'app-my-lessons',
-  imports: [CommonModule, RouterLink, ReactiveFormsModule],
+  imports: [CommonModule, RouterLink, ReactiveFormsModule, MarkdownPipe],
   templateUrl: './my-lessons.component.html',
   styleUrl: './my-lessons.component.scss'
 })
@@ -388,6 +390,7 @@ export class MyLessonsComponent implements OnInit {
 
   private buildDepEdDlpHtml(plan: ViewPlan, lesson: LessonRecord): string {
     const e = (v: string) => this.escapeHtml(v || '');
+    const md = (v: string) => marked.parse(v || '', { breaks: true, gfm: true }) as string;
     const nl2br = (v: string) => this.escapeHtml(v || '').replace(/\n/g, '<br>');
     const school = e(this.currentSchool());
     const teacher = e(this.currentTeacher());
@@ -579,12 +582,12 @@ export class MyLessonsComponent implements OnInit {
         <tr class="section-start">
           <td class="section-label"></td>
           <td class="sub-label">A. Content Standards</td>
-          <td class="content-cell">${nl2br(plan.content_standards)}</td>
+          <td class="content-cell">${md(plan.content_standards)}</td>
         </tr>
         <tr>
           <td class="section-label"></td>
           <td class="sub-label">B. Performance Standards</td>
-          <td class="content-cell">${nl2br(plan.performance_standards)}</td>
+          <td class="content-cell">${md(plan.performance_standards)}</td>
         </tr>
         <tr>
           <td class="section-label">I. CURRICULUM CONTENT,<br>STANDARDS AND LESSON<br>COMPETENCIES</td>
@@ -599,7 +602,7 @@ export class MyLessonsComponent implements OnInit {
         <tr class="section-end">
           <td class="section-label"></td>
           <td class="sub-label">E. Integration</td>
-          <td class="content-cell"><strong>Inclusive Education Focus:</strong> ${e(plan.difficulty)}<br>${nl2br(plan.integration)}${supportHtml}</td>
+          <td class="content-cell"><strong>Inclusive Education Focus:</strong> ${e(plan.difficulty)}<br>${md(plan.integration)}${supportHtml}</td>
         </tr>
       </table>
 
@@ -619,37 +622,37 @@ export class MyLessonsComponent implements OnInit {
         <tr class="section-start">
           <td class="section-label"></td>
           <td class="sub-label">A. Activating Prior Knowledge</td>
-          <td class="content-cell">${nl2br(plan.prior_knowledge)}</td>
+          <td class="content-cell">${md(plan.prior_knowledge)}</td>
         </tr>
         <tr>
           <td class="section-label"></td>
           <td class="sub-label">B. Establishing Lesson Purpose</td>
-          <td class="content-cell">${nl2br(plan.lesson_purpose)}</td>
+          <td class="content-cell">${md(plan.lesson_purpose)}</td>
         </tr>
         <tr>
           <td class="section-label"></td>
           <td class="sub-label">C. Developing and Deepening Understanding</td>
-          <td class="content-cell">${nl2br(plan.developing)}</td>
+          <td class="content-cell">${md(plan.developing)}</td>
         </tr>
         <tr>
           <td class="section-label">III. TEACHING AND<br>LEARNING PROCEDURE</td>
           <td class="sub-label">D. Making Generalization</td>
-          <td class="content-cell">${nl2br(plan.generalization)}</td>
+          <td class="content-cell">${md(plan.generalization)}</td>
         </tr>
         <tr>
           <td class="section-label"></td>
           <td class="sub-label">E. Evaluating Learning</td>
-          <td class="content-cell">${nl2br(plan.evaluation)}</td>
+          <td class="content-cell">${md(plan.evaluation)}</td>
         </tr>
         <tr>
           <td class="section-label"></td>
           <td class="sub-label">F. Teacher&rsquo;s Remarks</td>
-          <td class="content-cell">${nl2br(plan.remarks)}</td>
+          <td class="content-cell">${md(plan.remarks)}</td>
         </tr>
         <tr class="section-end">
           <td class="section-label"></td>
           <td class="sub-label">G. Reflection</td>
-          <td class="content-cell">${nl2br(plan.reflection)}</td>
+          <td class="content-cell">${md(plan.reflection)}</td>
         </tr>
       </table>
 

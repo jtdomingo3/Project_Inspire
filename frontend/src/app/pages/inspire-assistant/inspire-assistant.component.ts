@@ -9,6 +9,7 @@ import {
   ResourceLibraryItem
 } from '../../core/models/inspire-api.models';
 import { InspireApiService } from '../../core/services/inspire-api.service';
+import { marked } from 'marked';
 
 interface AssistantMessage {
   id: string;
@@ -217,7 +218,9 @@ export class InspireAssistantComponent implements OnInit {
       this.api.createAssistantConversation({
         title: 'New Conversation',
         model: this.selectedModel() || undefined,
-        references: this.useReferences() ? this.selectedReferences() : []
+        references: this.useReferences() 
+          ? (this.selectedReferences().length > 0 ? this.selectedReferences() : null) 
+          : []
       }).subscribe({
         next: (conversation) => {
           this.conversations.update((current) => [conversation, ...current]);
@@ -250,7 +253,9 @@ export class InspireAssistantComponent implements OnInit {
     this.api.queryAssistantConversation(conversationId, {
       question,
       model: this.selectedModel() || undefined,
-      references: this.useReferences() ? this.selectedReferences() : []
+      references: this.useReferences() 
+        ? (this.selectedReferences().length > 0 ? this.selectedReferences() : null) 
+        : []
     }).subscribe({
       next: (result) => {
         this.messages.update((current) => [...current, this.toAssistantMessage(result)]);
@@ -339,166 +344,7 @@ export class InspireAssistantComponent implements OnInit {
   }
 
   private formatAssistantMessage(content: string): string {
-    const safe = this.escapeHtml(content).replace(/\r\n/g, '\n');
-    const paragraphs = safe.split(/\n\s*\n/).map((chunk) => chunk.trim()).filter(Boolean);
-
-    const rendered = paragraphs.map((paragraph) => {
-      const lines = paragraph.split('\n').map((line) => line.trim()).filter(Boolean);
-      if (!lines.length) {
-        return '';
-      }
-
-      const table = this.tryRenderMarkdownTable(lines);
-      if (table) {
-        return table;
-      }
-
-      const numericTable = this.tryRenderNumericRowsTable(lines);
-      if (numericTable) {
-        return numericTable;
-      }
-
-      const bulletLines = lines.filter((line) => /^[-*•]\s+/.test(line));
-      const numberedLines = lines.filter((line) => /^\d+[.)]\s+/.test(line));
-
-      if (bulletLines.length === lines.length) {
-        const items = lines
-          .map((line) => line.replace(/^[-*•]\s+/, ''))
-          .map((line) => `<li>${this.applyInlineFormatting(line)}</li>`)
-          .join('');
-        return `<ul>${items}</ul>`;
-      }
-
-      if (numberedLines.length === lines.length) {
-        const items = lines
-          .map((line) => line.replace(/^\d+[.)]\s+/, ''))
-          .map((line) => `<li>${this.applyInlineFormatting(line)}</li>`)
-          .join('');
-        return `<ol>${items}</ol>`;
-      }
-
-      return `<p>${this.applyInlineFormatting(lines.join('<br>'))}</p>`;
-    });
-
-    return rendered.join('');
-  }
-
-  private tryRenderMarkdownTable(lines: string[]): string {
-    if (lines.length < 3 || !lines.every((line) => line.includes('|'))) {
-      return '';
-    }
-
-    const headerCells = this.parseTableRow(lines[0]);
-    const separatorCells = this.parseTableRow(lines[1]).map((cell) => cell.replace(/\s+/g, ''));
-    if (!headerCells.length || headerCells.length !== separatorCells.length) {
-      return '';
-    }
-
-    if (!separatorCells.every((cell) => /^:?-{3,}:?$/.test(cell))) {
-      return '';
-    }
-
-    const bodyRows = lines
-      .slice(2)
-      .map((line) => this.parseTableRow(line))
-      .filter((row) => row.length > 0);
-
-    if (!bodyRows.length) {
-      return '';
-    }
-
-    const headerHtml = headerCells
-      .map((cell) => `<th>${this.applyInlineFormatting(cell)}</th>`)
-      .join('');
-
-    const rowsHtml = bodyRows
-      .map((row) => {
-        const normalized = this.normalizeRowLength(row, headerCells.length);
-        const cells = normalized
-          .map((cell) => `<td>${this.applyInlineFormatting(cell)}</td>`)
-          .join('');
-        return `<tr>${cells}</tr>`;
-      })
-      .join('');
-
-    return `<div class="message-table-wrap"><table class="message-table"><thead><tr>${headerHtml}</tr></thead><tbody>${rowsHtml}</tbody></table></div>`;
-  }
-
-  private parseTableRow(line: string): string[] {
-    const trimmed = line.trim().replace(/^\|/, '').replace(/\|$/, '');
-    if (!trimmed) {
-      return [];
-    }
-    return trimmed.split('|').map((cell) => cell.trim());
-  }
-
-  private normalizeRowLength(row: string[], targetLength: number): string[] {
-    if (row.length === targetLength) {
-      return row;
-    }
-
-    const result = row.slice(0, targetLength);
-    while (result.length < targetLength) {
-      result.push('');
-    }
-    return result;
-  }
-
-  private tryRenderNumericRowsTable(lines: string[]): string {
-    const normalizedLines = this.normalizeBrokenNumericLines(lines);
-    const rows: Array<{ number: string; text: string }> = [];
-
-    for (const line of normalizedLines) {
-      const match = line.match(/^(\d{1,3})(?:[.)]|\s+)?\s*(.+)$/);
-      if (match) {
-        rows.push({ number: match[1], text: match[2].trim() });
-        continue;
-      }
-
-      if (rows.length > 0) {
-        rows[rows.length - 1].text = `${rows[rows.length - 1].text} ${line}`.trim();
-      }
-    }
-
-    if (rows.length < 3) {
-      return '';
-    }
-
-    const rowsHtml = rows
-      .map((row) => `<tr><td class="message-table-num">${row.number}</td><td>${this.applyInlineFormatting(row.text)}</td></tr>`)
-      .join('');
-
-    return `<div class="message-table-wrap"><table class="message-table"><thead><tr><th>No.</th><th>Item</th></tr></thead><tbody>${rowsHtml}</tbody></table></div>`;
-  }
-
-  private normalizeBrokenNumericLines(lines: string[]): string[] {
-    const merged: string[] = [];
-    for (let index = 0; index < lines.length; index += 1) {
-      const current = lines[index];
-      const next = lines[index + 1];
-      if (/^\d+$/.test(current) && next && /^\d+\s+.+/.test(next)) {
-        merged.push(`${current}${next}`);
-        index += 1;
-        continue;
-      }
-      merged.push(current);
-    }
-    return merged;
-  }
-
-  private applyInlineFormatting(text: string): string {
-    return text
-      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-      .replace(/__(.+?)__/g, '<strong>$1</strong>')
-      .replace(/`([^`]+)`/g, '<code>$1</code>');
-  }
-
-  private escapeHtml(value: string): string {
-    return value
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#39;');
+    if (!content) return '';
+    return marked.parse(content, { breaks: true, gfm: true }) as string;
   }
 }

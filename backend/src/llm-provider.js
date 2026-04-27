@@ -198,7 +198,17 @@ export function resolveLlmRuntimeConfig({ settings, requestedModel }) {
     ...getDefaultUserLlmSettings(settings?.user_id || 1),
     ...(settings || {})
   };
-  const provider = normalizeLlmProvider(merged.provider);
+
+  let provider = normalizeLlmProvider(merged.provider);
+  const hasGoogleKey = hasValue(merged.google_api_key);
+  const hasOpenRouterKey = hasValue(merged.openrouter_api_key);
+
+  // If provider is still 'openrouter' (the default) but we have a Google key,
+  // and no specific OpenRouter key is set, we switch to 'google' as requested.
+  if (provider === 'openrouter' && !hasOpenRouterKey && hasGoogleKey) {
+    provider = 'google';
+  }
+
   const modelOptions = buildModelListForProvider(provider, merged);
   const model = pickModelForRuntime({
     provider,

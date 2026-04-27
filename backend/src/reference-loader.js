@@ -86,7 +86,7 @@ function selectRelevantChunks(query, chunks, topN = 4) {
 
 export async function loadReferenceChunks(selectedSources = null) {
   const availableFiles = await scanReferenceFiles();
-  const selected = Array.isArray(selectedSources) && selectedSources.length > 0
+  const selected = Array.isArray(selectedSources)
     ? availableFiles.filter((name) => selectedSources.includes(name))
     : availableFiles;
 

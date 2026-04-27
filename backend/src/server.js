@@ -1182,13 +1182,15 @@ app.post('/api/assistant/conversations/:id/query', async (request, response) => 
       return;
     }
 
-    const references = Array.isArray(payload.references)
+    const references = (Array.isArray(payload.references) || payload.references === null)
       ? payload.references
       : (existing.references || []);
     const model = normalizeText(payload.model) || normalizeText(existing.last_model);
 
     const referenceMetadata = await db.getReferenceMetadata();
-    const referenceTitles = references.map((ref) => referenceMetadata[ref]?.title || ref);
+    const referenceTitles = Array.isArray(references) 
+      ? references.map((ref) => referenceMetadata[ref]?.title || ref)
+      : []; // If null (all files), we don't have a specific list of titles yet
 
     await db.addAssistantMessage({
       conversation_id: conversationId,

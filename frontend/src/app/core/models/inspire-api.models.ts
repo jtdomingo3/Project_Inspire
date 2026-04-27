@@ -88,7 +88,7 @@ export interface UpdateUserLlmSettingsPayload {
 export interface ChatbotQueryRequest {
   question: string;
   model?: string;
-  references?: string[];
+  references?: string[] | null;
 }
 
 export interface ChatbotSourceChunk {
