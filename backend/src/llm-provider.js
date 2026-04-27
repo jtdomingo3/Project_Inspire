@@ -27,7 +27,7 @@ const openRouterFreeModels = openRouterAllModels.filter((model) => model.include
 
 const providerModelPresets = {
   openrouter: openRouterAllModels,
-  openai: ['gpt-4o', 'gpt-4o-mini', 'o1-preview', 'o1-mini'],
+  openai: ['gpt-4o-mini', 'gpt-4o', 'o1-preview', 'o1-mini'],
   anthropic: ['claude-3-7-sonnet-latest', 'claude-3-5-sonnet-latest', 'claude-3-5-haiku-latest'],
   google: ['gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-2.0-flash', 'gemini-flash-latest', 'gemini-pro-latest'],
   xai: ['grok-2-1212', 'grok-2-mini', 'grok-beta']
@@ -201,12 +201,16 @@ export function resolveLlmRuntimeConfig({ settings, requestedModel }) {
 
   let provider = normalizeLlmProvider(merged.provider);
   const hasGoogleKey = hasValue(merged.google_api_key);
+  const hasOpenAIKey = hasValue(merged.openai_api_key);
   const hasOpenRouterKey = hasValue(merged.openrouter_api_key);
 
-  // If provider is still 'openrouter' (the default) but we have a Google key,
-  // and no specific OpenRouter key is set, we switch to 'google' as requested.
-  if (provider === 'openrouter' && !hasOpenRouterKey && hasGoogleKey) {
-    provider = 'google';
+  // Automatic provider switching if using default 'openrouter'
+  if (provider === 'openrouter' && !hasOpenRouterKey) {
+    if (hasGoogleKey) {
+      provider = 'google';
+    } else if (hasOpenAIKey) {
+      provider = 'openai';
+    }
   }
 
   const modelOptions = buildModelListForProvider(provider, merged);
@@ -283,6 +287,7 @@ export async function generateProviderText({ provider, model, apiKey, messages, 
 
     return trimOptional(result?.text);
   } catch (error) {
+    console.error(`[LLM ERROR] ${provider} (${model}):`, error);
     throw error;
   }
 }
