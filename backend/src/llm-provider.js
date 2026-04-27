@@ -28,9 +28,9 @@ const openRouterFreeModels = openRouterAllModels.filter((model) => model.include
 const providerModelPresets = {
   openrouter: openRouterAllModels,
   openai: ['gpt-4o-mini', 'gpt-4o', 'o1-preview', 'o1-mini'],
-  anthropic: ['claude-3-7-sonnet-latest', 'claude-3-5-sonnet-latest', 'claude-3-5-haiku-latest'],
+  anthropic: ['claude-3-5-haiku-20241022', 'claude-3-5-haiku', 'claude-3-haiku-20240307', 'claude-3-5-sonnet-latest', 'claude-3-5-sonnet-20241022'],
   google: ['gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-2.0-flash', 'gemini-flash-latest', 'gemini-pro-latest'],
-  xai: ['grok-2-1212', 'grok-2-mini', 'grok-beta']
+  xai: ['grok-2-mini', 'grok-2-1212', 'grok-beta']
 };
 
 export function trimOptional(value) {
@@ -202,6 +202,8 @@ export function resolveLlmRuntimeConfig({ settings, requestedModel }) {
   let provider = normalizeLlmProvider(merged.provider);
   const hasGoogleKey = hasValue(merged.google_api_key);
   const hasOpenAIKey = hasValue(merged.openai_api_key);
+  const hasAnthropicKey = hasValue(merged.anthropic_api_key);
+  const hasXaiKey = hasValue(merged.xai_api_key);
   const hasOpenRouterKey = hasValue(merged.openrouter_api_key);
 
   // Automatic provider switching if using default 'openrouter'
@@ -210,6 +212,10 @@ export function resolveLlmRuntimeConfig({ settings, requestedModel }) {
       provider = 'google';
     } else if (hasOpenAIKey) {
       provider = 'openai';
+    } else if (hasAnthropicKey) {
+      provider = 'anthropic';
+    } else if (hasXaiKey) {
+      provider = 'xai';
     }
   }
 
