@@ -296,11 +296,99 @@ function aggregateStats(store) {
   };
 }
 
+const curatedReferenceMetadata = {
+  'assessment-checklist.docx': {
+    title: 'Learner Difficulty Assessment Checklist',
+    description: 'Comprehensive checklist of learner difficulty categories, classroom indicators, and practical support strategies for inclusive instruction.',
+    category: 'Tips'
+  },
+  'DO_s2020_021-transition.pdf': {
+    title: 'DO s.2020 No. 021 - Transition Program Guidance',
+    description: 'Official transition-program guidance to support learner progression planning and continuity across grade levels.',
+    category: 'Strategies'
+  },
+  'DO_s2020_021.pdf': {
+    title: 'DO s.2020 No. 021 - Inclusive Transition Guidelines',
+    description: 'Department Order outlining standards, responsibilities, and implementation guidance for transition support in inclusive education.',
+    category: 'References'
+  },
+  'DO_s2021_044.pdf': {
+    title: 'DO s.2021 No. 044 - Inclusive Education Policy Framework',
+    description: 'National policy framework defining principles, systems, and school-level responsibilities for inclusive education implementation.',
+    category: 'References'
+  },
+  'DO_s2022_023.pdf': {
+    title: 'DO s.2022 No. 023 - Inclusive Education Policy Updates',
+    description: 'Updated policy guidance clarifying implementation priorities, coordination mechanisms, and learner support provisions for inclusion.',
+    category: 'References'
+  },
+  'DSM 5 TR-APA (2022).pdf': {
+    title: 'DSM-5-TR (2022) APA Edition',
+    description: 'Clinical diagnostic reference for evidence-based interpretation of learner behavioral and developmental needs.',
+    category: 'References'
+  },
+  'DSM-5.pdf': {
+    title: 'DSM-5 Reference for Learning and Behavior Needs',
+    description: 'Diagnostic reference to support interpretation of learner characteristics and intervention planning in school contexts.',
+    category: 'References'
+  },
+  'LEGAL BASIS.docx': {
+    title: 'Legal Basis for Inclusive Education',
+    description: 'Consolidated legal and policy foundations that support inclusive education implementation in schools.',
+    category: 'References'
+  },
+  'QUINONES_JANICE_ACTION RESEARCH_PROPOSAL.pdf': {
+    title: 'Action Research Proposal for Inclusive Teaching',
+    description: 'School-based action research proposal focused on strengthening inclusive teaching practices and learner outcomes.',
+    category: 'References'
+  },
+  'ra_11650_2022.pdf': {
+    title: 'Republic Act No. 11650 (2022)',
+    description: 'Statutory reference establishing rights-based support and service provisions for inclusive education delivery.',
+    category: 'References'
+  },
+  'REVISED K TO 12 DLP.docx': {
+    title: 'Revised K to 12 Daily Lesson Plan Guide',
+    description: 'Template and implementation guide for writing standards-aligned daily lesson plans in the K to 12 curriculum.',
+    category: 'Templates'
+  }
+};
+
 function buildDefaultReferenceMetadata(fileName) {
-  const title = fileName.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').trim();
+  const curated = curatedReferenceMetadata[fileName];
+  if (curated) {
+    return curated;
+  }
+
+  const baseName = fileName.replace(/\.[^.]+$/, '').trim();
+  const normalized = baseName
+    .replace(/[._-]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  const title = normalized
+    .split(' ')
+    .map((token) => {
+      const raw = token.trim();
+      if (!raw) {
+        return raw;
+      }
+
+      if (/^\d+$/.test(raw) || /^[IVXLCDM]+$/i.test(raw) || /^[A-Z]{2,6}$/.test(raw)) {
+        return raw.toUpperCase();
+      }
+
+      if (/\d/.test(raw)) {
+        return raw.toUpperCase();
+      }
+
+      return raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase();
+    })
+    .join(' ');
+
   return {
     title,
-    description: `Default resource imported from ${fileName}.`,
+    description: `Professional reference material on ${title} to support inclusive lesson planning and classroom decision-making.`,
     category: 'References'
   };
 }
@@ -600,6 +688,7 @@ app.get('/api/references', async (_request, response) => {
 
 app.get('/api/resource-library', async (_request, response) => {
   try {
+    await ensureReferenceMetadataDefaults();
     const metadata = await db.getReferenceMetadata();
     const files = await fs.readdir(referencesDir).catch(() => []);
     const items = files
