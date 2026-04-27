@@ -207,7 +207,10 @@ export function resolveLlmRuntimeConfig({ settings, requestedModel }) {
   const hasOpenRouterKey = hasValue(merged.openrouter_api_key);
 
   // Automatic provider switching if using default 'openrouter'
-  if (provider === 'openrouter' && !hasOpenRouterKey) {
+  const hasManagedOpenRouterKey = hasValue(process.env.OPENROUTER_API_KEY);
+  const isRequestedOpenRouterModel = trimOptional(requestedModel).includes('/');
+
+  if (provider === 'openrouter' && !hasOpenRouterKey && !hasManagedOpenRouterKey && !isRequestedOpenRouterModel) {
     if (hasGoogleKey) {
       provider = 'google';
     } else if (hasOpenAIKey) {
