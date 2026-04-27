@@ -4,6 +4,7 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import cors from 'cors';
 import express from 'express';
+import multer from 'multer';
 
 import { projectRoot, referencesDir, supportedModels, surveyQuestions } from './config.js';
 import { generateChatResponse, generateLessonPlan } from './openrouter.js';
@@ -39,13 +40,19 @@ function normalizeArray(value = []) {
 dotenv.config({ path: path.join(projectRoot, '.env') });
 
 const app = express();
+const referenceUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 1024 * 1024 * 1024
+  }
+});
 const defaultPort = Number(process.env.PORT || 3000);
 const defaultSchool = 'San Felipe National High School · Basud, Camarines Norte';
 let serverInstance = null;
 let shutdownHandlersRegistered = false;
 
 app.use(cors());
-app.use(express.json({ limit: '2mb' }));
+app.use(express.json({ limit: '1gb' }));
 app.use((request, response, next) => {
   console.log(`[${new Date().toISOString()}] ${request.method} ${request.path}`);
   if (request.headers.authorization) {
@@ -209,6 +216,13 @@ function normalizeReminderPayload(body) {
     due_date: normalizeText(payload.due_date ?? payload.dueDate),
     is_completed: payload.is_completed === true || payload.isCompleted === true
   };
+}
+
+function normalizeBoolean(value) {
+  if (value === true || value === 'true' || value === '1' || value === 1) {
+    return true;
+  }
+  return false;
 }
 
 function buildConversationTitleFromQuestion(question) {
@@ -655,29 +669,46 @@ app.put('/api/resource-library/:fileName', async (request, response) => {
 
 app.post('/api/resource-library/upload', async (request, response) => {
   try {
+    await new Promise((resolve, reject) => {
+      referenceUpload.single('file')(request, response, (error) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+        resolve();
+      });
+    });
+
     const payload = ensureObject(request.body, 'Request body');
-    const fileName = sanitizeReferenceFileName(payload.fileName);
+    const uploadedFile = request.file;
+    const fileNameSource = uploadedFile?.originalname || payload.fileName;
+    const fileName = sanitizeReferenceFileName(fileNameSource);
     const targetPath = path.join(referencesDir, fileName);
     await fs.mkdir(referencesDir, { recursive: true });
 
     const hasExistingFile = await fs.access(targetPath).then(() => true).catch(() => false);
-    if (hasExistingFile && payload.overwrite !== true) {
+    if (hasExistingFile && !normalizeBoolean(payload.overwrite)) {
       sendJson(response, 409, { success: false, error: 'A file with this name already exists. Use overwrite=true to replace it.' });
       return;
     }
 
-    const contentBase64 = normalizeText(payload.contentBase64);
-    if (!contentBase64) {
-      throw new Error('contentBase64 is required');
-    }
+    const buffer = uploadedFile?.buffer;
+    if (!buffer || !buffer.length) {
+      const contentBase64 = normalizeText(payload.contentBase64);
+      if (!contentBase64) {
+        throw new Error('file or contentBase64 is required');
+      }
 
-    const stripped = contentBase64.includes(',') ? contentBase64.split(',').pop() || '' : contentBase64;
-    const buffer = Buffer.from(stripped, 'base64');
-    if (!buffer.length) {
-      throw new Error('Invalid file content');
-    }
+      const stripped = contentBase64.includes(',') ? contentBase64.split(',').pop() || '' : contentBase64;
+      const decodedBuffer = Buffer.from(stripped, 'base64');
+      if (!decodedBuffer.length) {
+        throw new Error('Invalid file content');
+      }
 
-    await fs.writeFile(targetPath, buffer);
+      await fs.writeFile(targetPath, decodedBuffer);
+    } else {
+      await fs.writeFile(targetPath, buffer);
+    }
 
     const resourcePayload = validateResourceMetadataPayload({
       ...normalizeResourcePayload(payload),

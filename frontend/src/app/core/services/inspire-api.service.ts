@@ -112,8 +112,24 @@ export class InspireApiService {
     return this.http.put<{ success: boolean; item: ResourceLibraryItem }>(`/api/resource-library/${encodeURIComponent(fileName)}`, payload);
   }
 
-  uploadReference(payload: { fileName: string; contentBase64: string; title?: string; description?: string; category?: string; overwrite?: boolean }): Observable<{ success: boolean; item: ResourceLibraryItem }> {
-    return this.http.post<{ success: boolean; item: ResourceLibraryItem }>('/api/resource-library/upload', payload);
+  uploadReference(payload: { file: File; title?: string; description?: string; category?: string; overwrite?: boolean }): Observable<{ success: boolean; item: ResourceLibraryItem }> {
+    const formData = new FormData();
+    formData.append('file', payload.file, payload.file.name);
+
+    if (payload.title) {
+      formData.append('title', payload.title);
+    }
+    if (payload.description) {
+      formData.append('description', payload.description);
+    }
+    if (payload.category) {
+      formData.append('category', payload.category);
+    }
+    if (payload.overwrite !== undefined) {
+      formData.append('overwrite', String(payload.overwrite));
+    }
+
+    return this.http.post<{ success: boolean; item: ResourceLibraryItem }>('/api/resource-library/upload', formData);
   }
 
   deleteReference(fileName: string): Observable<{ success: boolean }> {

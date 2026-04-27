@@ -267,41 +267,26 @@ export class ReferenceLibraryComponent implements OnInit, OnDestroy {
     }
 
     this.uploading.set(true);
-    this.readFileAsBase64(this.uploadFile).then((contentBase64) => {
-      this.api.uploadReference({
-        fileName: this.uploadFile?.name || '',
-        contentBase64,
-        title,
-        description,
-        category: this.uploadCategory
-      }).subscribe({
-        next: ({ item }) => {
-          this.resources.update((current) => {
-            const withoutExisting = current.filter((existing) => existing.id !== item.id);
-            return [item, ...withoutExisting];
-          });
-          this.notificationService.addNotification(`Resource "${item.title}" was uploaded.`);
-          this.uploading.set(false);
-          this.error.set(null);
-          this.closeUpload();
-        },
-        error: (error) => {
-          this.uploading.set(false);
-          this.error.set(this.api.describeError(error));
-        }
-      });
-    }).catch((error) => {
-      this.uploading.set(false);
-      this.error.set(String(error));
-    });
-  }
-
-  private readFileAsBase64(file: File): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(String(reader.result || ''));
-      reader.onerror = () => reject(new Error('Unable to read selected file.'));
-      reader.readAsDataURL(file);
+    this.api.uploadReference({
+      file: this.uploadFile,
+      title,
+      description,
+      category: this.uploadCategory
+    }).subscribe({
+      next: ({ item }) => {
+        this.resources.update((current) => {
+          const withoutExisting = current.filter((existing) => existing.id !== item.id);
+          return [item, ...withoutExisting];
+        });
+        this.notificationService.addNotification(`Resource "${item.title}" was uploaded.`);
+        this.uploading.set(false);
+        this.error.set(null);
+        this.closeUpload();
+      },
+      error: (error) => {
+        this.uploading.set(false);
+        this.error.set(this.api.describeError(error));
+      }
     });
   }
 
