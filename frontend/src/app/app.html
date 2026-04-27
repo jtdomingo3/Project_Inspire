@@ -170,5 +170,36 @@
   </div>
 
   <app-chatbot-widget></app-chatbot-widget>
+
+  @if (showProviderMessage()) {
+  <div class="modal-overlay">
+    <div class="modal-card provider-modal">
+      <div class="modal-header">
+        <h3>Welcome to Project INSPIRE!</h3>
+        <button class="close-btn" (click)="showProviderMessage.set(false)">×</button>
+      </div>
+      <div class="modal-body">
+        <p>Project INSPIRE uses free LLM models from OpenRouter by default. While functional, these free models can sometimes be slower or less accurate.</p>
+        
+        <p><strong>Improve Your Experience:</strong></p>
+        <p>To improve model accuracy and make generation faster, you can add premium AI models such as <strong>ChatGPT, Gemini, Claude, and Grok</strong>. You must use your own API key for these services.</p>
+        
+        <p><em>Note: Premium model support has been primarily optimized and tested for <strong>Gemini</strong> within this application.</em></p>
+        
+        <div class="links-section">
+          <a href="https://lumetrium.com/definer/wiki/sources/ai/api-keys/openrouter" target="_blank" class="provider-link">
+            OpenRouter Setup Guide
+          </a>
+          <a href="https://www.merge.dev/blog/chatgpt-api-key" target="_blank" class="provider-link">
+            ChatGPT API Key Guide
+          </a>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" (click)="showProviderMessage.set(false)">I Understand</button>
+      </div>
+    </div>
+  </div>
+  }
 </div>
 }

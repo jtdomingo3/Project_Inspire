@@ -40,6 +40,7 @@ export class App {
   protected readonly loginLoading = signal(false);
   protected readonly notificationsOpen = signal(false);
   protected readonly sidebarOpen = signal(true);
+  protected readonly showProviderMessage = signal(false);
   protected loginUsername = '';
   protected loginPassword = '';
   protected readonly mainNavigation: NavigationItem[] = [
@@ -243,6 +244,7 @@ export class App {
           response.token || ''
         );
         this.notificationsOpen.set(false);
+        this.showProviderMessage.set(true);
         this.router.navigateByUrl('/dashboard');
       },
       error: (error) => {

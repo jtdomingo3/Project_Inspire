@@ -1,6 +1,9 @@
 import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'inspire-secret-key-change-in-production';
+import crypto from 'node:crypto';
+
+const SESSION_SALT = crypto.randomBytes(16).toString('hex');
+const JWT_SECRET = (process.env.JWT_SECRET || 'inspire-secret-key-change-in-production') + SESSION_SALT;
 const TOKEN_EXPIRY = '24h';
 
 export function generateToken(userId, username, role) {
